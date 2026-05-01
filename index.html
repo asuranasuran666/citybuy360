@@ -114,7 +114,14 @@
         }
 
         @media (max-width: 1200px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } aside { display: none; } }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { aside { display: none; } }
+@media (max-width: 1024px) {
+    header h1 { font-size: 1.65rem; }
+    header p { font-size: 0.6rem; }
+    header img { max-width: 126px !important; }
+    header > div { gap: 12px; padding: 0 15px; }
+}
 
         .lifestyle-ribbon {
             background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%);
