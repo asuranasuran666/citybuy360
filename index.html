@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo CityBUY360</title>
+    <style>
+        :root {
+            --brand-blue: #007bff;
+            --brand-orange-light: #ff9800;
+            --brand-orange-dark: #ff5722;
+            --dark-header: #1a1a1a;
+            --white: #ffffff;
+            --gray-bg: #f4f4f4;
+            --tag-orange: #ff6600;
+            --price-green: #2ecc71;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; }
+        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+
+        header { background: var(--dark-header); padding: 12px 25px; text-align: center; color: white; }
+        header h1 { color: var(--brand-blue); margin: 0; text-transform: uppercase; font-size: 3.3rem; font-weight: 800; }
+        header p { margin: 5px 0 0; font-weight: 600; font-size: 1.21rem; }
+
+        .promo-banner { 
+            background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%); 
+    padding: 10px 20px; text-align: center; color: white; position: relative;
+    display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+        }
+        .promo-banner::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px);
+            background-size: 15px 15px;
+        }
+
+        .btn-compra-ya {
+            display: inline-block; background: var(--white); color: var(--brand-orange-dark);
+            padding: 10px 25px; border-radius: 50px; text-decoration: none;
+            font-weight: 900; font-size: 1rem; position: relative; z-index: 1;
+        }
+
+        .section-title { 
+            background: white; padding: 15px 25px; margin: 15px 0; font-weight: bold; 
+            text-transform: uppercase; border-left: 6px solid var(--brand-orange-dark);
+            font-size: 1.1rem; text-align: center; color: #111;
+        }
+
+        .products-container { padding: 0 20px 40px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+
+        /* Imagen clickeable */
+        .card-img-container { 
+            height: 190px; display: flex; align-items: center; justify-content: center; 
+            padding: 10px; border-bottom: 1px solid #eee;
+            cursor: pointer;
+            position: relative;
+        }
+        .card-img-container:hover::after {
+            content: "🔍";
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            padding: 4px 6px;
+            line-height: 1;
+        }
+        /* Indicador de múltiples imágenes */
+        .card-img-container[data-count="2"]::before {
+            content: "1 / 2";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.7rem;
+            background: var(--brand-orange-dark);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 7px;
+            font-weight: 700;
+        }
+
+        .card-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .tag-category { font-size: 0.75rem; color: var(--tag-orange); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 8px; min-height: 2.4em; }
+        .details-block { font-size: 0.8rem; color: #666; margin-bottom: 12px; line-height: 1.4; flex-grow: 1; }
+        .price { font-size: 1.4rem; color: var(--price-green); font-weight: 800; margin-top: auto; }
+        .btn-lo-quiero { 
+            display: block; text-align: center; background: var(--brand-blue); color: white; 
+            text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 15px;
+        }
+
+        aside { 
+            width: 160px; 
+            background: var(--dark-header); 
+            min-height: 100vh; 
+            position: sticky; 
+            top: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-top: 20px; 
+        }
+        .sidebar-logo { 
+            width: 130px; 
+            height: auto;
+            object-fit: contain;
+        }
+
+        @media (max-width: 1200px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } aside { display: none; } }
+
+        .lifestyle-ribbon {
+            background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+
+        /* ===== LIGHTBOX ===== */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        #lightbox.active { display: flex; }
+
+        #lightbox-img {
+            max-width: 88vw;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            user-select: none;
+        }
+
+        .lb-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            font-size: 2.2rem;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 10001;
+        }
+        .lb-btn:hover { background: rgba(255,255,255,0.28); }
+        .lb-btn.hidden { display: none; }
+
+        #lb-prev { left: 16px; }
+        #lb-next { right: 16px; }
+
+        #lb-close {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2.4rem;
+            cursor: pointer;
+            z-index: 10001;
+            line-height: 1;
+        }
+
+        #lb-counter {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* Zoom para imagen única */
+        #lightbox-img.zoomable { cursor: zoom-in; }
+        #lightbox-img.zoomed  { 
+            transform: scale(2); 
+            cursor: zoom-out; 
+            transition: transform 0.25s ease;
+        }
+        #lightbox-img { transition: transform 0.25s ease; }
+
+        #lb-zoom-hint {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.55);
+            font-size: 0.85rem;
+            font-family: 'Segoe UI', sans-serif;
+            pointer-events: none;
+        }
+
+.details-block.collapsible { display: none; }
+.details-block.collapsible { display: none; }
+.details-block.collapsible.open { display: block; }
+
+.toggle-details {
+    background: none; border: none; cursor: pointer;
+    font-size: 0.75rem; color: #999; padding: 0 0 8px 0;
+    display: flex; align-items: center; gap: 5px;
+}
+.toggle-details .arrow { display: inline-block; transition: transform 0.2s; }
+.toggle-details.open .arrow { transform: rotate(90deg); }
+
+.hover-tooltip {
+    display: none;
+    position: fixed;
+    background: rgba(255, 255, 255, 0.95);
+    color: #111;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: 200px;
+    width: 220px;
+    z-index: 99999;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    pointer-events: none;
+}
+    </style>
+</head>
+<body>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+    <button id="lb-close" title="Cerrar">✕</button>
+    <button class="lb-btn" id="lb-prev">&#8592;</button>
+    <img id="lightbox-img" src="" alt="Vista ampliada">
+    <button class="lb-btn" id="lb-next">&#8594;</button>
+    <div id="lb-counter"></div>
+    <div id="lb-zoom-hint"></div>
+</div>
+
+<div class="page-wrapper">
+    <div class="main-content">
+        <header>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+                <div>
+                    <h1>CityBUY360</h1>
+                    <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
+                </div>
+                <img src="bolsaanimada.gif" style="max-width: 180px; width: 100%; border-radius: 10px;">
+            </div>
+        </header>
+
+        <div class="promo-banner">
+            <div style="position: relative; z-index: 1;">
+                <h2 style="font-size: 1.5rem; margin: 0;">Recarga 360 por 1,100 MN</h2>
+                <p style="margin: 5px 0 0; opacity: 0.9;">¡Dale vida a tu móvil!</p>
+            </div>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C100%20MN)" class="btn-compra-ya">Compra YA 🛒</a>
+        </div>
+
+	<div class="products-container">
+            <div class="section-title">👙 ROPA INTERIOR</div>
+            <div class="grid">
+
+		<div class="card" style="align-self: start;">
+    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
+        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
+        <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA INTERIOR</div>
+        <div class="product-name">Blumer sin costuras</div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+        <div class="price">550 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+<div class="card" style="align-self: start;">
+    <div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position: relative;">
+        <img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras">
+        <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA INTERIOR</div>
+        <div class="product-name">Ajustador sin costuras</div>
+        <div class="details-block">Tallas: S, M, L<br>Colores: Pregunta el color que buscas</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
+        <div class="price">1,500 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Ajustador%20sin%20costuras%20%F0%9F%A9%B1%20(1%2C500%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+	</div>
+
+                    <div class="section-title">👕 ROPA Y MODA</div>
+            <div class="grid">
+
+                <div class="card">
+                    <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2">
+                        <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover estampado PARIS</div>
+                        <div class="details-block">Look casual y moderno<br>Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2">
+                        <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div>
+                        <div class="details-block">Recomendado por deportistas, transpirable<br>Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2">
+                        <img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div>
+                        <div class="details-block">Lo más vendido<br>Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2">
+                        <img src="aac.jpg" class="card-img" alt="Pulover Amor, Alegría y Cerveza Fría">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover Amor, Alegría y Cerveza Fría</div>
+                        <div class="details-block">Estilo casual. El alma de la FIESTA<br>Tallas: S, M, L</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="usa.jpg" data-count="1">
+                        <img src="usa.jpg" class="card-img" alt="Pulover estampado USA">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover estampado USA</div>
+                        <div class="details-block">Estilo Americano Classic<br>Tallas: S, M, L, XL</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20USA%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="freedom.jpg" data-count="1">
+                        <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover estampado FREEDOM</div>
+                        <div class="details-block">Blanco de primavera, transpirable, fresco<br>Tallas: S, M, L, XL<br>Comodidad garantizada</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="mblancas.jpg" data-count="1">
+                        <img src="mblancas.jpg" class="card-img" alt="Medias Blancas">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Medias Blancas</div>
+                        <div class="details-block">Talla: Única | Transpirable</div>
+                        <div class="price">250 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Blancas%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="mnegras.jpg" data-count="1">
+                        <img src="mnegras.jpg" class="card-img" alt="Medias Negras">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Medias Negras</div>
+                        <div class="details-block">Talla: Única | Transpirable</div>
+                        <div class="price">250 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Negras%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="lifestyle-ribbon">
+                "Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo actual."
+            </div>
+
+            <div class="section-title">👜 ACCESORIOS</div>
+            <div class="grid">
+
+                <div class="card">
+                    <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1">
+                        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ACCESORIOS</div>
+                        <div class="product-name">Bolso Bandolera para Móvil</div>
+                        <div class="details-block">Deportivas y con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales.Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.<br>Material: Cuero sintético y Nylon.<br>Colores: Negro con detalles decorativos.</div>
+                        <div class="price">2,000 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1">
+                        <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ACCESORIOS</div>
+                        <div class="product-name">Gorro para bebé</div>
+                        <div class="details-block">Diseño suave y elástico para no dañar la delicada piel del bebé. Tiene un estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.<br>Material: Algodón elastano.<br>Colores: Pregunta el color que buscas.</div>
+                        <div class="price">1,200 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <!-- GORRA: 2 imágenes en el lightbox -->
+                <div class="card">
+                    <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2">
+                        <img src="gorra.jpg" class="card-img" alt="Gorra">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ACCESORIOS</div>
+                        <div class="product-name">Gorra</div>
+                        <div class="details-block">Ajustables, deportivas y elegantes.<br>Material: Calidad<br>Colores: Varios</div>
+                        <div class="price">2,800 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="lifestyle-ribbon">
+                "¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y Entrega garantizadas."
+            </div>
+
+            <div class="section-title">⚡ SERVICIOS</div>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-img-container" data-images="saldo.jpg" data-count="1">
+                        <img src="saldo.jpg" class="card-img" alt="Comprar Saldo - Recargas 360">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">SERVICIOS</div>
+                        <div class="product-name">COMPRAR SALDO (RECARGAS)</div>
+                        <div class="details-block">Recargas 360 SALDO</div>
+                        <div class="price">1,100 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C100%20MN)" class="btn-lo-quiero">Recarga YA</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside>
+        
+</div>
+
+<script>
+    const lightbox   = document.getElementById('lightbox');
+    const lbImg      = document.getElementById('lightbox-img');
+    const lbPrev     = document.getElementById('lb-prev');
+    const lbNext     = document.getElementById('lb-next');
+    const lbClose    = document.getElementById('lb-close');
+    const lbCounter  = document.getElementById('lb-counter');
+    const lbZoomHint = document.getElementById('lb-zoom-hint');
+
+    let images  = [];
+    let current = 0;
+    let isZoomed = false;
+
+    function openLightbox(imgs, startIndex) {
+        images   = imgs;
+        current  = startIndex;
+        isZoomed = false;
+        lbImg.classList.remove('zoomed');
+        showImage();
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+        isZoomed = false;
+        lbImg.classList.remove('zoomed', 'zoomable');
+    }
+
+    function showImage() {
+        lbImg.src = images[current];
+        isZoomed = false;
+        lbImg.classList.remove('zoomed');
+
+        var single = images.length === 1;
+
+        lbPrev.classList.toggle('hidden', single || current === 0);
+        lbNext.classList.toggle('hidden', single || current === images.length - 1);
+        lbCounter.textContent = !single ? (current + 1) + ' / ' + images.length : '';
+
+        if (single) {
+            lbImg.classList.add('zoomable');
+            lbZoomHint.textContent = '🔍 Toca la imagen para hacer zoom';
+        } else {
+            lbImg.classList.remove('zoomable');
+            lbZoomHint.textContent = '';
+        }
+    }
+
+    // Zoom toggle — solo para imagen única
+    lbImg.addEventListener('click', function(e) {
+        if (images.length !== 1) return;
+        e.stopPropagation();
+        isZoomed = !isZoomed;
+        lbImg.classList.toggle('zoomed', isZoomed);
+        lbZoomHint.textContent = isZoomed ? '🔍 Toca de nuevo para reducir' : '🔍 Toca la imagen para hacer zoom';
+    });
+
+    // Clic en contenedor de imagen
+    document.querySelectorAll('.card-img-container').forEach(function(container) {
+        container.addEventListener('click', function() {
+            var raw = container.getAttribute('data-images') || '';
+            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+            if (imgs.length > 0) openLightbox(imgs, 0);
+        });
+    });
+
+    lbPrev.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (current > 0) { current--; showImage(); }
+    });
+
+    lbNext.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (current < images.length - 1) { current++; showImage(); }
+    });
+
+    lbClose.addEventListener('click', closeLightbox);
+
+    // Clic fuera de la imagen cierra el lightbox
+    lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    // Teclas: Escape cierra, flechas navegan
+    document.addEventListener('keydown', function(e) {
+        if (!lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape')      closeLightbox();
+        if (e.key === 'ArrowLeft'  && current > 0)               { current--; showImage(); }
+        if (e.key === 'ArrowRight' && current < images.length-1) { current++; showImage(); }
+    });
+
+document.querySelectorAll('.card-img-container').forEach(function(container) {
+        var tooltip = container.querySelector('.hover-tooltip');
+        if (!tooltip) return;
+        container.addEventListener('mouseenter', function(e) {
+            var rect = container.getBoundingClientRect();
+            tooltip.style.display = 'block';
+            tooltip.style.top  = (rect.top + rect.height / 2) + 'px';
+            tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+        });
+        container.addEventListener('mouseleave', function() {
+            tooltip.style.display = 'none';
+        });
+    });
+</script>
+
+</body>
+</html>
