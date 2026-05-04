@@ -1,3 +1,4 @@
 CORREO DE CONTACTO
 ENVIOS GRATUITOS SI LA COMPRA SUPERA LOS 10000
-AGREGAR OPCION DONDE el cliente PONGA UNA FOTO SUYA Y Q LE GENERE UN MINIVIDEO O GIF DE 3 SEGUNDOS DE COMO LE QUEDARIA LA PRENDA
+AGREGAR OPCION DONDE el cliente PONGA UNA FOTO SUYA Y Q LE GENERE UNa foto con la prenda puesta
+q la IA agregre las la descripción de los productos automáticamente. configurar Gemini y revisar como lo hace, q sean descripciones básicas y lo mas reales posibles.

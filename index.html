@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo CityBUY360</title>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
     <style>
         :root {
             --brand-blue: #007bff;
@@ -26,9 +31,8 @@
 
         .promo-banner { 
             background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%); 
-    padding: 10px 20px; text-align: center; color: white; position: relative;
-    display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;
-}
+            padding: 10px 20px; text-align: center; color: white; position: relative;
+            display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;
         }
         .promo-banner::before {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -50,6 +54,7 @@
 
         .products-container { padding: 0 20px 40px; }
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .grid-destacado { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 
         .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
 
@@ -115,13 +120,13 @@
 
         @media (max-width: 1200px) { .grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
-@media (max-width: 1024px) { aside { display: none; } }
-@media (max-width: 1024px) {
-    header h1 { font-size: 1.65rem; }
-    header p { font-size: 0.6rem; }
-    header img { max-width: 126px !important; }
-    header > div { gap: 12px; padding: 0 15px; }
-}
+        @media (max-width: 1024px) { aside { display: none; } }
+        @media (max-width: 1024px) {
+            header h1 { font-size: 1.65rem; }
+            header p { font-size: 0.6rem; }
+            header img { max-width: 126px !important; }
+            header > div { gap: 12px; padding: 0 15px; }
+        }
 
         .lifestyle-ribbon {
             background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%);
@@ -223,34 +228,133 @@
             pointer-events: none;
         }
 
-.details-block.collapsible { display: none; }
-.details-block.collapsible { display: none; }
-.details-block.collapsible.open { display: block; }
+        .details-block.collapsible { display: none; }
+        .details-block.collapsible.open { display: block; }
 
-.toggle-details {
-    background: none; border: none; cursor: pointer;
-    font-size: 0.75rem; color: #999; padding: 0 0 8px 0;
-    display: flex; align-items: center; gap: 5px;
-}
-.toggle-details .arrow { display: inline-block; transition: transform 0.2s; }
-.toggle-details.open .arrow { transform: rotate(90deg); }
+        .toggle-details {
+            background: none; border: none; cursor: pointer;
+            font-size: 0.75rem; color: #999; padding: 0 0 8px 0;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .toggle-details .arrow { display: inline-block; transition: transform 0.2s; }
+        .toggle-details.open .arrow { transform: rotate(90deg); }
 
-.hover-tooltip {
-    display: none;
-    position: fixed;
-    background: rgba(255, 255, 255, 0.95);
-    color: #111;
-    font-size: 0.72rem;
-    line-height: 1.5;
-    padding: 10px 12px;
-    border-radius: 8px;
-    overflow-y: auto;
-    max-height: 200px;
-    width: 220px;
-    z-index: 99999;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-    pointer-events: none;
-}
+        .hover-tooltip {
+            display: none;
+            position: fixed;
+            background: rgba(255, 255, 255, 0.95);
+            color: #111;
+            font-size: 0.72rem;
+            line-height: 1.5;
+            padding: 10px 12px;
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 200px;
+            width: 220px;
+            z-index: 99999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            pointer-events: none;
+        }
+
+        /* ===== ESTRELLAS ===== */
+        .stars-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .stars {
+            display: flex;
+            gap: 2px;
+        }
+        .star {
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.15s;
+            line-height: 1;
+        }
+        .star.filled { color: #f5a623; }
+        .stars:not(.voted) .star:hover,
+        .stars:not(.voted) .star:hover ~ .star { color: #ddd; }
+        .stars:not(.voted) .star:hover,
+        .stars:not(.voted) .star.hover-fill { color: #f5a623; }
+        .stars.voted { pointer-events: none; }
+        .stars-info {
+            font-size: 0.72rem;
+            color: #999;
+        }
+
+        /* ===== BOTTOM SHEET (MÓVIL) ===== */
+        #bs-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 19998;
+        }
+        #bs-overlay.active { display: block; }
+
+        #bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            z-index: 19999;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        #bottom-sheet.active { transform: translateY(0); }
+
+        #bs-handle {
+            width: 40px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        #bs-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #888;
+            line-height: 1;
+        }
+        #bs-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 10px;
+            padding-right: 30px;
+        }
+        #bs-content {
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        #bs-ver-foto {
+            display: block;
+            text-align: center;
+            background: var(--brand-blue);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
@@ -263,6 +367,16 @@
     <button class="lb-btn" id="lb-next">&#8594;</button>
     <div id="lb-counter"></div>
     <div id="lb-zoom-hint"></div>
+</div>
+
+<!-- BOTTOM SHEET (MÓVIL) -->
+<div id="bs-overlay"></div>
+<div id="bottom-sheet">
+    <div id="bs-handle"></div>
+    <button id="bs-close">✕</button>
+    <div id="bs-title"></div>
+    <div id="bs-content"></div>
+    <button id="bs-ver-foto">📷 Ver foto</button>
 </div>
 
 <div class="page-wrapper">
@@ -285,89 +399,224 @@
             <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C100%20MN)" class="btn-compra-ya">Compra YA 🛒</a>
         </div>
 
-	<div class="products-container">
+        <div class="products-container">
+
+            <div class="section-title">⭐ LO MÁS DESTACADO</div>
+            <div class="grid-destacado">
+
+                <div class="card" style="align-self: start;">
+                    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
+                        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
+                        <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA INTERIOR</div>
+                        <div class="product-name">Blumer sin costuras</div>
+                        <div class="stars-container" data-product="blumer">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span>
+                                <span class="star" data-val="2">★</span>
+                                <span class="star" data-val="3">★</span>
+                                <span class="star" data-val="4">★</span>
+                                <span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
+                        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                            <span class="arrow">▶</span> Ver más
+                        </button>
+                        <div class="details-block collapsible">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+                        <div class="price">550 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card">
+    <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
+        <img src="gorra.jpg" class="card-img" alt="Gorra">
+        <div class="hover-tooltip">Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Gorra</div>
+        <div class="stars-container" data-product="gorra">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Calidad<br>Colores: Varios</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+        <div class="price">2,800 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
+        <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
+        <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado FREEDOM</div>
+        <div class="stars-container" data-product="freedom">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco con franjas negras</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+            </div>
+
             <div class="section-title">👙 ROPA INTERIOR</div>
             <div class="grid">
 
-		<div class="card" style="align-self: start;">
-    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
-        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
-        <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
-    </div>
-    <div class="card-content">
-        <div class="tag-category">ROPA INTERIOR</div>
-        <div class="product-name">Blumer sin costuras</div>
-        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
-        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-            <span class="arrow">▶</span> Ver más
-        </button>
-        <div class="details-block collapsible">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
-        <div class="price">550 MN</div>
-        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
-    </div>
-</div>
+                <div class="card" style="align-self: start;">
+                    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
+                        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
+                        <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA INTERIOR</div>
+                        <div class="product-name">Blumer sin costuras</div>
+                        <div class="stars-container" data-product="blumer">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span>
+                                <span class="star" data-val="2">★</span>
+                                <span class="star" data-val="3">★</span>
+                                <span class="star" data-val="4">★</span>
+                                <span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
+                        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                            <span class="arrow">▶</span> Ver más
+                        </button>
+                        <div class="details-block collapsible">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+                        <div class="price">550 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
 
-<div class="card" style="align-self: start;">
-    <div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position: relative;">
-        <img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras">
-        <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
-    </div>
-    <div class="card-content">
-        <div class="tag-category">ROPA INTERIOR</div>
-        <div class="product-name">Ajustador sin costuras</div>
-        <div class="details-block">Tallas: S, M, L<br>Colores: Pregunta el color que buscas</div>
-        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-            <span class="arrow">▶</span> Ver más
-        </button>
-        <div class="details-block collapsible">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
-        <div class="price">1,500 MN</div>
-        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Ajustador%20sin%20costuras%20%F0%9F%A9%B1%20(1%2C500%20MN)" class="btn-lo-quiero">Lo quiero</a>
-    </div>
-</div>
+                <div class="card" style="align-self: start;">
+                    <div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position: relative;">
+                        <img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras">
+                        <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA INTERIOR</div>
+                        <div class="product-name">Ajustador sin costuras</div>
+                        <div class="stars-container" data-product="sujetador">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span>
+                                <span class="star" data-val="2">★</span>
+                                <span class="star" data-val="3">★</span>
+                                <span class="star" data-val="4">★</span>
+                                <span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Tallas: S, M, L<br>Colores: Pregunta el color que buscas</div>
+                        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                            <span class="arrow">▶</span> Ver más
+                        </button>
+                        <div class="details-block collapsible">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
+                        <div class="price">1,500 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Ajustador%20sin%20costuras%20%F0%9F%A9%B1%20(1%2C500%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
 
-	</div>
+            </div>
 
-                    <div class="section-title">👕 ROPA Y MODA</div>
+            <div class="section-title">👕 ROPA Y MODA</div>
             <div class="grid">
 
                 <div class="card">
-                    <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2">
-                        <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ROPA Y MODA</div>
-                        <div class="product-name">Pulover estampado PARIS</div>
-                        <div class="details-block">Look casual y moderno<br>Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
-                        <div class="price">2,900 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position: relative;">
+        <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
+        <div class="hover-tooltip">Look casual y elegante. Diseño sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado PARIS</div>
+        <div class="stars-container" data-product="paris">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Look casual y elegante. Diseño sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
                 <div class="card">
-                    <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2">
-                        <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ROPA Y MODA</div>
-                        <div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div>
-                        <div class="details-block">Recomendado por deportistas, transpirable<br>Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
-                        <div class="price">2,900 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position: relative;">
+        <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
+        <div class="hover-tooltip">Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div>
+        <div class="stars-container" data-product="ngu">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
                 <div class="card">
-                    <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2">
-                        <img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ROPA Y MODA</div>
-                        <div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div>
-                        <div class="details-block">Lo más vendido<br>Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
-                        <div class="price">2,900 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position: relative;">
+        <img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER">
+        <div class="hover-tooltip">Lo más vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div>
+        <div class="stars-container" data-product="gdm">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Lo más vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
                 <div class="card">
                     <div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2">
@@ -376,6 +625,12 @@
                     <div class="card-content">
                         <div class="tag-category">ROPA Y MODA</div>
                         <div class="product-name">Pulover Amor, Alegría y Cerveza Fría</div>
+                        <div class="stars-container" data-product="aac">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
                         <div class="details-block">Estilo casual. El alma de la FIESTA<br>Tallas: S, M, L</div>
                         <div class="price">2,900 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
@@ -383,12 +638,18 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-img-container" data-images="usa.jpg" data-count="1">
+                    <div class="card-img-container" data-images="usa.jpg,hombre01usa.jpg,hombre02usa.jpg" data-count="2">
                         <img src="usa.jpg" class="card-img" alt="Pulover estampado USA">
                     </div>
                     <div class="card-content">
                         <div class="tag-category">ROPA Y MODA</div>
                         <div class="product-name">Pulover estampado USA</div>
+                        <div class="stars-container" data-product="usa">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
                         <div class="details-block">Estilo Americano Classic<br>Tallas: S, M, L, XL</div>
                         <div class="price">2,900 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20USA%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
@@ -396,17 +657,28 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-img-container" data-images="freedom.jpg" data-count="1">
-                        <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ROPA Y MODA</div>
-                        <div class="product-name">Pulover estampado FREEDOM</div>
-                        <div class="details-block">Blanco de primavera, transpirable, fresco<br>Tallas: S, M, L, XL<br>Comodidad garantizada</div>
-                        <div class="price">2,900 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
+        <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
+        <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado FREEDOM</div>
+        <div class="stars-container" data-product="freedom">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco con franjas negras</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
                 <div class="card">
                     <div class="card-img-container" data-images="mblancas.jpg" data-count="1">
@@ -415,6 +687,12 @@
                     <div class="card-content">
                         <div class="tag-category">ROPA Y MODA</div>
                         <div class="product-name">Medias Blancas</div>
+                        <div class="stars-container" data-product="mblancas">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
                         <div class="details-block">Talla: Única | Transpirable</div>
                         <div class="price">250 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Blancas%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
@@ -428,6 +706,12 @@
                     <div class="card-content">
                         <div class="tag-category">ROPA Y MODA</div>
                         <div class="product-name">Medias Negras</div>
+                        <div class="stars-container" data-product="mnegras">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
                         <div class="details-block">Talla: Única | Transpirable</div>
                         <div class="price">250 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Negras%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
@@ -444,44 +728,76 @@
             <div class="grid">
 
                 <div class="card">
-                    <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1">
-                        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ACCESORIOS</div>
-                        <div class="product-name">Bolso Bandolera para Móvil</div>
-                        <div class="details-block">Deportivas y con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales.Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.<br>Material: Cuero sintético y Nylon.<br>Colores: Negro con detalles decorativos.</div>
-                        <div class="price">2,000 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
+        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
+        <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Bolso Bandolera para Móvil</div>
+        <div class="stars-container" data-product="bolsomovil">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Cuero sintético y Nylon.<br>Colores: Negro con detalles decorativos.</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
+        <div class="price">2,000 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
                 <div class="card">
-                    <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1">
-                        <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ACCESORIOS</div>
-                        <div class="product-name">Gorro para bebé</div>
-                        <div class="details-block">Diseño suave y elástico para no dañar la delicada piel del bebé. Tiene un estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.<br>Material: Algodón elastano.<br>Colores: Pregunta el color que buscas.</div>
-                        <div class="price">1,200 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position: relative;">
+        <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé">
+        <div class="hover-tooltip">Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Gorro para bebé</div>
+        <div class="stars-container" data-product="gorrobebe">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Algodón elastano.<br>Colores: Pregunta el color que buscas.</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.</div>
+        <div class="price">1,200 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
-                <!-- GORRA: 2 imágenes en el lightbox -->
                 <div class="card">
-                    <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2">
-                        <img src="gorra.jpg" class="card-img" alt="Gorra">
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ACCESORIOS</div>
-                        <div class="product-name">Gorra</div>
-                        <div class="details-block">Ajustables, deportivas y elegantes.<br>Material: Calidad<br>Colores: Varios</div>
-                        <div class="price">2,800 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
+    <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
+        <img src="gorra.jpg" class="card-img" alt="Gorra">
+        <div class="hover-tooltip">Diseño icónico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nítido. Un clásico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para máxima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Gorra</div>
+        <div class="stars-container" data-product="gorra">
+            <div class="stars">
+                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Calidad<br>Colores: Varios</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">▶</span> Ver más
+        </button>
+        <div class="details-block collapsible">Diseño icónico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nítido. Un clásico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para máxima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+        <div class="price">2,800 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
 
             </div>
 
@@ -509,9 +825,92 @@
 
     <aside>
         
+    </aside>
 </div>
 
 <script>
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
+        authDomain: "citybuy360.firebaseapp.com",
+        databaseURL: "https://citybuy360-default-rtdb.firebaseio.com",
+        projectId: "citybuy360",
+        storageBucket: "citybuy360.firebasestorage.app",
+        messagingSenderId: "701999748308",
+        appId: "1:701999748308:web:85c320687f6eb10471d741",
+        measurementId: "G-BM5N0W6KJE"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ===== ESTRELLAS =====
+    function renderStars(starsEl, avg) {
+        var stars = starsEl.querySelectorAll('.star');
+        stars.forEach(function(s, i) {
+            s.classList.toggle('filled', i < Math.round(avg));
+        });
+    }
+
+    function updateInfo(infoEl, avg, count) {
+        if (count === 0) {
+            infoEl.textContent = 'Sin votos';
+        } else {
+            infoEl.textContent = avg.toFixed(1) + ' (' + count + ' voto' + (count > 1 ? 's' : '') + ')';
+        }
+    }
+
+    document.querySelectorAll('.stars-container').forEach(function(container) {
+        var productId = container.getAttribute('data-product');
+        var starsEl   = container.querySelector('.stars');
+        var infoEl    = container.querySelector('.stars-info');
+        var starEls   = starsEl.querySelectorAll('.star');
+        var ref       = db.ref('ratings/' + productId);
+        var voted     = localStorage.getItem('voted_' + productId);
+
+        if (voted) starsEl.classList.add('voted');
+
+        // Escuchar cambios en tiempo real
+        ref.on('value', function(snap) {
+            var data  = snap.val() || { total: 0, count: 0 };
+            var avg   = data.count > 0 ? data.total / data.count : 0;
+            renderStars(starsEl, avg);
+            updateInfo(infoEl, avg, data.count);
+        });
+
+        // Hover
+        starEls.forEach(function(star, idx) {
+            star.addEventListener('mouseover', function() {
+                if (starsEl.classList.contains('voted')) return;
+                starEls.forEach(function(s, i) {
+                    s.classList.toggle('filled', i <= idx);
+                });
+            });
+            star.addEventListener('mouseout', function() {
+                if (starsEl.classList.contains('voted')) return;
+                ref.once('value', function(snap) {
+                    var data = snap.val() || { total: 0, count: 0 };
+                    var avg  = data.count > 0 ? data.total / data.count : 0;
+                    renderStars(starsEl, avg);
+                });
+            });
+        });
+
+        // Votar
+        starsEl.addEventListener('click', function(e) {
+            if (starsEl.classList.contains('voted')) return;
+            var star = e.target.closest('.star');
+            if (!star) return;
+            var val = parseInt(star.getAttribute('data-val'));
+            ref.transaction(function(current) {
+                var d = current || { total: 0, count: 0 };
+                return { total: d.total + val, count: d.count + 1 };
+            });
+            localStorage.setItem('voted_' + productId, '1');
+            starsEl.classList.add('voted');
+        });
+    });
+
+    // ===== LIGHTBOX =====
     const lightbox   = document.getElementById('lightbox');
     const lbImg      = document.getElementById('lightbox-img');
     const lbPrev     = document.getElementById('lb-prev');
@@ -545,13 +944,10 @@
         lbImg.src = images[current];
         isZoomed = false;
         lbImg.classList.remove('zoomed');
-
         var single = images.length === 1;
-
         lbPrev.classList.toggle('hidden', single || current === 0);
         lbNext.classList.toggle('hidden', single || current === images.length - 1);
         lbCounter.textContent = !single ? (current + 1) + ' / ' + images.length : '';
-
         if (single) {
             lbImg.classList.add('zoomable');
             lbZoomHint.textContent = '🔍 Toca la imagen para hacer zoom';
@@ -561,7 +957,6 @@
         }
     }
 
-    // Zoom toggle — solo para imagen única
     lbImg.addEventListener('click', function(e) {
         if (images.length !== 1) return;
         e.stopPropagation();
@@ -570,7 +965,6 @@
         lbZoomHint.textContent = isZoomed ? '🔍 Toca de nuevo para reducir' : '🔍 Toca la imagen para hacer zoom';
     });
 
-    // Clic en contenedor de imagen
     document.querySelectorAll('.card-img-container').forEach(function(container) {
         container.addEventListener('click', function() {
             var raw = container.getAttribute('data-images') || '';
@@ -591,12 +985,10 @@
 
     lbClose.addEventListener('click', closeLightbox);
 
-    // Clic fuera de la imagen cierra el lightbox
     lightbox.addEventListener('click', function(e) {
         if (e.target === lightbox) closeLightbox();
     });
 
-    // Teclas: Escape cierra, flechas navegan
     document.addEventListener('keydown', function(e) {
         if (!lightbox.classList.contains('active')) return;
         if (e.key === 'Escape')      closeLightbox();
@@ -604,10 +996,71 @@
         if (e.key === 'ArrowRight' && current < images.length-1) { current++; showImage(); }
     });
 
-document.querySelectorAll('.card-img-container').forEach(function(container) {
+    // ===== BOTTOM SHEET + TOOLTIP =====
+    var bsOverlay    = document.getElementById('bs-overlay');
+    var bottomSheet  = document.getElementById('bottom-sheet');
+    var bsTitle      = document.getElementById('bs-title');
+    var bsContent    = document.getElementById('bs-content');
+    var bsClose      = document.getElementById('bs-close');
+    var bsVerFoto    = document.getElementById('bs-ver-foto');
+    var bsImgs       = [];
+
+    function isMobile() {
+        return window.innerWidth <= 1024;
+    }
+
+    function openBottomSheet(title, content, imgs) {
+        bsTitle.textContent   = title;
+        bsContent.innerHTML   = content;
+        bsImgs                = imgs;
+        bsOverlay.classList.add('active');
+        bottomSheet.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeBottomSheet() {
+        bsOverlay.classList.remove('active');
+        bottomSheet.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    bsClose.addEventListener('click', closeBottomSheet);
+    bsOverlay.addEventListener('click', closeBottomSheet);
+
+    bsVerFoto.addEventListener('click', function() {
+        closeBottomSheet();
+        if (bsImgs.length > 0) openLightbox(bsImgs, 0);
+    });
+
+    document.querySelectorAll('.card-img-container').forEach(function(container) {
+        container.addEventListener('click', function() {
+            var raw  = container.getAttribute('data-images') || '';
+            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+            if (isMobile()) {
+                var tooltip = container.querySelector('.hover-tooltip');
+                var card    = container.closest('.card');
+                var title   = card ? (card.querySelector('.product-name') || {}).textContent || '' : '';
+                var content = tooltip ? tooltip.innerHTML : '';
+
+                if (content) {
+                    openBottomSheet(title, content, imgs);
+                } else {
+                    // Sin tooltip — abrir lightbox directamente
+                    if (imgs.length > 0) openLightbox(imgs, 0);
+                }
+            } else {
+                if (imgs.length > 0) openLightbox(imgs, 0);
+            }
+        });
+    });
+
+    // Tooltip solo en PC
+    document.querySelectorAll('.card-img-container').forEach(function(container) {
         var tooltip = container.querySelector('.hover-tooltip');
         if (!tooltip) return;
-        container.addEventListener('mouseenter', function(e) {
+        container.addEventListener('mouseenter', function() {
+            if (isMobile()) return;
             var rect = container.getBoundingClientRect();
             tooltip.style.display = 'block';
             tooltip.style.top  = (rect.top + rect.height / 2) + 'px';
