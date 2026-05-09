@@ -90,7 +90,7 @@
             min-height: 100vh; 
             position: sticky; 
             top: 0; 
-            display: none;
+            display: flex; 
             flex-direction: column; 
             align-items: center; 
             padding-top: 20px; 
@@ -464,7 +464,7 @@
         </div>
 
         <button onclick="sliderPrev()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;">&#8592;</button>
-        <button onclick="sliderNext()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;">&#8594;</button>
+        <button onclick="sliderNext()" style="position: absolute; right: 45px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;">&#8594;</button>
 
         <div id="slider-dots" style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
             <span class="dot active-dot" style="width: 7px; height: 7px; border-radius: 50%; background: white; cursor: pointer;"></span>
@@ -1121,6 +1121,14 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         isZoomed = !isZoomed;
         lbImg.classList.toggle('zoomed', isZoomed);
         lbZoomHint.textContent = isZoomed ? '🔍 Toca de nuevo para reducir' : '🔍 Toca la imagen para hacer zoom';
+    });
+
+    document.querySelectorAll('.card-img-container').forEach(function(container) {
+        container.addEventListener('click', function() {
+            var raw = container.getAttribute('data-images') || '';
+            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+            if (imgs.length > 0) openLightbox(imgs, 0);
+        });
     });
 
     lbPrev.addEventListener('click', function(e) {
