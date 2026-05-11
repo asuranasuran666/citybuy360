@@ -25,9 +25,104 @@
         .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
         .main-content { flex: 1; display: flex; flex-direction: column; }
 
-        header { padding: 0; }
-        header h1 { color: var(--brand-blue); margin: 0; text-transform: uppercase; font-size: 3.3rem; font-weight: 800; }
-        header p { margin: 5px 0 0; font-weight: 600; font-size: 1.21rem; }
+        header { padding: 0; display: flex; width: 100%; height: 90px; align-items: stretch; }
+
+        .header-brand {
+            width: 30%;
+            background: var(--dark-header);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 25px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        .header-brand h1 {
+            color: var(--brand-blue);
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 2.1rem;
+            font-weight: 800;
+        }
+        .header-brand p {
+            margin: 2px 0 0;
+            font-weight: 600;
+            font-size: 0.89rem;
+            color: white;
+        }
+        .header-slider {
+            width: 70%;
+            position: relative;
+            overflow: hidden;
+            height: 90px;
+            flex-shrink: 0;
+        }
+        .slide {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 80px;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .slide-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .slide-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+        }
+        .slide-cta {
+            position: absolute;
+            right: 80px;
+            background: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: 0.85rem;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .slider-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        @media (max-width: 1024px) {
+            header { flex-direction: column; height: auto; }
+            .header-brand { width: 100%; padding: 10px 20px; }
+            .header-brand h1 { font-size: 1.5rem; }
+            .header-brand p { font-size: 0.78rem; }
+            .header-slider { width: 100%; height: 65px; }
+            .slide { padding: 0 50px; }
+            .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
+            .slide-title { font-size: 1rem; }
+            .slide-cta { right: 8px; font-size: 0.7rem; padding: 5px 10px; }
+        }
 
         .section-title { 
             background: white; padding: 15px 25px; margin: 15px 0; font-weight: bold; 
@@ -90,7 +185,7 @@
             min-height: 100vh; 
             position: sticky; 
             top: 0; 
-            display: flex; 
+            display: none;
             flex-direction: column; 
             align-items: center; 
             padding-top: 20px; 
@@ -412,67 +507,67 @@
     <div class="main-content">
         
         <!-- SLIDER -->
-<header style="display: flex; width: 100%; height: 90px; align-items: stretch;">
-    <div style="width: 30%; background: var(--dark-header); display: flex; flex-direction: column; justify-content: center; padding: 0 25px; box-sizing: border-box;">
-        <h1 style="color: var(--brand-blue); margin: 0; text-transform: uppercase; font-size: 2.1rem; font-weight: 800;">CityBUY360</h1>
-        <p style="margin: 2px 0 0; font-weight: 600; font-size: 0.89rem; color: white;">Excelente CALIDAD | Precios ASEQUIBLES</p>
+<header>
+    <div class="header-brand">
+        <h1>CityBUY360</h1>
+        <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
     </div>
-    <div style="width: 70%; position: relative; overflow: hidden; height: 90px;">
+    <div class="header-slider">
 
-        <div class="slide" style="background: linear-gradient(135deg, #ff9800, #ff5722); display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 80px; height: 100%; box-sizing: border-box; height: 100%;">
+        <div class="slide" style="background: linear-gradient(135deg, #ff9800, #ff5722); display: flex;">
             <div>
-                <div style="font-size: 0.75rem; color: white; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; opacity: 0.85;">¡Dale vida a tu móvil!</div>
-                <div style="font-size: 1.4rem; font-weight: 900; color: white; text-transform: uppercase;">Recarga 360 — 1,000 MN</div>
+                <div class="slide-label" style="color: white; opacity: 0.85;">¡Dale vida a tu móvil!</div>
+                <div class="slide-title">Recarga 360 — 1,000 MN</div>
             </div>
-            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" style="position: absolute; right: 80px; background: white; color: #ff5722; padding: 8px 20px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; text-decoration: none; white-space: nowrap;">Compra YA 🛒</a>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="slide-cta" style="color: #ff5722;">Compra YA 🛒</a>
         </div>
 
-        <div class="slide" style="background: linear-gradient(135deg, #1a1a2e, #16213e); display: none; align-items: center; justify-content: center; text-align: center; padding: 0 80px; height: 100%; box-sizing: border-box;">
+        <div class="slide" style="background: linear-gradient(135deg, #1a1a2e, #16213e); display: none;">
             <div>
-                <div style="font-size: 0.75rem; color: #f5a623; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">CityBUY360</div>
-                <div style="font-size: 1.4rem; font-weight: 900; color: white; text-transform: uppercase;">Ofertas Increíbles</div>
-            </div>
-        </div>
-
-        <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none; align-items: center; justify-content: center; text-align: center; padding: 0 80px; height: 100%; box-sizing: border-box;">
-            <div>
-                <div style="font-size: 0.75rem; color: #00d4ff; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Acaba de llegar</div>
-                <div style="font-size: 1.4rem; font-weight: 900; color: white; text-transform: uppercase;">Nuevas Llegadas</div>
+                <div class="slide-label" style="color: #f5a623;">CityBUY360</div>
+                <div class="slide-title">Ofertas Increíbles</div>
             </div>
         </div>
 
-        <div class="slide" style="background: linear-gradient(135deg, #1b4332, #2d6a4f); display: none; align-items: center; justify-content: center; text-align: center; padding: 0 80px; height: 100%; box-sizing: border-box;">
+        <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none;">
             <div>
-                <div style="font-size: 0.75rem; color: #95d5b2; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Disponible ya</div>
-                <div style="font-size: 1.4rem; font-weight: 900; color: white; text-transform: uppercase;">Almacén Local</div>
+                <div class="slide-label" style="color: #00d4ff;">Acaba de llegar</div>
+                <div class="slide-title">Nuevas Llegadas</div>
             </div>
         </div>
 
-        <div class="slide" style="background: linear-gradient(135deg, #7b2d8b, #c0392b); display: none; align-items: center; justify-content: center; text-align: center; padding: 0 80px; height: 100%; box-sizing: border-box;">
+        <div class="slide" style="background: linear-gradient(135deg, #1b4332, #2d6a4f); display: none;">
             <div>
-                <div style="font-size: 0.75rem; color: #ffd700; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">¡A celebrar!</div>
-                <div style="font-size: 1.4rem; font-weight: 900; color: white; text-transform: uppercase;">Hora de la Fiesta</div>
+                <div class="slide-label" style="color: #95d5b2;">Disponible ya</div>
+                <div class="slide-title">Almacén Local</div>
             </div>
         </div>
 
-        <div class="slide" style="background: linear-gradient(135deg, #004e92, #000428); display: none; align-items: center; justify-content: center; text-align: center; padding: 0 80px; height: 100%; box-sizing: border-box;">
+        <div class="slide" style="background: linear-gradient(135deg, #7b2d8b, #c0392b); display: none;">
             <div>
-                <div style="font-size: 0.75rem; color: #00d4ff; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Emprendedores</div>
-                <div style="font-size: 1.2rem; font-weight: 900; color: white;">Publica tus productos en nuestro catálogo digital</div>
+                <div class="slide-label" style="color: #ffd700;">¡A celebrar!</div>
+                <div class="slide-title">Hora de la Fiesta</div>
             </div>
-            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" style="position: absolute; right: 80px; background: white; color: #004e92; padding: 8px 20px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; text-decoration: none; white-space: nowrap;">Contáctanos</a>
         </div>
 
-        <button onclick="sliderPrev()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;">&#8592;</button>
-        <button onclick="sliderNext()" style="position: absolute; right: 45px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;">&#8594;</button>
+        <div class="slide" style="background: linear-gradient(135deg, #004e92, #000428); display: none;">
+            <div>
+                <div class="slide-label" style="color: #00d4ff;">Emprendedores</div>
+                <div class="slide-title" style="font-size: 1.2rem;">Publica tus productos en nuestro catálogo digital</div>
+            </div>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" class="slide-cta" style="color: #004e92;">Contáctanos</a>
+        </div>
+
+        <button onclick="sliderPrev()" class="slider-nav-btn" style="left: 10px;">&#8592;</button>
+        <button onclick="sliderNext()" class="slider-nav-btn" style="right: 10px;">&#8594;</button>
 
         <div id="slider-dots" style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
-            <span class="dot active-dot" style="width: 7px; height: 7px; border-radius: 50%; background: white; cursor: pointer;"></span>
-            <span class="dot" style="width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer;"></span>
-            <span class="dot" style="width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer;"></span>
-            <span class="dot" style="width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer;"></span>
-            <span class="dot" style="width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer;"></span>
-            <span class="dot" style="width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer;"></span>
+            <span class="dot active-dot" style="background: white;"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
         </div>
     </div>
 </header>
@@ -1121,14 +1216,6 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         isZoomed = !isZoomed;
         lbImg.classList.toggle('zoomed', isZoomed);
         lbZoomHint.textContent = isZoomed ? '🔍 Toca de nuevo para reducir' : '🔍 Toca la imagen para hacer zoom';
-    });
-
-    document.querySelectorAll('.card-img-container').forEach(function(container) {
-        container.addEventListener('click', function() {
-            var raw = container.getAttribute('data-images') || '';
-            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-            if (imgs.length > 0) openLightbox(imgs, 0);
-        });
     });
 
     lbPrev.addEventListener('click', function(e) {
