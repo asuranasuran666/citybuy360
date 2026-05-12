@@ -58,6 +58,8 @@
             flex-shrink: 0;
         }
         .slide {
+            width: 100%;
+            position: relative;
             align-items: center;
             justify-content: center;
             text-align: center;
@@ -113,11 +115,11 @@
         }
 
         @media (max-width: 1024px) {
-            header { flex-direction: column; height: auto; }
-            .header-brand { width: 100%; padding: 10px 20px; }
+            header { flex-direction: column; height: auto; overflow: hidden; }
+            .header-brand { width: 100%; padding: 10px 20px; flex-shrink: unset; }
             .header-brand h1 { font-size: 1.5rem; }
             .header-brand p { font-size: 0.78rem; }
-            .header-slider { width: 100%; height: 65px; }
+            .header-slider { width: 100%; height: 65px; flex-shrink: unset; }
             .slide { padding: 0 50px; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 1rem; }
