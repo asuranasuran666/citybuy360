@@ -73,7 +73,7 @@
             box-sizing: border-box;
         }
         .slide-label {
-            font-size: 0.82rem;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -83,13 +83,12 @@
             font-weight: 900;
             color: white;
             text-transform: uppercase;
-            white-space: nowrap;
         }
         .slide-cta {
             position: absolute;
-            right: 50px;
+            right: 80px;
             background: white;
-            padding: 8px 16px;
+            padding: 8px 20px;
             border-radius: 50px;
             font-weight: 900;
             font-size: 0.85rem;
@@ -100,18 +99,17 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
         }
         .dot {
             width: 7px;
@@ -126,7 +124,7 @@
             .slide { padding: 0 40px; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
-            .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
+            .slide-cta { right: 8px; font-size: 0.7rem; padding: 5px 10px; }
         }
         @media (max-width: 700px) {
             .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -140,20 +138,7 @@
             .stars-container { display: none; }
             .tag-category { display: none; }
             .details-block { display: none; }
-    
-        .no-disponible-overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,0.6);
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 12px; z-index: 10;
-        }
-        .no-disponible-overlay span {
-            background: #e53935; color: white;
-            padding: 6px 18px; border-radius: 20px;
-            font-weight: 700; font-size: 0.9rem;
-            letter-spacing: 0.5px;
-        }
-        .section-title { font-size: 0.9rem; padding: 10px 12px; }
+            .section-title { font-size: 0.9rem; padding: 10px 12px; }
         }
 
         .section-title { 
@@ -547,10 +532,10 @@
 
         <div class="products-container">
 
-            <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
+            <div class="section-title">⭐ LO MÁS DESTACADO</div>
             <div class="grid">
 
-                <div class="card" data-product="blumer" style="align-self: start;">
+                <div class="card" style="align-self: start;">
                     <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
                         <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
                         <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
@@ -574,7 +559,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="gorra">
+                <div class="card">
     <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
         <img src="gorra.jpg" class="card-img" alt="Gorra">
         <div class="hover-tooltip">Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
@@ -594,7 +579,7 @@
     </div>
 </div>
 
-<div class="card" data-product="freedom">
+<div class="card">
     <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
         <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
         <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
@@ -614,7 +599,7 @@
     </div>
 </div>
 
-<div class="card" data-product="bolsomovil">
+<div class="card">
     <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
         <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
         <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
@@ -636,10 +621,10 @@
 
             </div>
 
-            <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
+            <div class="section-title">👙 ROPA INTERIOR</div>
             <div class="grid">
 
-                <div class="card" data-product="blumer" style="align-self: start;">
+                <div class="card" style="align-self: start;">
                     <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
                         <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
                         <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
@@ -663,7 +648,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="sujetador" style="align-self: start;">
+                <div class="card" style="align-self: start;">
                     <div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position: relative;">
                         <img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras">
                         <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
@@ -689,10 +674,10 @@
 
             </div>
 
-            <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">👕 ROPA Y MODA</div>
+            <div class="section-title">👕 ROPA Y MODA</div>
             <div class="grid">
 
-                <div class="card" data-product="paris">
+                <div class="card">
     <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position: relative;">
         <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
         <div class="hover-tooltip">Look casual y elegante. Diseño sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.</div>
@@ -712,7 +697,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="ngu">
+                <div class="card">
     <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position: relative;">
         <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
         <div class="hover-tooltip">Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
@@ -732,7 +717,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="gdm">
+                <div class="card">
     <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position: relative;">
         <img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER">
         <div class="hover-tooltip">Lo más vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.</div>
@@ -752,7 +737,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="aac">
+                <div class="card">
                     <div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2">
                         <img src="aac.jpg" class="card-img" alt="Pulover Amor, Alegría y Cerveza Fría">
                     </div>
@@ -771,7 +756,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="usa">
+                <div class="card">
                     <div class="card-img-container" data-images="usa.jpg,hombre01usa.jpg,hombre02usa.jpg" data-count="2">
                         <img src="usa.jpg" class="card-img" alt="Pulover estampado USA">
                     </div>
@@ -790,7 +775,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="freedom">
+                <div class="card">
     <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
         <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
         <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
@@ -810,7 +795,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="mblancas">
+                <div class="card">
                     <div class="card-img-container" data-images="mblancas.jpg" data-count="1">
                         <img src="mblancas.jpg" class="card-img" alt="Medias Blancas">
                     </div>
@@ -829,7 +814,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="mnegras">
+                <div class="card">
                     <div class="card-img-container" data-images="mnegras.jpg" data-count="1">
                         <img src="mnegras.jpg" class="card-img" alt="Medias Negras">
                     </div>
@@ -854,10 +839,10 @@
                 "Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo actual."
             </div>
 
-            <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
+            <div class="section-title">👜 ACCESORIOS</div>
             <div class="grid">
 
-                <div class="card" data-product="bolsomovil">
+                <div class="card">
     <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
         <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
         <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
@@ -877,7 +862,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="gorrobebe">
+                <div class="card">
     <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position: relative;">
         <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé">
         <div class="hover-tooltip">Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.</div>
@@ -897,7 +882,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="gorra">
+                <div class="card">
     <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
         <img src="gorra.jpg" class="card-img" alt="Gorra">
         <div class="hover-tooltip">Diseño icónico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nítido. Un clásico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para máxima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
@@ -923,7 +908,7 @@
                 "¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y Entrega garantizadas."
             </div>
 
-            <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
+            <div class="section-title">⚡ SERVICIOS</div>
             <div class="grid">
                 <div class="card">
                     <div class="card-img-container" data-images="saldo.jpg" data-count="1">
@@ -937,7 +922,7 @@
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="btn-lo-quiero">Recarga YA</a>
                     </div>
                 </div>
-<div class="card" data-product="citybuy360familia">
+<div class="card">
     <div class="card-img-container" data-images="bolsas-azules.jpg" data-count="1" style="position: relative;">
         <img src="bolsas-azules.jpg" class="card-img" alt="Únete a CityBUY360">
         <div class="hover-tooltip">¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.</div>
@@ -988,62 +973,6 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // ── Tracking de visitas ──────────────────────────────────────────────────
-    const today = new Date().toISOString().split('T')[0];
-    db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1);
-
-    // ── Tracking de ventas al hacer clic en Lo quiero ────────────────────────
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.btn-lo-quiero');
-        if (!btn) return;
-        const card = btn.closest('[data-product]');
-        if (!card) return;
-        const pid = card.getAttribute('data-product');
-        if (pid) db.ref('sales/' + pid).transaction(c => (c || 0) + 1);
-    });
-
-    // ── Leer config admin: mostrar/ocultar secciones y productos ─────────────
-    db.ref('config').once('value', snap => {
-        const cfg = snap.val();
-        if (!cfg) return;
-        const now = new Date();
-
-        // Secciones
-        if (cfg.sections) {
-            Object.entries(cfg.sections).forEach(([secId, data]) => {
-                const titleEl = document.querySelector('[data-section="' + secId + '"]');
-                if (!titleEl) return;
-                let visible = data.active !== false;
-                if (visible && data.expires) {
-                    visible = new Date(data.expires) > now;
-                }
-                const gridEl = titleEl.nextElementSibling;
-                titleEl.style.display = visible ? '' : 'none';
-                if (gridEl) gridEl.style.display = visible ? '' : 'none';
-            });
-        }
-
-        // Productos
-        if (cfg.products) {
-            Object.entries(cfg.products).forEach(([pid, data]) => {
-                const cards = document.querySelectorAll('[data-product="' + pid + '"]');
-                cards.forEach(card => {
-                    const visible = data.active !== false;
-                    // Quitar overlay previo
-                    const old = card.querySelector('.no-disponible-overlay');
-                    if (old) old.remove();
-                    if (!visible) {
-                        const overlay = document.createElement('div');
-                        overlay.className = 'no-disponible-overlay';
-                        overlay.innerHTML = '<span>No disponible</span>';
-                        card.style.position = 'relative';
-                        card.appendChild(overlay);
-                    }
-                });
-            });
-        }
-    });
 
     // ===== ESTRELLAS =====
     function renderStars(starsEl, avg) {

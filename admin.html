@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — CityBUY360</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0d; --surface: #1a1a1a; --surface2: #242424;
+    --brand: #1565C0; --brand-light: #1e88e5;
+    --orange: #f57c00; --green: #2e7d32; --red: #c62828;
+    --text: #f0f0f0; --text-muted: #888; --border: #333;
+    --toggle-on: #1565C0; --toggle-off: #444;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; gap: 20px; padding: 30px;
+  }
+  .login-logo { font-size: 2rem; font-weight: 900; color: var(--brand-light); text-transform: uppercase; letter-spacing: 2px; }
+  .login-sub { color: var(--text-muted); font-size: 0.85rem; }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 16px; }
+  .login-box h2 { font-size: 1.1rem; color: var(--text-muted); text-align: center; }
+  .login-box input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 8px; font-size: 1rem; width: 100%; outline: none; }
+  .login-box input:focus { border-color: var(--brand-light); }
+  .login-box button { background: var(--brand); color: white; border: none; padding: 13px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .login-box button:hover { background: var(--brand-light); }
+  #login-error { color: #ef5350; font-size: 0.85rem; text-align: center; min-height: 18px; }
+
+  /* ── ADMIN PANEL ── */
+  #admin-panel { display: none; }
+  .admin-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .admin-header .logo { font-size: 1.1rem; font-weight: 900; color: var(--brand-light); }
+  .admin-header .logout { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+  .admin-header .logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── TABS ── */
+  .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; }
+  .tab-btn { background: none; border: none; color: var(--text-muted); padding: 14px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: var(--brand-light); border-bottom-color: var(--brand-light); }
+  .tab-content { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* ── TOGGLE SWITCH ── */
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--toggle-off); border-radius: 24px; cursor: pointer; transition: 0.2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: var(--toggle-on); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* ── SECCIONES ── */
+  .section-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  .section-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .section-header:hover { background: var(--surface2); }
+  .section-emoji { font-size: 1.2rem; }
+  .section-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
+  .section-arrow { color: var(--text-muted); transition: transform 0.2s; font-size: 0.8rem; }
+  .section-block.open .section-arrow { transform: rotate(90deg); }
+  .section-meta { display: flex; align-items: center; gap: 10px; }
+  .expiry-label { font-size: 0.75rem; color: var(--text-muted); }
+  .expiry-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; }
+  .expiry-input::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+  .products-list { border-top: 1px solid var(--border); display: none; }
+  .section-block.open .products-list { display: block; }
+  .product-row { display: flex; align-items: center; padding: 10px 16px 10px 42px; border-bottom: 1px solid #1e1e1e; gap: 12px; }
+  .product-row:last-child { border-bottom: none; }
+  .product-row-name { flex: 1; font-size: 0.85rem; color: var(--text-muted); }
+  .prod-status { font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .prod-status.on { background: rgba(46,125,50,0.2); color: #66bb6a; }
+  .prod-status.off { background: rgba(198,40,40,0.2); color: #ef5350; }
+
+  /* ── ANALYTICS ── */
+  .period-btns { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .period-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+  .period-btn.active { background: var(--brand); border-color: var(--brand); color: white; }
+  .chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-number { font-size: 1.8rem; font-weight: 900; color: var(--brand-light); }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── VENTAS ── */
+  .sales-table { width: 100%; border-collapse: collapse; }
+  .sales-table th { background: var(--surface2); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  .sales-table td { padding: 11px 14px; border-bottom: 1px solid #1e1e1e; font-size: 0.88rem; }
+  .sales-table tr:last-child td { border-bottom: none; }
+  .sales-table tr:hover td { background: var(--surface2); }
+  .sales-bar-wrap { background: var(--surface2); border-radius: 4px; height: 6px; width: 120px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 10px; }
+  .sales-bar { background: var(--brand-light); height: 100%; border-radius: 4px; }
+  .sales-total-chip { background: var(--brand); color: white; padding: 2px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; }
+  .section-title-admin { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .save-btn { background: var(--green); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .save-btn:hover { background: #388e3c; }
+  .save-chip { display: inline-block; background: #2e7d32; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.78rem; margin-left: 10px; opacity: 0; transition: opacity 0.4s; }
+  .save-chip.show { opacity: 1; }
+  .empty-state { text-align: center; color: var(--text-muted); padding: 40px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ LOGIN ══════════════════════ -->
+<div id="login-screen">
+  <div class="login-logo">CityBUY360</div>
+  <div class="login-sub">Panel de Administración</div>
+  <div class="login-box">
+    <h2>Acceso restringido</h2>
+    <input type="password" id="pwd-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')checkPwd()">
+    <button onclick="checkPwd()">Entrar</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ADMIN ══════════════════════ -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <span class="logo">CITYBUY360 · Admin</span>
+    <button class="logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('control',this)">🎛 Control</button>
+    <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
+    <button class="tab-btn" onclick="showTab('ventas',this)">💰 Ventas</button>
+  </div>
+
+  <!-- ── TAB: CONTROL ── -->
+  <div id="tab-control" class="tab-content active">
+    <div id="sections-container">
+      <div class="empty-state">Cargando configuración…</div>
+    </div>
+    <div style="margin-top:20px; display:flex; align-items:center; gap:12px;">
+      <button class="save-btn" onclick="saveConfig()">Guardar cambios</button>
+      <span class="save-chip" id="save-chip">✓ Guardado</span>
+    </div>
+  </div>
+
+  <!-- ── TAB: ANALÍTICAS ── -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-number" id="stat-hoy">—</div><div class="stat-label">Hoy</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-semana">—</div><div class="stat-label">Esta semana</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-mes">—</div><div class="stat-label">Este mes</div></div>
+    </div>
+    <div class="period-btns">
+      <button class="period-btn active" onclick="setPeriod('week',this)">Semana</button>
+      <button class="period-btn" onclick="setPeriod('month',this)">Mes</button>
+      <button class="period-btn" onclick="setPeriod('year',this)">Año</button>
+    </div>
+    <div class="chart-box">
+      <canvas id="visits-chart" height="80"></canvas>
+    </div>
+  </div>
+
+  <!-- ── TAB: VENTAS ── -->
+  <div id="tab-ventas" class="tab-content">
+    <table class="sales-table">
+      <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th></tr></thead>
+      <tbody id="sales-tbody"><tr><td colspan="3" class="empty-state">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const PASS = 'CityBUY360/-+*';
+const firebaseConfig = {
+  apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
+  authDomain: "citybuy360.firebaseapp.com",
+  databaseURL: "https://citybuy360-default-rtdb.firebaseio.com",
+  projectId: "citybuy360",
+  storageBucket: "citybuy360.firebasestorage.app",
+  messagingSenderId: "701999748308",
+  appId: "1:701999748308:web:85c320687f6eb10471d741"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── Datos del catálogo ────────────────────────────────────────────────────────
+const SECTIONS = [
+  { id: 'destacado',     emoji: '⭐', name: 'LO MÁS DESTACADO',  products: ['blumer','gorra','freedom','bolsomovil'] },
+  { id: 'ropa-interior', emoji: '👙', name: 'ROPA INTERIOR',      products: ['blumer','sujetador'] },
+  { id: 'ropa-moda',     emoji: '👕', name: 'ROPA Y MODA',        products: ['paris','ngu','gdm','aac','usa','freedom','mblancas','mnegras'] },
+  { id: 'accesorios',    emoji: '👜', name: 'ACCESORIOS',         products: ['bolsomovil','gorrobebe','gorra'] },
+  { id: 'servicios',     emoji: '⚡', name: 'SERVICIOS',          products: ['saldo','citybuy360familia'] },
+];
+const PRODUCT_NAMES = {
+  blumer:'Blumer sin costuras', gorra:'Gorra', freedom:'Pulover FREEDOM',
+  bolsomovil:'Bolso Bandolera', sujetador:'Ajustador sin costuras',
+  paris:'Pulover PARIS', ngu:'Pulover NEVER GIVE UP', gdm:'Pulóver GREAT DREAM MAKER',
+  aac:'Pulover Amor, Alegría y Cerveza', usa:'Pulover USA',
+  mblancas:'Medias Blancas', mnegras:'Medias Negras',
+  gorrobebe:'Gorro para bebé', saldo:'Comprar Saldo — Recargas 360',
+  citybuy360familia:'Únete a la familia CityBUY360'
+};
+
+// Estado local en memoria
+let cfg = { sections: {}, products: {} };
+let visitsData = {};
+let salesData = {};
+let chart = null;
+let currentPeriod = 'week';
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function checkPwd() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('login-error').textContent = 'Contraseña incorrecta';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+function logout() {
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pwd-input').value = '';
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function initAdmin() {
+  db.ref('config').once('value', snap => {
+    const data = snap.val() || {};
+    cfg.sections = data.sections || {};
+    cfg.products = data.products || {};
+    renderControl();
+  });
+  db.ref('analytics/visits').once('value', snap => {
+    visitsData = snap.val() || {};
+    renderAnalytics();
+  });
+  db.ref('sales').once('value', snap => {
+    salesData = snap.val() || {};
+    renderSales();
+  });
+}
+
+// ── CONTROL ───────────────────────────────────────────────────────────────────
+function renderControl() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
+  SECTIONS.forEach(sec => {
+    const secCfg = cfg.sections[sec.id] || { active: true, expires: '' };
+    const block = document.createElement('div');
+    block.className = 'section-block';
+    block.innerHTML = `
+      <div class="section-header" onclick="toggleBlock(this)">
+        <span class="section-emoji">${sec.emoji}</span>
+        <span class="section-name">${sec.name}</span>
+        <span class="section-meta" onclick="event.stopPropagation()">
+          <span class="expiry-label">Expira:</span>
+          <input type="date" class="expiry-input" data-sec="${sec.id}" value="${secCfg.expires||''}" onchange="onExpiryChange(this)">
+          <label class="toggle">
+            <input type="checkbox" data-sec="${sec.id}" ${secCfg.active!==false?'checked':''} onchange="onSectionToggle(this)">
+            <span class="toggle-slider"></span>
+          </label>
+        </span>
+        <span class="section-arrow">▶</span>
+      </div>
+      <div class="products-list" id="prod-list-${sec.id}">
+        ${sec.products.map(pid => {
+          const pCfg = cfg.products[pid] || { active: true };
+          const on = pCfg.active !== false;
+          return `<div class="product-row">
+            <span class="product-row-name">${PRODUCT_NAMES[pid]||pid}</span>
+            <span class="prod-status ${on?'on':'off'}" id="pstatus-${pid}">${on?'Activo':'Inactivo'}</span>
+            <label class="toggle">
+              <input type="checkbox" data-prod="${pid}" ${on?'checked':''} onchange="onProductToggle(this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>`;
+        }).join('')}
+      </div>`;
+    container.appendChild(block);
+  });
+}
+
+function toggleBlock(header) {
+  header.parentElement.classList.toggle('open');
+}
+function onSectionToggle(input) {
+  const id = input.dataset.sec;
+  if (!cfg.sections[id]) cfg.sections[id] = { active: true, expires: '' };
+  cfg.sections[id].active = input.checked;
+}
+function onExpiryChange(input) {
+  const id = input.dataset.sec;
+  if (!cfg.sections[id]) cfg.sections[id] = { active: true, expires: '' };
+  cfg.sections[id].expires = input.value;
+}
+function onProductToggle(input) {
+  const pid = input.dataset.prod;
+  if (!cfg.products[pid]) cfg.products[pid] = { active: true };
+  cfg.products[pid].active = input.checked;
+  const chip = document.getElementById('pstatus-' + pid);
+  if (chip) { chip.textContent = input.checked?'Activo':'Inactivo'; chip.className='prod-status '+(input.checked?'on':'off'); }
+}
+function saveConfig() {
+  db.ref('config').set(cfg).then(() => {
+    const chip = document.getElementById('save-chip');
+    chip.classList.add('show');
+    setTimeout(() => chip.classList.remove('show'), 2500);
+  });
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────────────
+function setPeriod(period, btn) {
+  currentPeriod = period;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  // Stats top
+  let hoy = visitsData[todayStr] || 0;
+  let semana = 0, mes = 0;
+  Object.entries(visitsData).forEach(([d, v]) => {
+    const date = new Date(d);
+    const diff = (now - date) / 86400000;
+    if (diff < 7) semana += v;
+    if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) mes += v;
+  });
+  document.getElementById('stat-hoy').textContent = hoy;
+  document.getElementById('stat-semana').textContent = semana;
+  document.getElementById('stat-mes').textContent = mes;
+
+  // Generar labels y datos según período
+  let labels = [], values = [];
+  if (currentPeriod === 'week') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      labels.push(d.toLocaleDateString('es',{weekday:'short'}));
+      values.push(visitsData[key] || 0);
+    }
+  } else if (currentPeriod === 'month') {
+    const days = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    for (let i = 1; i <= days; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), i);
+      const key = d.toISOString().split('T')[0];
+      labels.push(i);
+      values.push(visitsData[key] || 0);
+    }
+  } else {
+    for (let m = 0; m < 12; m++) {
+      const mName = new Date(now.getFullYear(), m, 1).toLocaleDateString('es',{month:'short'});
+      labels.push(mName);
+      let total = 0;
+      Object.entries(visitsData).forEach(([d,v]) => {
+        const date = new Date(d);
+        if (date.getFullYear() === now.getFullYear() && date.getMonth() === m) total += v;
+      });
+      values.push(total);
+    }
+  }
+
+  const ctx = document.getElementById('visits-chart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Visitas', data: values, backgroundColor: '#1565C0', borderRadius: 6 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888' }, grid: { color: '#222' } },
+        y: { ticks: { color: '#888', stepSize: 1 }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ── VENTAS ────────────────────────────────────────────────────────────────────
+function renderSales() {
+  const tbody = document.getElementById('sales-tbody');
+  const entries = Object.entries(salesData).sort((a,b) => b[1]-a[1]);
+  if (!entries.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Sin ventas registradas aún</td></tr>';
+    return;
+  }
+  const max = Math.max(...entries.map(e => e[1]));
+  let html = '';
+  // Agrupar por sección
+  SECTIONS.forEach(sec => {
+    const secEntries = entries.filter(([pid]) => sec.products.includes(pid));
+    if (!secEntries.length) return;
+    html += `<tr><td colspan="3"><div class="section-title-admin">${sec.emoji} ${sec.name}</div></td></tr>`;
+    secEntries.forEach(([pid, count]) => {
+      const pct = Math.round((count/max)*100);
+      html += `<tr>
+        <td>${PRODUCT_NAMES[pid]||pid}</td>
+        <td style="color:var(--text-muted);font-size:0.8rem">${sec.name}</td>
+        <td>
+          <span class="sales-total-chip">${count}</span>
+          <span class="sales-bar-wrap"><span class="sales-bar" style="width:${pct}%"></span></span>
+        </td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html;
+}
+</script>
+</body>
+</html>
