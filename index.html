@@ -140,24 +140,11 @@
             .stars-container { display: none; }
             .tag-category { display: none; }
             .details-block { display: none; }
-    
-        .no-disponible-overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,0.6);
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 12px; z-index: 10;
-        }
-        .no-disponible-overlay span {
-            background: #e53935; color: white;
-            padding: 6px 18px; border-radius: 20px;
-            font-weight: 700; font-size: 0.9rem;
-            letter-spacing: 0.5px;
-        }
-        .section-title { font-size: 0.9rem; padding: 10px 12px; }
+            .section-title { font-size: 0.9rem; padding: 10px 12px; }
         }
 
         .section-title { 
-            background: white; padding: 15px 25px; margin: 15px 0; font-weight: bold; 
+            background: white; padding: 15px 25px; margin: 4px 0 15px; font-weight: bold; 
             text-transform: uppercase; border-left: 6px solid var(--brand-orange-dark);
             font-size: 1.1rem; text-align: center; color: #111;
         }
@@ -206,6 +193,7 @@
         .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 8px; min-height: 2.4em; }
         .details-block { font-size: 0.8rem; color: #666; margin-bottom: 12px; line-height: 1.4; flex-grow: 1; }
         .price { font-size: 1.4rem; color: var(--price-green); font-weight: 800; margin-top: auto; }
+        .ventas-counter { font-size: 0.75rem; color: #888; margin-top: 3px; }
         .btn-lo-quiero { 
             display: block; text-align: center; background: var(--brand-blue); color: white; 
             text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 15px;
@@ -335,13 +323,13 @@
             position: fixed;
             background: rgba(255, 255, 255, 0.95);
             color: #111;
-            font-size: 0.72rem;
-            line-height: 1.5;
-            padding: 10px 12px;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            padding: 12px 14px;
             border-radius: 8px;
             overflow-y: auto;
-            max-height: 200px;
-            width: 220px;
+            max-height: 220px;
+            width: 260px;
             z-index: 99999;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             pointer-events: none;
@@ -525,8 +513,8 @@
 
         <div class="slide" style="background: linear-gradient(135deg, #004e92, #000428); display: none;">
             <div>
-                <div class="slide-label" style="color: #00d4ff;">Emprendedores</div>
-                <div class="slide-title" style="font-size: 1.2rem;">Publica tus productos en nuestro catálogo digital</div>
+                <div class="slide-label" style="color: #00d4ff;">EMPRENDEDORES</div>
+                <div class="slide-title">¡Vende con nosotros!</div>
             </div>
             <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" class="slide-cta" style="color: #004e92;">Contáctanos</a>
         </div>
@@ -1028,17 +1016,10 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         if (cfg.products) {
             Object.entries(cfg.products).forEach(([pid, data]) => {
                 const cards = document.querySelectorAll('[data-product="' + pid + '"]');
+                const visible = data.active !== false;
                 cards.forEach(card => {
-                    const visible = data.active !== false;
-                    // Quitar overlay previo
-                    const old = card.querySelector('.no-disponible-overlay');
-                    if (old) old.remove();
-                    if (!visible) {
-                        const overlay = document.createElement('div');
-                        overlay.className = 'no-disponible-overlay';
-                        overlay.innerHTML = '<span>No disponible</span>';
-                        card.style.position = 'relative';
-                        card.appendChild(overlay);
+                    if (card.classList.contains('card')) {
+                        card.style.display = visible ? '' : 'none';
                     }
                 });
             });
