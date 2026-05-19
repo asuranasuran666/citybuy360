@@ -144,12 +144,12 @@
         }
 
         .section-title { 
-            background: white; padding: 15px 25px; margin: 4px 0 15px; font-weight: bold; 
+            background: white; padding: 15px 25px; margin: 4px 0 6px; font-weight: bold; 
             text-transform: uppercase; border-left: 6px solid var(--brand-orange-dark);
             font-size: 1.1rem; text-align: center; color: #111;
         }
 
-        .products-container { padding: 0 20px 40px; width: 100%; box-sizing: border-box; }
+        .products-container { padding: 4px 20px 40px; width: 100%; box-sizing: border-box; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .grid-destacado { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 
@@ -161,6 +161,7 @@
             padding: 10px; border-bottom: 1px solid #eee;
             cursor: pointer;
             position: relative;
+            overflow: hidden;
         }
         .card-img-container:hover::after {
             content: "🔍";
@@ -187,7 +188,8 @@
             font-weight: 700;
         }
 
-        .card-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .card-img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.35s ease; }
+        .card-img-container:hover .card-img { transform: scale(1.08); }
         .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
         .tag-category { font-size: 0.75rem; color: var(--tag-orange); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
         .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 8px; min-height: 2.4em; }
@@ -913,13 +915,19 @@
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid">
-                <div class="card">
+                <div class="card" data-product="saldo">
                     <div class="card-img-container" data-images="saldo.jpg" data-count="1">
                         <img src="saldo.jpg" class="card-img" alt="Comprar Saldo - Recargas 360">
                     </div>
                     <div class="card-content">
                         <div class="tag-category">SERVICIOS</div>
                         <div class="product-name">COMPRAR SALDO (RECARGAS)</div>
+                        <div class="stars-container" data-product="saldo">
+                            <div class="stars">
+                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
                         <div class="details-block">Recargas 360 SALDO</div>
                         <div class="price">1,000 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="btn-lo-quiero">Recarga YA</a>
@@ -1016,7 +1024,10 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         if (cfg.products) {
             Object.entries(cfg.products).forEach(([pid, data]) => {
                 const cards = document.querySelectorAll('[data-product="' + pid + '"]');
-                const visible = data.active !== false;
+                let visible = data.active !== false;
+                if (visible && data.expires) {
+                    visible = new Date(data.expires) > now;
+                }
                 cards.forEach(card => {
                     if (card.classList.contains('card')) {
                         card.style.display = visible ? '' : 'none';

@@ -65,7 +65,11 @@
   .section-arrow { color: var(--text-muted); transition: transform 0.2s; font-size: 0.8rem; }
   .section-block.open .section-arrow { transform: rotate(90deg); }
   .section-meta { display: flex; align-items: center; gap: 10px; }
-  .expiry-label { font-size: 0.75rem; color: var(--text-muted); }
+  .dest-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); transition: all 0.2s; }
+  .dest-btn:hover { border-color: #f5a623; color: #f5a623; }
+  .dest-btn.active { border-color: #f5a623; background: rgba(245,166,35,0.15); color: #f5a623; }
+  .mod-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 0.8rem; color: var(--text-muted); }
+  .mod-btn:hover { border-color: var(--brand-light); color: var(--brand-light); }
   .expiry-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; }
   .expiry-input::-webkit-calendar-picker-indicator { filter: invert(1); }
 
@@ -683,8 +687,13 @@ function renderControl() {
         ${sec.products.map(pid => {
           const pCfg = cfg.products[pid] || { active: true };
           const on = pCfg.active !== false;
+          const isDestacado = sec.id === 'destacado';
           return `<div class="product-row">
             <span class="product-row-name">${PRODUCT_NAMES[pid]||pid}</span>
+            <span class="expiry-label">Expira:</span>
+            <input type="date" class="expiry-input" data-prod-exp="${pid}" value="${pCfg.expires||''}" onchange="onProductExpiryChange(this)">
+            ${!isDestacado ? `<button class="dest-btn" id="dest-${pid}" onclick="toggleDestacado('${pid}',this)" title="Añadir/quitar de Destacados">⭐</button>` : ''}
+            <button class="mod-btn" onclick="editProduct('${pid}')" title="Modificar producto">✏️</button>
             <span class="prod-status ${on?'on':'off'}" id="pstatus-${pid}">${on?'Activo':'Inactivo'}</span>
             <label class="toggle">
               <input type="checkbox" data-prod="${pid}" ${on?'checked':''} onchange="onProductToggle(this)">
@@ -710,9 +719,136 @@ function onExpiryChange(input) {
   if (!cfg.sections[id]) cfg.sections[id] = { active: true, expires: '' };
   cfg.sections[id].expires = input.value;
 }
+function editProduct(pid) {
+  // Ir al tab Nuevo producto
+  const tabBtn = document.querySelector('.tab-btn:last-child');
+  showTab('nuevo', tabBtn);
+  // Marcar como modo edición
+  document.getElementById('publish-btn').textContent = '💾 Guardar cambios';
+  document.getElementById('publish-btn').dataset.editPid = pid;
+  // Intentar cargar datos desde el index via fetch
+  fetch('index.html').then(r=>r.text()).then(text => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    const card = doc.querySelector(`[data-product="${pid}"].card`);
+    if (!card) { alert('Producto no encontrado en el index'); return; }
+    const nameEl = card.querySelector('.product-name');
+    const priceEl = card.querySelector('.price');
+    const detailsEl = card.querySelector('.details-block');
+    const tooltipEl = card.querySelector('.hover-tooltip');
+    const imgContainer = card.querySelector('.card-img-container');
+    if (nameEl) document.getElementById('prod-name').value = nameEl.textContent.trim();
+    if (priceEl) document.getElementById('prod-price').value = priceEl.textContent.replace(' MN','').replace(',','').trim();
+    if (detailsEl) {
+      const text = detailsEl.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+      const lines = text.split('\n');
+      lines.forEach(line => {
+        if (line.startsWith('Tallas:')) document.getElementById('prod-tallas').value = line.replace('Tallas:','').trim();
+        else if (line.startsWith('Colores:')) document.getElementById('prod-colores').value = line.replace('Colores:','').trim();
+        else document.getElementById('prod-desc').value = line.trim();
+      });
+    }
+    if (tooltipEl) document.getElementById('prod-tooltip').value = tooltipEl.textContent.trim();
+    // Buscar sección del producto
+    const SECTIONS_LOCAL = SECTIONS;
+    const sec = SECTIONS_LOCAL.find(s => s.products.includes(pid));
+    if (sec) document.getElementById('prod-seccion').value = sec.id;
+    // Mostrar foto actual
+    if (imgContainer) {
+      const imgs = (imgContainer.dataset.images||'').split(',');
+      uploadedPhotos = imgs.filter(Boolean).map((name,i) => ({
+        name, base64: null, dataUrl: name, ext: name.split('.').pop()
+      }));
+      renderPreviews();
+    }
+    alert(`Editando: ${nameEl?nameEl.textContent.trim():pid}\n\nModifica los campos y pulsa "Guardar cambios". Las fotos actuales se mantienen si no subes nuevas.`);
+  }).catch(e => alert('Error cargando producto: ' + e.message));
+}
+
+async function toggleDestacado(pid, btn) {
+  const token = localStorage.getItem('gh_token');
+  if (!token) { alert('Necesitas el token de GitHub en el tab Nuevo producto'); return; }
+  btn.disabled = true;
+  try {
+    const indexFile = await ghGet('index.html');
+    let indexHTML = atob(indexFile.content.replace(/\n/g,''));
+    const destSection = SECTIONS.find(s => s.id === 'destacado');
+    const cardEl = document.querySelector(`[data-section="destacado"]`);
+
+    // Buscar si el producto ya está en Destacados
+    const destMarker = `data-section="destacado"`;
+    const destIdx = indexHTML.indexOf(destMarker);
+    const gridStart = indexHTML.indexOf('<div class="grid', destIdx);
+    let depth = 0, pos = gridStart, gridEnd = -1;
+    while (pos < indexHTML.length) {
+      if (indexHTML.slice(pos,pos+4)==='<div'){depth++;pos+=4;}
+      else if (indexHTML.slice(pos,pos+6)==='</div>'){depth--;if(depth===0){gridEnd=pos;break;}pos+=6;}
+      else pos++;
+    }
+    const gridContent = indexHTML.slice(gridStart, gridEnd+6);
+    const alreadyIn = gridContent.includes(`data-product="${pid}"`);
+
+    if (alreadyIn) {
+      // Quitar de Destacados: encontrar y eliminar la card
+      const cardStart = gridContent.indexOf(`data-product="${pid}"`);
+      const beforeCard = gridContent.lastIndexOf('<div class="card"', cardStart);
+      let d2=0, p2=beforeCard;
+      while(p2<gridContent.length){
+        if(gridContent.slice(p2,p2+4)==='<div'){d2++;p2+=4;}
+        else if(gridContent.slice(p2,p2+6)==='</div>'){d2--;if(d2===0){p2+=6;break;}p2+=6;}
+        else p2++;
+      }
+      const newGrid = gridContent.slice(0, beforeCard) + gridContent.slice(p2).trimStart();
+      indexHTML = indexHTML.slice(0, gridStart) + newGrid + indexHTML.slice(gridEnd+6);
+      btn.classList.remove('active');
+      btn.title = 'Añadir a Destacados';
+    } else {
+      // Añadir a Destacados: copiar la card de su sección original
+      const prodSec = SECTIONS.find(s => s.products.includes(pid) && s.id !== 'destacado');
+      if (!prodSec) { alert('Producto no encontrado en ninguna sección'); btn.disabled=false; return; }
+      const secMarker = `data-section="${prodSec.id}"`;
+      const secIdx = indexHTML.indexOf(secMarker);
+      const secGrid = indexHTML.indexOf('<div class="grid', secIdx);
+      let d3=0, p3=secGrid;
+      while(p3<indexHTML.length){
+        if(indexHTML.slice(p3,p3+4)==='<div'){d3++;p3+=4;}
+        else if(indexHTML.slice(p3,p3+6)==='</div>'){d3--;if(d3===0){p3+=6;break;}p3+=6;}
+        else p3++;
+      }
+      const secGrid2 = indexHTML.slice(secGrid, p3);
+      const cStart2 = secGrid2.indexOf(`data-product="${pid}"`);
+      const bCard2 = secGrid2.lastIndexOf('<div class="card"', cStart2);
+      let d4=0, p4=bCard2;
+      while(p4<secGrid2.length){
+        if(secGrid2.slice(p4,p4+4)==='<div'){d4++;p4+=4;}
+        else if(secGrid2.slice(p4,p4+6)==='</div>'){d4--;if(d4===0){p4+=6;break;}p4+=6;}
+        else p4++;
+      }
+      const cardCopy = '\n' + secGrid2.slice(bCard2, p4);
+      const insertAt2 = gridEnd;
+      indexHTML = indexHTML.slice(0, insertAt2) + cardCopy + '\n            ' + indexHTML.slice(insertAt2);
+      btn.classList.add('active');
+      btn.title = 'Quitar de Destacados';
+    }
+
+    const newContent64 = btoa(unescape(encodeURIComponent(indexHTML)));
+    await ghPut('index.html', newContent64, `${alreadyIn?'quitar':'añadir'} ${pid} de destacados`, indexFile.sha);
+    alert(alreadyIn ? `${pid} quitado de Destacados. Render desplegará en ~2 min.` : `${pid} añadido a Destacados. Render desplegará en ~2 min.`);
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function onProductExpiryChange(input) {
+  const pid = input.dataset.prodExp;
+  if (!cfg.products[pid]) cfg.products[pid] = { active: true, expires: '' };
+  cfg.products[pid].expires = input.value;
+}
 function onProductToggle(input) {
   const pid = input.dataset.prod;
-  if (!cfg.products[pid]) cfg.products[pid] = { active: true };
+  if (!cfg.products[pid]) cfg.products[pid] = { active: true, expires: '' };
   cfg.products[pid].active = input.checked;
   const chip = document.getElementById('pstatus-' + pid);
   if (chip) { chip.textContent = input.checked?'Activo':'Inactivo'; chip.className='prod-status '+(input.checked?'on':'off'); }
