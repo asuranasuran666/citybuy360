@@ -302,23 +302,61 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ── Datos del catálogo ────────────────────────────────────────────────────────
-const SECTIONS = [
-  { id: 'destacado',     emoji: '⭐', name: 'LO MÁS DESTACADO',  products: ['blumer','gorra','freedom','bolsomovil'] },
-  { id: 'ropa-interior', emoji: '👙', name: 'ROPA INTERIOR',      products: ['blumer','sujetador'] },
-  { id: 'ropa-moda',     emoji: '👕', name: 'ROPA Y MODA',        products: ['paris','ngu','gdm','aac','usa','freedom','mblancas','mnegras'] },
-  { id: 'accesorios',    emoji: '👜', name: 'ACCESORIOS',         products: ['bolsomovil','gorrobebe','gorra'] },
-  { id: 'servicios',     emoji: '⚡', name: 'SERVICIOS',          products: ['saldo','citybuy360familia'] },
-];
-const PRODUCT_NAMES = {
-  blumer:'Blumer sin costuras', gorra:'Gorra', freedom:'Pulover FREEDOM',
-  bolsomovil:'Bolso Bandolera', sujetador:'Ajustador sin costuras',
-  paris:'Pulover PARIS', ngu:'Pulover NEVER GIVE UP', gdm:'Pulóver GREAT DREAM MAKER',
-  aac:'Pulover Amor, Alegría y Cerveza', usa:'Pulover USA',
-  mblancas:'Medias Blancas', mnegras:'Medias Negras',
-  gorrobebe:'Gorro para bebé', saldo:'Comprar Saldo — Recargas 360',
-  citybuy360familia:'Únete a la familia CityBUY360'
-};
+// ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
+let SECTIONS = [];
+let PRODUCT_NAMES = {};
+
+async function loadStructureFromIndex() {
+  try {
+    const res = await fetch('index.html');
+    const text = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    const secEls = doc.querySelectorAll('[data-section]');
+    SECTIONS = [];
+    PRODUCT_NAMES = {};
+    secEls.forEach(secEl => {
+      const secId = secEl.getAttribute('data-section');
+      const fullTitle = secEl.textContent.trim();
+      const emojiMatch = fullTitle.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u);
+      const emoji = emojiMatch ? emojiMatch[0].trim() : '';
+      const name  = fullTitle.replace(emoji, '').trim();
+      let grid = secEl.nextElementSibling;
+      const productIds = [];
+      if (grid) {
+        grid.querySelectorAll('[data-product]').forEach(card => {
+          const pid = card.getAttribute('data-product');
+          if (!pid || productIds.includes(pid)) return;
+          productIds.push(pid);
+          const nameEl = card.querySelector('.product-name');
+          if (nameEl && !PRODUCT_NAMES[pid]) PRODUCT_NAMES[pid] = nameEl.textContent.trim();
+        });
+      }
+      if (secId) SECTIONS.push({ id: secId, emoji, name, products: productIds });
+    });
+    console.log('Estructura cargada:', SECTIONS.length, 'secciones,', Object.keys(PRODUCT_NAMES).length, 'productos');
+  } catch(e) {
+    console.warn('No se pudo cargar index.html:', e);
+    // Fallback hardcodeado
+    SECTIONS = [
+      { id:'destacado',     emoji:'⭐', name:'LO MÁS DESTACADO',  products:['blumer','gorra','freedom','bolsomovil'] },
+      { id:'ropa-interior', emoji:'👙', name:'ROPA INTERIOR',      products:['blumer','sujetador'] },
+      { id:'ropa-moda',     emoji:'👕', name:'ROPA Y MODA',        products:['paris','ngu','gdm','aac','usa','freedom','mblancas','mnegras'] },
+      { id:'accesorios',    emoji:'👜', name:'ACCESORIOS',         products:['bolsomovil','gorrobebe','gorra'] },
+      { id:'servicios',     emoji:'⚡', name:'SERVICIOS',          products:['saldo','citybuy360familia'] },
+    ];
+    PRODUCT_NAMES = {
+      blumer:'Blumer sin costuras', gorra:'Gorra', freedom:'Pulover FREEDOM',
+      bolsomovil:'Bolso Bandolera', sujetador:'Ajustador sin costuras',
+      paris:'Pulover PARIS', ngu:'Pulover NEVER GIVE UP', gdm:'Pulóver GREAT DREAM MAKER',
+      aac:'Pulover Amor, Alegría y Cerveza', usa:'Pulover USA',
+      mblancas:'Medias Blancas', mnegras:'Medias Negras',
+      gorrobebe:'Gorro para bebé', saldo:'Comprar Saldo — Recargas 360',
+      citybuy360familia:'Únete a la familia CityBUY360'
+    };
+  }
+}
+
 
 // Estado local en memoria
 let cfg = { sections: {}, products: {} };
