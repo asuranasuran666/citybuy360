@@ -226,32 +226,53 @@
 
         /* ── BARRA NAVEGACIÓN INFERIOR ── */
         #bottom-nav {
-            display: none; position: fixed; bottom: 0; left: 0; right: 0;
-            background: #111; border-top: 1px solid #222;
-            z-index: 200; height: 60px;
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15,15,15,0.97);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #2a2a2a;
+            z-index: 200; height: 58px;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
         }
         #bottom-nav ul {
-            list-style: none; display: flex; height: 100%;
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            height: 100%;
             margin: 0; padding: 0;
+            width: 100%;
         }
         #bottom-nav ul li {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            cursor: pointer; gap: 3px; transition: background 0.2s;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            gap: 3px;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
-        #bottom-nav ul li:hover { background: #1a1a1a; }
-        #bottom-nav ul li.active { color: var(--brand-blue); }
-        #bottom-nav ul li .nav-icon { font-size: 1.2rem; line-height: 1; }
-        #bottom-nav ul li .nav-label { font-size: 0.65rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        #bottom-nav ul li:active { background: #1a1a1a; }
+        #bottom-nav ul li .nav-icon {
+            font-size: 1.15rem;
+            line-height: 1;
+            display: block;
+        }
+        #bottom-nav ul li .nav-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+        }
         #bottom-nav ul li.active .nav-label { color: var(--brand-blue); }
-        .nav-acceso .nav-icon { 
-            background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
-            background-size: 200% 200%; animation: goldshine 3s ease infinite;
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        @media (max-width: 1024px) { #bottom-nav { display: flex; } }
-        body.has-bottom-nav .products-container { padding-bottom: 70px; }
+        #bottom-nav ul li.active .nav-icon { filter: brightness(1.5); }
+        .nav-acceso .nav-label { color: #b8860b !important; }
+        @media (max-width: 1024px) { #bottom-nav { display: block; } }
+        body.has-bottom-nav { padding-bottom: 58px; }
         .badge-360 {
             display: inline-block;
             background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
@@ -572,6 +593,8 @@
         /* ===== CARRUSEL ===== */
         @media (min-width: 1025px) {
             .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+            .card-nav-btn { display: none !important; }
+            .card-photo-dots { display: none !important; }
         }
     </style>
 </head>
@@ -597,13 +620,6 @@
     <button id="bs-ver-foto">📷 Ver foto</button>
 </div>
 
-<div id="cat-bar">
-        <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
-        <button class="cat-btn" onclick="filterCat('mujer',this)">Mujer</button>
-        <button class="cat-btn" onclick="filterCat('hombre',this)">Hombre</button>
-        <button class="cat-btn" onclick="filterCat('unisex',this)">Unisex</button>
-        <button class="cat-btn" onclick="filterCat('ninos',this)">Niños</button>
-    </div>
 <div class="page-wrapper">
     <div class="main-content">
         
@@ -673,6 +689,14 @@
         </div>
     </div>
 </header>
+
+<div id="cat-bar">
+    <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
+    <button class="cat-btn" onclick="filterCat('mujer',this)">Mujer</button>
+    <button class="cat-btn" onclick="filterCat('hombre',this)">Hombre</button>
+    <button class="cat-btn" onclick="filterCat('unisex',this)">Unisex</button>
+    <button class="cat-btn" onclick="filterCat('ninos',this)">Niños</button>
+</div>
 
         <div class="products-container">
 
