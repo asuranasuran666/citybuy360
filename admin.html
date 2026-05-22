@@ -104,6 +104,32 @@
   .section-title-admin { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
   .save-btn { background: var(--green); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
   .save-btn:hover { background: #388e3c; }
+
+  /* ── PRECIOS ── */
+  .price-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #1e1e1e; gap: 12px; }
+  .price-row:last-child { border-bottom: none; }
+  .price-prod-name { flex: 1; font-size: 0.88rem; }
+  .price-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 700; width: 130px; outline: none; }
+  .price-input:focus { border-color: var(--brand-light); }
+  .price-unit { font-size: 0.78rem; color: var(--text-muted); }
+
+  /* ── INTERFAZ ── */
+  .interfaz-row { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #1e1e1e; gap: 12px; }
+  .interfaz-row:last-child { border-bottom: none; }
+  .interfaz-name { flex: 1; font-size: 0.88rem; }
+  .interfaz-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── ACCESO 360 ── */
+  .code-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #1e1e1e; gap: 12px; }
+  .code-row:last-child { border-bottom: none; }
+  .code-chip { font-family: monospace; font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; color: #ffd700; flex: 1; }
+  .code-status { font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .code-status.on { background: rgba(46,125,50,0.2); color: #66bb6a; }
+  .code-status.off { background: rgba(198,40,40,0.2); color: #ef5350; }
+  .add-code-row { display: flex; gap: 8px; padding: 14px 16px; }
+  .add-code-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; font-family: monospace; letter-spacing: 2px; text-transform: uppercase; outline: none; }
+  .add-code-btn { background: var(--brand); color: white; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.85rem; }
+  .gold-label { color: #ffd700; font-weight: 700; }
   .save-chip { display: inline-block; background: #2e7d32; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.78rem; margin-left: 10px; opacity: 0; transition: opacity 0.4s; }
   .save-chip.show { opacity: 1; }
   .empty-state { text-align: center; color: var(--text-muted); padding: 40px; font-size: 0.9rem; }
@@ -182,6 +208,9 @@
     <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
     <button class="tab-btn" onclick="showTab('ventas',this)">💰 Ventas</button>
     <button class="tab-btn" onclick="showTab('nuevo',this)">➕ Nuevo producto</button>
+    <button class="tab-btn" onclick="showTab('precios',this)">💲 Precios</button>
+    <button class="tab-btn" onclick="showTab('interfaz',this)">🖥 Interfaz</button>
+    <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
   </div>
 
   <!-- ── TAB: CONTROL ── -->
@@ -281,6 +310,69 @@
 
     <button class="publish-btn" id="publish-btn" onclick="publishProduct()">🚀 Publicar producto</button>
     <div class="publish-log" id="publish-log"></div>
+  </div>
+
+
+  <!-- ── TAB: PRECIOS ── -->
+  <div id="tab-precios" class="tab-content">
+    <div id="prices-container" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div class="empty-state">Cargando precios…</div>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
+      <button class="save-btn" onclick="savePrices()">Guardar precios</button>
+      <span class="save-chip" id="prices-chip">✓ Guardado</span>
+    </div>
+  </div>
+
+  <!-- ── TAB: INTERFAZ ── -->
+  <div id="tab-interfaz" class="tab-content">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;" id="interfaz-container">
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Barra de categorías</div><div class="interfaz-desc">Todos, Mujer, Hombre, Unisex — visible bajo el header</div></div>
+        <label class="toggle"><input type="checkbox" id="if-catbar" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Slider del header</div><div class="interfaz-desc">Las 6 slides con ofertas y promociones</div></div>
+        <label class="toggle"><input type="checkbox" id="if-slider" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Badge Acceso 360</div><div class="interfaz-desc">El pase dorado en el header y la sección exclusiva</div></div>
+        <label class="toggle"><input type="checkbox" id="if-acceso360" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Barra de navegación inferior</div><div class="interfaz-desc">Inicio, Categorías, Acceso 360 — fija en móvil</div></div>
+        <label class="toggle"><input type="checkbox" id="if-bottomnav" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Lifestyle ribbons</div><div class="interfaz-desc">Franjas de texto motivacional entre secciones</div></div>
+        <label class="toggle"><input type="checkbox" id="if-ribbons" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: ACCESO 360 ── -->
+  <div id="tab-acceso360" class="tab-content">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+        <span class="gold-label" style="flex:1;font-size:1rem">✦ Sección ACCESO 360</span>
+        <label class="toggle"><input type="checkbox" id="acceso-seccion-toggle" onchange="toggleAcceso360Seccion(this)"><span class="toggle-slider"></span></label>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-size:0.8rem;color:var(--text-muted)">Cuando está activa, la sección aparece al final del catálogo. Los visitantes necesitan un código válido para ver el contenido.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span class="gold-label">Códigos de acceso</span>
+        <span style="font-size:0.75rem;color:var(--text-muted)" id="codes-count">Cargando…</span>
+      </div>
+      <div id="codes-list"><div class="empty-state">Cargando códigos…</div></div>
+      <div class="add-code-row">
+        <input type="text" class="add-code-input" id="new-code-input" placeholder="NUEVO CÓDIGO" maxlength="12">
+        <button class="add-code-btn" onclick="addCode()">+ Añadir</button>
+      </div>
+    </div>
   </div>
 
   <!-- ── TAB: VENTAS ── -->
@@ -615,6 +707,118 @@ async function publishProduct() {
     btn.disabled = false;
   }
 }
+
+// ── PRECIOS ───────────────────────────────────────────────────────────────────
+let pricesData = {};
+
+function renderPrices() {
+  const container = document.getElementById('prices-container');
+  if (!SECTIONS.length) { container.innerHTML = '<div class="empty-state">Carga el index primero</div>'; return; }
+  const allProds = [...new Set(SECTIONS.flatMap(s => s.products))];
+  container.innerHTML = allProds.map(pid => {
+    const price = pricesData[pid] || '';
+    return `<div class="price-row">
+      <span class="price-prod-name">${PRODUCT_NAMES[pid]||pid}</span>
+      <input type="text" class="price-input" id="price-${pid}" value="${price}" placeholder="2,900 MN">
+      <span class="price-unit">MN</span>
+    </div>`;
+  }).join('');
+}
+
+function savePrices() {
+  const allProds = [...new Set(SECTIONS.flatMap(s => s.products))];
+  allProds.forEach(pid => {
+    const input = document.getElementById('price-' + pid);
+    if (input && input.value.trim()) pricesData[pid] = input.value.trim();
+  });
+  db.ref('prices').set(pricesData).then(() => {
+    const chip = document.getElementById('prices-chip');
+    chip.classList.add('show');
+    setTimeout(() => chip.classList.remove('show'), 2500);
+  });
+}
+
+// ── INTERFAZ ──────────────────────────────────────────────────────────────────
+let interfazData = {};
+
+function loadInterfaz() {
+  db.ref('interfaz').once('value', snap => {
+    interfazData = snap.val() || {};
+    const map = { catbar:'if-catbar', slider:'if-slider', acceso360:'if-acceso360', bottomnav:'if-bottomnav', ribbons:'if-ribbons' };
+    Object.entries(map).forEach(([key, elId]) => {
+      const el = document.getElementById(elId);
+      if (el) el.checked = interfazData[key] !== false;
+    });
+  });
+}
+
+function saveInterfaz() {
+  interfazData = {
+    catbar: document.getElementById('if-catbar').checked,
+    slider: document.getElementById('if-slider').checked,
+    acceso360: document.getElementById('if-acceso360').checked,
+    bottomnav: document.getElementById('if-bottomnav').checked,
+    ribbons: document.getElementById('if-ribbons').checked,
+  };
+  db.ref('interfaz').set(interfazData);
+}
+
+// ── ACCESO 360 ────────────────────────────────────────────────────────────────
+let codesData = {};
+
+function loadAcceso360Admin() {
+  db.ref('acceso360').once('value', snap => {
+    const data = snap.val() || {};
+    codesData = data.codes || {};
+    const toggle = document.getElementById('acceso-seccion-toggle');
+    if (toggle) toggle.checked = data.seccionActiva === true;
+    renderCodes();
+  });
+}
+
+function toggleAcceso360Seccion(input) {
+  db.ref('acceso360/seccionActiva').set(input.checked);
+}
+
+function renderCodes() {
+  const list = document.getElementById('codes-list');
+  const count = document.getElementById('codes-count');
+  const entries = Object.entries(codesData);
+  count.textContent = entries.length + ' código' + (entries.length !== 1 ? 's' : '');
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">Sin códigos aún</div>'; return; }
+  list.innerHTML = entries.map(([code, active]) => `
+    <div class="code-row">
+      <span class="code-chip">${code}</span>
+      <span class="code-status ${active?'on':'off'}">${active?'Activo':'Inactivo'}</span>
+      <label class="toggle"><input type="checkbox" ${active?'checked':''} onchange="toggleCode('${code}',this)"><span class="toggle-slider"></span></label>
+      <button class="modal-btn-secondary" style="padding:4px 10px;font-size:0.75rem" onclick="deleteCode('${code}')">🗑</button>
+    </div>`).join('');
+}
+
+function addCode() {
+  const input = document.getElementById('new-code-input');
+  const code = input.value.trim().toUpperCase();
+  if (!code || code.length < 4) { alert('Mínimo 4 caracteres'); return; }
+  if (codesData[code] !== undefined) { alert('Ese código ya existe'); return; }
+  codesData[code] = true;
+  db.ref('acceso360/codes/' + code).set(true);
+  renderCodes();
+  input.value = '';
+}
+
+function toggleCode(code, input) {
+  codesData[code] = input.checked;
+  db.ref('acceso360/codes/' + code).set(input.checked);
+  renderCodes();
+}
+
+function deleteCode(code) {
+  if (!confirm('¿Eliminar código ' + code + '?')) return;
+  delete codesData[code];
+  db.ref('acceso360/codes/' + code).remove();
+  renderCodes();
+}
+
 function checkPwd() {
   const val = document.getElementById('pwd-input').value;
   if (val === PASS) {
@@ -659,6 +863,12 @@ async function initAdmin() {
     salesData = snap.val() || {};
     renderSales();
   });
+  db.ref('prices').once('value', snap => {
+    pricesData = snap.val() || {};
+    renderPrices();
+  });
+  loadInterfaz();
+  loadAcceso360Admin();
 }
 
 // ── CONTROL ───────────────────────────────────────────────────────────────────

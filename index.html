@@ -123,7 +123,7 @@
 
         @media (max-width: 1024px) {
             aside { display: none; }
-            .slide { padding: 0 40px; }
+            .slide { padding: 0 50px 0 20px; text-align: left; justify-content: flex-start; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
             .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
@@ -140,7 +140,139 @@
             .stars-container { display: none; }
             .tag-category { display: none; }
             .details-block { display: none; }
-            .section-title { font-size: 0.9rem; padding: 10px 12px; }
+    
+
+
+
+        /* ── SLIDER DE FOTOS EN CARD ── */
+        .card-img-container { position: relative; overflow: hidden; }
+        .card-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.45); border: none; color: white;
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+            font-size: 0.8rem; display: none; align-items: center;
+            justify-content: center; z-index: 5; font-weight: 700;
+        }
+        .card-img-container:hover .card-nav-btn { display: flex; }
+        .card-nav-btn.prev { left: 5px; }
+        .card-nav-btn.next { right: 5px; }
+        .card-photo-dots {
+            position: absolute; bottom: 5px; left: 50%;
+            transform: translateX(-50%); display: flex; gap: 4px; z-index: 5;
+        }
+        .card-photo-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: rgba(255,255,255,0.4); transition: background 0.2s;
+        }
+        .card-photo-dot.active { background: white; }
+        /* ── ACCESO 360 ── */
+        #sec-acceso360 { position: relative; }
+        .acceso360-lock {
+            position: absolute; inset: 0; z-index: 20;
+            background: linear-gradient(135deg, rgba(0,0,0,0.92), rgba(20,10,0,0.95));
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 16px; border-radius: 8px;
+            padding: 30px; text-align: center;
+        }
+        .acceso360-badge {
+            background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
+            background-size: 200% 200%; animation: goldshine 3s ease infinite;
+            color: #1a1a1a; font-weight: 900; font-size: 1.3rem;
+            padding: 8px 24px; border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+            letter-spacing: 2px;
+        }
+        .acceso360-title { color: #ffd700; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; }
+        .acceso360-desc { color: #aaa; font-size: 0.82rem; line-height: 1.6; max-width: 320px; }
+        .acceso360-perks { list-style: none; padding: 0; margin: 0; text-align: left; }
+        .acceso360-perks li { color: #ccc; font-size: 0.8rem; padding: 3px 0; }
+        .acceso360-perks li::before { content: "✦ "; color: #ffd700; }
+        .acceso360-input-wrap { display: flex; gap: 8px; width: 100%; max-width: 300px; }
+        .acceso360-input {
+            flex: 1; background: #1a1a1a; border: 1px solid #444;
+            color: white; padding: 10px 14px; border-radius: 8px;
+            font-size: 0.9rem; outline: none; text-align: center;
+            letter-spacing: 3px; font-weight: 700;
+        }
+        .acceso360-input:focus { border-color: #ffd700; }
+        .acceso360-btn {
+            background: linear-gradient(135deg, #b8860b, #ffd700);
+            color: #1a1a1a; border: none; padding: 10px 16px;
+            border-radius: 8px; font-weight: 900; cursor: pointer;
+            font-size: 0.85rem; white-space: nowrap;
+        }
+        .acceso360-error { color: #ef5350; font-size: 0.78rem; }
+        .acceso360-placeholder-card {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+            height: 200px; display: flex; align-items: center; justify-content: center;
+            color: #444; font-size: 0.8rem;
+        }
+        /* ── BARRA DE CATEGORÍAS ── */
+        #cat-bar {
+            display: flex; overflow-x: auto; gap: 8px;
+            padding: 10px 20px; background: var(--bg-dark);
+            border-bottom: 1px solid #222;
+            scrollbar-width: none; position: sticky; top: 0; z-index: 50;
+        }
+        #cat-bar::-webkit-scrollbar { display: none; }
+        .cat-btn {
+            flex-shrink: 0; background: #1e1e1e; color: #aaa;
+            border: 1px solid #333; border-radius: 20px;
+            padding: 6px 16px; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .cat-btn.active { background: var(--brand-blue); color: white; border-color: var(--brand-blue); }
+        .cat-btn:hover { border-color: var(--brand-blue); color: white; }
+
+        /* ── BARRA NAVEGACIÓN INFERIOR ── */
+        #bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            background: #111; border-top: 1px solid #222;
+            z-index: 200; height: 60px;
+        }
+        #bottom-nav ul {
+            list-style: none; display: flex; height: 100%;
+            margin: 0; padding: 0;
+        }
+        #bottom-nav ul li {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; gap: 3px; transition: background 0.2s;
+        }
+        #bottom-nav ul li:hover { background: #1a1a1a; }
+        #bottom-nav ul li.active { color: var(--brand-blue); }
+        #bottom-nav ul li .nav-icon { font-size: 1.2rem; line-height: 1; }
+        #bottom-nav ul li .nav-label { font-size: 0.65rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        #bottom-nav ul li.active .nav-label { color: var(--brand-blue); }
+        .nav-acceso .nav-icon { 
+            background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
+            background-size: 200% 200%; animation: goldshine 3s ease infinite;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        @media (max-width: 1024px) { #bottom-nav { display: flex; } }
+        body.has-bottom-nav .products-container { padding-bottom: 70px; }
+        .badge-360 {
+            display: inline-block;
+            background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
+            background-size: 200% 200%;
+            animation: goldshine 3s ease infinite;
+            color: #1a1a1a;
+            font-size: inherit;
+            font-weight: 900;
+            padding: 1px 6px;
+            border-radius: 5px;
+            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+            cursor: pointer;
+            position: relative;
+        }
+        @keyframes goldshine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .badge-360:hover { box-shadow: 0 0 16px rgba(255,215,0,0.8); transform: scale(1.05); transition: all 0.2s; }
+        .section-title { font-size: 0.9rem; padding: 10px 12px; }
         }
 
         .section-title { 
@@ -448,9 +580,9 @@
 <!-- LIGHTBOX -->
 <div id="lightbox">
     <button id="lb-close" title="Cerrar">✕</button>
-    <button class="lb-btn" id="lb-prev">&#8592;</button>
+    <button class="lb-btn" id="lb-prev"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">‹</span></button>
     <img id="lightbox-img" src="" alt="Vista ampliada">
-    <button class="lb-btn" id="lb-next">&#8594;</button>
+    <button class="lb-btn" id="lb-next"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">›</span></button>
     <div id="lb-counter"></div>
     <div id="lb-zoom-hint"></div>
 </div>
@@ -465,13 +597,20 @@
     <button id="bs-ver-foto">📷 Ver foto</button>
 </div>
 
+<div id="cat-bar">
+        <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
+        <button class="cat-btn" onclick="filterCat('mujer',this)">Mujer</button>
+        <button class="cat-btn" onclick="filterCat('hombre',this)">Hombre</button>
+        <button class="cat-btn" onclick="filterCat('unisex',this)">Unisex</button>
+        <button class="cat-btn" onclick="filterCat('ninos',this)">Niños</button>
+    </div>
 <div class="page-wrapper">
     <div class="main-content">
         
         <!-- SLIDER -->
 <header>
     <div class="header-brand">
-        <h1>CityBUY360</h1>
+        <h1>CityBUY<span class="badge-360">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
     </div>
@@ -521,8 +660,8 @@
             <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" class="slide-cta" style="color: #004e92;">Contáctanos</a>
         </div>
 
-        <button onclick="sliderPrev()" class="slider-nav-btn" style="left: 10px; z-index: 10;">&#8592;</button>
-        <button onclick="sliderNext()" class="slider-nav-btn" style="right: 10px; z-index: 10;">&#8594;</button>
+        <button onclick="sliderPrev()" class="slider-nav-btn" style="left: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">‹</span></button>
+        <button onclick="sliderNext()" class="slider-nav-btn" style="right: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">›</span></button>
 
         <div id="slider-dots" style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
             <span class="dot active-dot" style="background: white;"></span>
@@ -965,6 +1104,41 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         </div>
     </div>
 
+
+            <!-- ── SECCIÓN ACCESO 360 (desactivada por defecto) ── -->
+            <div id="sec-acceso360" data-section="acceso360" style="display:none; margin-top: 20px;">
+                <div class="section-title" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
+                    ✦ ACCESO 360
+                </div>
+                <div style="position: relative; min-height: 300px;">
+                    <!-- Overlay de bloqueo -->
+                    <div class="acceso360-lock" id="acceso360-lock">
+                        <div class="acceso360-badge">ACCESO 360</div>
+                        <div class="acceso360-title">Sección Exclusiva</div>
+                        <div class="acceso360-desc">Accede a productos exclusivos, drops limitados y beneficios premium con tu código personal.</div>
+                        <ul class="acceso360-perks">
+                            <li>Productos exclusivos no disponibles al público</li>
+                            <li>Drops limitados con acceso anticipado</li>
+                            <li>Videos IA de cómo te queda la ropa</li>
+                            <li>Reserva de productos antes del lanzamiento</li>
+                            <li>Envío prioritario</li>
+                        </ul>
+                        <div class="acceso360-input-wrap">
+                            <input type="text" class="acceso360-input" id="acceso360-code" placeholder="TU CÓDIGO" maxlength="12">
+                            <button class="acceso360-btn" onclick="checkAcceso360()">Acceder</button>
+                        </div>
+                        <div class="acceso360-error" id="acceso360-error"></div>
+                    </div>
+                    <!-- Contenido desbloqueado -->
+                    <div id="acceso360-content" style="display:none;">
+                        <div class="grid">
+                            <div class="acceso360-placeholder-card">Próximamente</div>
+                            <div class="acceso360-placeholder-card">Próximamente</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
     <aside>
         
     </aside>
@@ -988,6 +1162,191 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     // ── Tracking de visitas ──────────────────────────────────────────────────
     const today = new Date().toISOString().split('T')[0];
     db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1);
+
+    // ── PRECIOS DESDE FIREBASE ───────────────────────────────────────────────
+    // ── Configuración de interfaz desde Firebase ─────────────────────────────
+    db.ref('interfaz').once('value', function(snap) {
+        var interfaz = snap.val();
+        if (!interfaz) return;
+        var catBar = document.getElementById('cat-bar');
+        var headerSlider = document.querySelector('.header-slider');
+        var badge360 = document.querySelector('.badge-360');
+        var bottomNav = document.getElementById('bottom-nav');
+        var ribbons = document.querySelectorAll('.lifestyle-ribbon');
+        var secAcceso = document.getElementById('sec-acceso360');
+
+        if (catBar) catBar.style.display = interfaz.catbar === false ? 'none' : '';
+        if (headerSlider) headerSlider.style.display = interfaz.slider === false ? 'none' : '';
+        if (badge360) badge360.style.display = interfaz.acceso360 === false ? 'none' : '';
+        if (bottomNav) bottomNav.style.display = interfaz.bottomnav === false ? 'none' : '';
+        ribbons.forEach(function(r) { r.style.display = interfaz.ribbons === false ? 'none' : ''; });
+        if (secAcceso) secAcceso.style.display = interfaz.acceso360 === false ? 'none' : '';
+    });
+
+    // ── Estado sección Acceso 360 desde Firebase ──────────────────────────────
+    db.ref('acceso360/seccionActiva').once('value', function(snap) {
+        var secAcceso = document.getElementById('sec-acceso360');
+        if (secAcceso) secAcceso.style.display = snap.val() === true ? '' : 'none';
+    });
+
+    db.ref('prices').once('value', function(snap) {
+        var prices = snap.val();
+        if (!prices) return;
+        document.querySelectorAll('[data-product]').forEach(function(card) {
+            var pid = card.getAttribute('data-product');
+            if (!pid || !prices[pid]) return;
+            var priceEl = card.querySelector('.price');
+            if (priceEl) priceEl.textContent = prices[pid];
+        });
+    });
+
+    // ── ACCESO 360 ───────────────────────────────────────────────────────────
+    // Verificar si hay sesión activa de Acceso 360
+    var acceso360Active = sessionStorage.getItem('acceso360') === 'true';
+    if (acceso360Active) {
+        var lockEl = document.getElementById('acceso360-lock');
+        var contentEl = document.getElementById('acceso360-content');
+        if (lockEl) lockEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
+    }
+
+    function checkAcceso360() {
+        var code = document.getElementById('acceso360-code').value.trim().toUpperCase();
+        var errEl = document.getElementById('acceso360-error');
+        if (!code) { errEl.textContent = 'Introduce tu código'; return; }
+        db.ref('acceso360/codes/' + code).once('value', function(snap) {
+            if (snap.val() === true) {
+                sessionStorage.setItem('acceso360', 'true');
+                document.getElementById('acceso360-lock').style.display = 'none';
+                document.getElementById('acceso360-content').style.display = 'block';
+                errEl.textContent = '';
+            } else {
+                errEl.textContent = 'Código inválido o expirado';
+                document.getElementById('acceso360-code').value = '';
+            }
+        });
+    }
+
+    // ── BARRA DE CATEGORÍAS ──────────────────────────────────────────────────
+    function filterCat(cat, btn) {
+        document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var cards = document.querySelectorAll('.card');
+        cards.forEach(function(card) {
+            if (cat === 'todos') {
+                card.style.display = '';
+            } else {
+                var genero = (card.getAttribute('data-genero') || '').toLowerCase();
+                card.style.display = (genero === cat || genero.includes(cat)) ? '' : 'none';
+            }
+        });
+        // Ocultar secciones vacías
+        document.querySelectorAll('.section-title').forEach(function(title) {
+            var grid = title.nextElementSibling;
+            if (!grid) return;
+            var visible = grid.querySelectorAll('.card:not([style*="display: none"])').length > 0;
+            title.style.display = visible || cat === 'todos' ? '' : 'none';
+            grid.style.display = visible || cat === 'todos' ? '' : 'none';
+        });
+    }
+
+    // ── NAVEGACIÓN INFERIOR ──────────────────────────────────────────────────
+    function navGo(dest, el) {
+        document.querySelectorAll('#bottom-nav li').forEach(function(li) { li.classList.remove('active'); });
+        if (el) el.classList.add('active');
+        if (dest === 'inicio') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (dest === 'categorias') {
+            var catBar = document.getElementById('cat-bar');
+            if (catBar) catBar.scrollIntoView({ behavior: 'smooth' });
+        } else if (dest === 'acceso360') {
+            var sec = document.getElementById('sec-acceso360');
+            if (sec && sec.style.display !== 'none') {
+                sec.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                document.getElementById('acceso360-code') && document.getElementById('acceso360-code').focus();
+            }
+        }
+    }
+
+    // Añadir clase al body para padding bottom nav
+    if (window.innerWidth <= 1024) document.body.classList.add('has-bottom-nav');
+
+    // ── SLIDER DE FOTOS EN CARDS ─────────────────────────────────────────────
+    function initCardSliders() {
+        document.querySelectorAll('.card-img-container').forEach(function(container) {
+            var imagesStr = container.getAttribute('data-images') || '';
+            var images = imagesStr.split(',').filter(Boolean);
+            if (images.length <= 1) return;
+
+            var imgEl = container.querySelector('.card-img');
+            var current = 0;
+            var timer = null;
+
+            // Crear botones prev/next
+            var prevBtn = document.createElement('button');
+            prevBtn.className = 'card-nav-btn prev';
+            prevBtn.innerHTML = '‹';
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'card-nav-btn next';
+            nextBtn.innerHTML = '›';
+
+            // Crear dots
+            var dotsWrap = document.createElement('div');
+            dotsWrap.className = 'card-photo-dots';
+            images.forEach(function(_, i) {
+                var dot = document.createElement('span');
+                dot.className = 'card-photo-dot' + (i === 0 ? ' active' : '');
+                dotsWrap.appendChild(dot);
+            });
+
+            container.appendChild(prevBtn);
+            container.appendChild(nextBtn);
+            container.appendChild(dotsWrap);
+
+            function goTo(n) {
+                current = (n + images.length) % images.length;
+                if (imgEl) imgEl.src = images[current];
+                // Actualizar badge
+                var badge = container.getAttribute('data-count');
+                dotsWrap.querySelectorAll('.card-photo-dot').forEach(function(d, i) {
+                    d.classList.toggle('active', i === current);
+                });
+            }
+
+            function startAuto() {
+                timer = setInterval(function() { goTo(current + 1); }, 3000);
+            }
+            function stopAuto() { clearInterval(timer); }
+
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); stopAuto(); goTo(current - 1); startAuto();
+            });
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); stopAuto(); goTo(current + 1); startAuto();
+            });
+
+            // Swipe táctil
+            var touchStartX = 0;
+            container.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            container.addEventListener('touchend', function(e) {
+                var diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 30) {
+                    stopAuto();
+                    goTo(diff > 0 ? current + 1 : current - 1);
+                    startAuto();
+                }
+            }, { passive: true });
+
+            startAuto();
+        });
+    }
+
+    // Inicializar sliders después de que cargue la página
+    document.addEventListener('DOMContentLoaded', initCardSliders);
+    if (document.readyState !== 'loading') initCardSliders();
 
     // ── Tracking de ventas al hacer clic en Lo quiero ────────────────────────
     document.addEventListener('click', function(e) {
@@ -1275,5 +1634,21 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     timer = setInterval(function() { goTo(sliderCurrent + 1); }, 3500);
 </script>
 
+    <nav id="bottom-nav">
+        <ul>
+            <li class="active" onclick="navGo('inicio',this)">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Inicio</span>
+            </li>
+            <li onclick="navGo('categorias',this)">
+                <span class="nav-icon">☰</span>
+                <span class="nav-label">Categorías</span>
+            </li>
+            <li class="nav-acceso" onclick="navGo('acceso360',this)">
+                <span class="nav-icon">✦</span>
+                <span class="nav-label">Acceso 360</span>
+            </li>
+        </ul>
+    </nav>
 </body>
 </html>
