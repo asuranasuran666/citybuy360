@@ -123,7 +123,7 @@
 
         @media (max-width: 1024px) {
             aside { display: none; }
-            .slide { padding: 0 50px 0 20px; text-align: left; justify-content: flex-start; }
+            .slide { padding: 0 50px 0 50px; text-align: left; justify-content: flex-start; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
             .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
@@ -274,25 +274,30 @@
         @media (max-width: 1024px) { #bottom-nav { display: block; } }
         body.has-bottom-nav { padding-bottom: 58px; }
         .badge-360 {
-            display: inline-block;
-            background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
+            display: inline-flex;
+            align-items: center;
+            margin-left: auto;
+            background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
             background-size: 200% 200%;
             animation: goldshine 3s ease infinite;
-            color: #1a1a1a;
-            font-size: inherit;
+            color: #1a0a00;
+            font-size: 0.82rem;
             font-weight: 900;
-            padding: 1px 6px;
-            border-radius: 5px;
-            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+            padding: 5px 12px;
+            border-radius: 6px;
+            box-shadow: 0 0 12px rgba(255,215,0,0.7), 0 0 4px rgba(255,215,0,0.4);
             cursor: pointer;
-            position: relative;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         @keyframes goldshine {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        .badge-360:hover { box-shadow: 0 0 16px rgba(255,215,0,0.8); transform: scale(1.05); transition: all 0.2s; }
+        .badge-360:hover { box-shadow: 0 0 22px rgba(255,215,0,0.95), 0 0 8px rgba(255,215,0,0.6); transform: scale(1.05); transition: all 0.2s; }
+        .badge-360.disabled { pointer-events: none; opacity: 0.45; }
         .section-title { font-size: 0.9rem; padding: 10px 12px; }
         }
 
@@ -365,12 +370,30 @@
         .lifestyle-ribbon {
             background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%);
             color: white;
-            padding: 25px;
-            text-align: center;
+            padding: 20px 28px;
             font-weight: 800;
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             margin: 30px 0;
             border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .ribbon-text { flex: 1; text-align: left; }
+        .ribbon-cta {
+            white-space: nowrap;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.88rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 700px) {
+            .lifestyle-ribbon { flex-direction: column; text-align: center; gap: 10px; padding: 18px; font-size: 0.92rem; }
+            .ribbon-text { text-align: center; }
         }
 
         /* ===== LIGHTBOX ===== */
@@ -626,9 +649,10 @@
         <!-- SLIDER -->
 <header>
     <div class="header-brand">
-        <h1>CityBUY<span class="badge-360">360</span></h1>
+        <h1>CityBUY<span style="color:var(--brand-blue)">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
+        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')">✦ ACCESO 360</span>
     </div>
     <div class="header-slider">
 
@@ -643,21 +667,21 @@
         <div class="slide" style="background: linear-gradient(135deg, #1a1a2e, #16213e); display: none;">
             <div>
                 <div class="slide-label" style="color: #f5a623;">CityBUY360</div>
-                <div class="slide-title">Ofertas IncreÃÂÃÂÃÂÃÂ­bles</div>
+                <div class="slide-title">Mejores Ofertas</div>
             </div>
         </div>
 
         <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none;">
             <div>
                 <div class="slide-label" style="color: #00d4ff;">Acaba de llegar</div>
-                <div class="slide-title">Nuevas Llegadas</div>
+                <div class="slide-title">Nueva Mercancía</div>
             </div>
         </div>
 
         <div class="slide" style="background: linear-gradient(135deg, #1b4332, #2d6a4f); display: none;">
             <div>
                 <div class="slide-label" style="color: #95d5b2;">Disponible ya</div>
-                <div class="slide-title">AlmacÃÂÃÂÃÂÃÂ©n Local</div>
+                <div class="slide-title">En nuestro almacén</div>
             </div>
         </div>
 
@@ -1048,9 +1072,7 @@
 
             </div>
 
-            <div class="lifestyle-ribbon">
-                "ÃÂÃÂÃÂÃÂ¿Por quÃÂÃÂÃÂÃÂ© elegir CityBUY360? Mejores precios y calidad. Privacidad y Entrega garantizadas."
-            </div>
+            <div class="lifestyle-ribbon"><div class="ribbon-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div><div class="ribbon-cta">Lo quiero →</div></div>
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¡ SERVICIOS</div>
             <div class="grid">
@@ -1101,13 +1123,11 @@ EscrÃÂÃÂÃÂÃÂ­benos por privado y hablemos de tu proyecto.
     </div>
 </div>
             </div>
-        </div>
-    </div>
 
 
-            <!-- ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ SECCIÃÂÃÂÃÂÃÂN ACCESO 360 (desactivada por defecto) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ -->
+            <!-- ── SECCIÓN ACCESO 360 ── -->
             <div id="sec-acceso360" data-section="acceso360" style="display:none; margin-top: 20px;">
-                <div class="section-title" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
+                <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
                     ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦ ACCESO 360
                 </div>
                 <div style="position: relative; min-height: 300px;">
@@ -1186,6 +1206,8 @@ Modos de colocación: Vertical (sobre mesa), con clip (pinza), o invertido (colg
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
     <aside>
         
@@ -1218,17 +1240,23 @@ Modos de colocación: Vertical (sobre mesa), con clip (pinza), o invertido (colg
         if (!interfaz) return;
         var catBar = document.getElementById('cat-bar');
         var headerSlider = document.querySelector('.header-slider');
-        var badge360 = document.querySelector('.badge-360');
+        var badge360 = document.getElementById('badge-360-header');
         var bottomNav = document.getElementById('bottom-nav');
         var ribbons = document.querySelectorAll('.lifestyle-ribbon');
         var secAcceso = document.getElementById('sec-acceso360');
 
         if (catBar) catBar.style.display = interfaz.catbar === false ? 'none' : '';
         if (headerSlider) headerSlider.style.display = interfaz.slider === false ? 'none' : '';
-        if (badge360) badge360.style.display = interfaz.acceso360 === false ? 'none' : '';
+        if (badge360) {
+            if (interfaz.acceso360 === false) {
+                badge360.classList.add('disabled');
+            } else {
+                badge360.classList.remove('disabled');
+            }
+        }
         if (bottomNav) bottomNav.style.display = interfaz.bottomnav === false ? 'none' : '';
         ribbons.forEach(function(r) { r.style.display = interfaz.ribbons === false ? 'none' : ''; });
-        if (secAcceso) secAcceso.style.display = interfaz.acceso360 === false ? 'none' : '';
+        if (secAcceso && interfaz.acceso360 === false) secAcceso.style.display = 'none';
     });
 
     // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Estado secciÃÂÃÂÃÂÃÂ³n Acceso 360 desde Firebase ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ

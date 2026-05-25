@@ -47,6 +47,22 @@
   .tab-content { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
   .tab-content.active { display: block; }
 
+  @media (max-width: 700px) {
+    .tabs { overflow-x: auto; padding: 0 8px; flex-wrap: nowrap; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { padding: 12px 14px; font-size: 0.8rem; white-space: nowrap; flex-shrink: 0; }
+    .tab-content { padding: 12px; }
+    .section-header { flex-wrap: nowrap; gap: 8px; padding: 12px 10px; align-items: center; }
+    .section-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+    .section-meta { gap: 6px; flex-shrink: 0; }
+    .expiry-input { width: 110px; font-size: 0.72rem; padding: 3px 5px; }
+    .product-row { padding: 8px 10px 8px 24px; flex-wrap: nowrap; gap: 6px; overflow-x: auto; }
+    .product-row-name { font-size: 0.78rem; min-width: 80px; }
+    .form-row { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-number { font-size: 1.3rem; }
+  }
+
   /* ── TOGGLE SWITCH ── */
   .toggle-wrap { display: flex; align-items: center; gap: 10px; }
   .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
@@ -547,7 +563,15 @@ async function ghGet(path) {
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
   });
   if (!res.ok) throw new Error('Error leyendo ' + path + ': ' + res.status);
-  return res.json();
+  const data = await res.json();
+  // GitHub devuelve content:null para archivos grandes — usar download_url como fallback
+  if (data.content === null && data.download_url) {
+    const raw = await fetch(data.download_url);
+    if (!raw.ok) throw new Error('Error descargando contenido de ' + path);
+    const text = await raw.text();
+    data.content = btoa(unescape(encodeURIComponent(text)));
+  }
+  return data;
 }
 
 async function ghPut(path, content64, message, sha) {
@@ -898,11 +922,13 @@ function renderControl() {
           const pCfg = cfg.products[pid] || { active: true };
           const on = pCfg.active !== false;
           const isDestacado = sec.id === 'destacado';
+          const destSec = SECTIONS.find(s => s.id === 'destacado');
+          const inDestacado = destSec ? destSec.products.includes(pid) : false;
           return `<div class="product-row">
             <span class="product-row-name">${PRODUCT_NAMES[pid]||pid}</span>
             <span class="expiry-label">Expira:</span>
             <input type="date" class="expiry-input" data-prod-exp="${pid}" value="${pCfg.expires||''}" onchange="onProductExpiryChange(this)">
-            ${!isDestacado ? `<button class="dest-btn" id="dest-${pid}" onclick="toggleDestacado('${pid}',this)" title="Añadir/quitar de Destacados">⭐</button>` : ''}
+            ${!isDestacado ? `<button class="dest-btn ${inDestacado ? 'active' : ''}" id="dest-${pid}" onclick="toggleDestacado('${pid}',this)" title="${inDestacado ? 'Quitar de Destacados' : 'Añadir a Destacados'}">${inDestacado ? '⭐' : '☆'}</button>` : ''}
             <button class="mod-btn" onclick="editProduct('${pid}')" title="Modificar producto">✏️</button>
             <span class="prod-status ${on?'on':'off'}" id="pstatus-${pid}">${on?'Activo':'Inactivo'}</span>
             <label class="toggle">
@@ -1012,6 +1038,7 @@ async function toggleDestacado(pid, btn) {
       indexHTML = indexHTML.slice(0, gridStart) + newGrid + indexHTML.slice(gridEnd+6);
       btn.classList.remove('active');
       btn.title = 'Añadir a Destacados';
+      btn.textContent = '☆';
     } else {
       // Añadir a Destacados: copiar la card de su sección original
       const prodSec = SECTIONS.find(s => s.products.includes(pid) && s.id !== 'destacado');
@@ -1039,6 +1066,7 @@ async function toggleDestacado(pid, btn) {
       indexHTML = indexHTML.slice(0, insertAt2) + cardCopy + '\n            ' + indexHTML.slice(insertAt2);
       btn.classList.add('active');
       btn.title = 'Quitar de Destacados';
+      btn.textContent = '⭐';
     }
 
     const newContent64 = btoa(unescape(encodeURIComponent(indexHTML)));
