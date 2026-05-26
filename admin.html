@@ -46,7 +46,6 @@
   .tab-btn.active { color: var(--brand-light); border-bottom-color: var(--brand-light); }
   .tab-content { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
   .tab-content.active { display: block; }
-
   @media (max-width: 700px) {
     .tabs { overflow-x: auto; padding: 0 8px; flex-wrap: nowrap; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
@@ -54,7 +53,6 @@
     .tab-content { padding: 12px; }
     .section-header { flex-wrap: nowrap; gap: 8px; padding: 12px 10px; align-items: center; }
     .section-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
-    .section-meta { gap: 6px; flex-shrink: 0; }
     .expiry-input { width: 110px; font-size: 0.72rem; padding: 3px 5px; }
     .product-row { padding: 8px 10px 8px 24px; flex-wrap: nowrap; gap: 6px; overflow-x: auto; }
     .product-row-name { font-size: 0.78rem; min-width: 80px; }
@@ -197,6 +195,7 @@
   .modal-btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 11px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
   .modal-btn-secondary:hover { border-color: var(--red); color: var(--red); }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -373,20 +372,64 @@
         <span class="gold-label" style="flex:1;font-size:1rem">✦ Sección ACCESO 360</span>
         <label class="toggle"><input type="checkbox" id="acceso-seccion-toggle" onchange="toggleAcceso360Seccion(this)"><span class="toggle-slider"></span></label>
       </div>
-      <div style="padding:14px 16px;">
-        <div style="font-size:0.8rem;color:var(--text-muted)">Cuando está activa, la sección aparece al final del catálogo. Los visitantes necesitan un código válido para ver el contenido.</div>
+      <div style="padding:14px 16px;"><div style="font-size:0.8rem;color:var(--text-muted)">Cuando está activa, la sección aparece al final del catálogo. Los visitantes necesitan un código válido para ver el contenido.</div></div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid #b8860b33;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span class="gold-label">📥 Solicitudes de acceso</span>
+        <span id="solicitudes-count" style="font-size:0.75rem;color:var(--text-muted)">Cargando…</span>
+      </div>
+      <div id="solicitudes-list"><div class="empty-state">Cargando solicitudes…</div></div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid #b8860b55;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);"><span class="gold-label">⚡ Generar código y enviar acceso</span></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:5px;">Correo del cliente</label>
+          <input type="email" id="gen-email" placeholder="cliente@email.com" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.9rem;">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:5px;">Referencia (nombre / producto comprado)</label>
+          <input type="text" id="gen-ref" placeholder="Ej: María - Blumer azul" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.9rem;">
+        </div>
+        <button onclick="generarCodigo()" style="background:linear-gradient(135deg,#f5c518,#ffe566);color:#1a0a00;font-weight:900;border:none;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">⚡ Generar código</button>
+        <div id="email-preview-wrap" style="display:none;">
+          <div style="background:#0d0d0d;border:1px solid #b8860b44;border-radius:10px;padding:16px;">
+            <div style="font-size:0.75rem;color:#ffd700;margin-bottom:10px;font-weight:700;">VISTA PREVIA DEL CORREO</div>
+            <div id="email-preview-body" style="font-size:0.82rem;color:#ccc;line-height:1.6;"></div>
+          </div>
+          <div style="margin-top:10px;padding:12px;background:#1a1100;border-radius:8px;border:1px solid #b8860b;">
+            <div style="font-size:0.75rem;color:#aaa;margin-bottom:4px;">Código generado:</div>
+            <div id="codigo-generado" style="font-size:1.3rem;font-weight:900;color:#ffd700;letter-spacing:2px;"></div>
+          </div>
+          <div id="emailjs-config-warn" style="display:none;background:#1a0a00;border:1px solid #ff6b6b44;border-radius:8px;padding:12px;margin-top:10px;font-size:0.8rem;color:#ff9999;">⚠️ Para enviar correos configura EmailJS abajo.</div>
+          <button onclick="enviarAcceso360()" id="btn-enviar-acceso" style="width:100%;margin-top:10px;background:#1a4a1a;border:1px solid #2d7a2d;color:#7fff7f;font-weight:700;border-radius:8px;padding:12px;cursor:pointer;font-size:0.9rem;">📧 Enviar correo de acceso</button>
+          <div id="envio-status" style="font-size:0.8rem;text-align:center;margin-top:8px;"></div>
+        </div>
       </div>
     </div>
 
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
       <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <span class="gold-label">Códigos de acceso</span>
-        <span style="font-size:0.75rem;color:var(--text-muted)" id="codes-count">Cargando…</span>
+        <span class="gold-label">✦ Clientes ACCESO 360</span>
+        <span id="clientes-count" style="font-size:0.75rem;color:var(--text-muted)">Cargando…</span>
       </div>
-      <div id="codes-list"><div class="empty-state">Cargando códigos…</div></div>
-      <div class="add-code-row">
-        <input type="text" class="add-code-input" id="new-code-input" placeholder="NUEVO CÓDIGO" maxlength="12">
-        <button class="add-code-btn" onclick="addCode()">+ Añadir</button>
+      <div id="clientes-list"><div class="empty-state">Sin clientes activos aún</div></div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="toggleEmailjsConfig()">
+        <span style="color:var(--text-muted);font-size:0.85rem;">⚙️ Configuración EmailJS <span id="emailjs-config-arrow">▼</span></span>
+      </div>
+      <div id="emailjs-config-body" style="display:none;padding:16px;flex-direction:column;gap:10px;">
+        <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;">Crea una cuenta gratuita en <a href="https://emailjs.com" target="_blank" style="color:#ffd700;">emailjs.com</a>, conecta tu Gmail y crea una plantilla. Luego pega aquí tus credenciales.</div>
+        <input type="text" id="ejs-service" placeholder="Service ID (ej: service_abc123)" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:0.85rem;">
+        <input type="text" id="ejs-template" placeholder="Template ID (ej: template_xyz789)" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:0.85rem;">
+        <input type="text" id="ejs-pubkey" placeholder="Public Key" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:0.85rem;">
+        <button onclick="saveEmailjsConfig()" style="background:var(--primary);border:none;color:#fff;border-radius:6px;padding:10px;cursor:pointer;font-weight:700;">Guardar configuración</button>
+        <div id="emailjs-save-msg" style="font-size:0.78rem;color:#7fff7f;display:none;text-align:center;">✅ Configuración guardada</div>
       </div>
     </div>
   </div>
@@ -564,10 +607,9 @@ async function ghGet(path) {
   });
   if (!res.ok) throw new Error('Error leyendo ' + path + ': ' + res.status);
   const data = await res.json();
-  // GitHub devuelve content:null para archivos grandes — usar download_url como fallback
   if (data.content === null && data.download_url) {
     const raw = await fetch(data.download_url);
-    if (!raw.ok) throw new Error('Error descargando contenido de ' + path);
+    if (!raw.ok) throw new Error('Error descargando ' + path);
     const text = await raw.text();
     data.content = btoa(unescape(encodeURIComponent(text)));
   }
@@ -796,51 +838,138 @@ function loadAcceso360Admin() {
     codesData = data.codes || {};
     const toggle = document.getElementById('acceso-seccion-toggle');
     if (toggle) toggle.checked = data.seccionActiva === true;
-    renderCodes();
+    renderSolicitudes(data.solicitudes || {});
+    renderClientes(data.clientes || {});
   });
+  loadEmailjsConfig();
 }
 
 function toggleAcceso360Seccion(input) {
   db.ref('acceso360/seccionActiva').set(input.checked);
 }
 
-function renderCodes() {
-  const list = document.getElementById('codes-list');
-  const count = document.getElementById('codes-count');
-  const entries = Object.entries(codesData);
-  count.textContent = entries.length + ' código' + (entries.length !== 1 ? 's' : '');
-  if (!entries.length) { list.innerHTML = '<div class="empty-state">Sin códigos aún</div>'; return; }
-  list.innerHTML = entries.map(([code, active]) => `
-    <div class="code-row">
-      <span class="code-chip">${code}</span>
-      <span class="code-status ${active?'on':'off'}">${active?'Activo':'Inactivo'}</span>
-      <label class="toggle"><input type="checkbox" ${active?'checked':''} onchange="toggleCode('${code}',this)"><span class="toggle-slider"></span></label>
-      <button class="modal-btn-secondary" style="padding:4px 10px;font-size:0.75rem" onclick="deleteCode('${code}')">🗑</button>
+function renderSolicitudes(solicitudes) {
+  const list = document.getElementById('solicitudes-list');
+  const count = document.getElementById('solicitudes-count');
+  if (!list) return;
+  const entries = Object.entries(solicitudes).filter(([,v]) => v.estado === 'pendiente');
+  count.textContent = entries.length + ' pendiente' + (entries.length !== 1 ? 's' : '');
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">Sin solicitudes pendientes</div>'; return; }
+  list.innerHTML = entries.map(([id, s]) => `
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="flex:1;font-size:0.88rem;color:var(--text);">${s.correo}</span>
+      <span style="font-size:0.72rem;color:var(--text-muted);">${new Date(s.fecha).toLocaleDateString('es-ES')}</span>
+      <button onclick="usarSolicitud('${s.correo}','${id}')" style="background:#1a1100;border:1px solid #b8860b;color:#ffd700;border-radius:6px;padding:5px 10px;font-size:0.78rem;cursor:pointer;">Generar acceso ✦</button>
+      <button onclick="descartarSolicitud('${id}')" style="background:none;border:1px solid #333;color:#666;border-radius:6px;padding:5px 10px;font-size:0.78rem;cursor:pointer;">✕</button>
     </div>`).join('');
 }
 
-function addCode() {
-  const input = document.getElementById('new-code-input');
-  const code = input.value.trim().toUpperCase();
-  if (!code || code.length < 4) { alert('Mínimo 4 caracteres'); return; }
-  if (codesData[code] !== undefined) { alert('Ese código ya existe'); return; }
-  codesData[code] = true;
-  db.ref('acceso360/codes/' + code).set(true);
-  renderCodes();
-  input.value = '';
+function renderClientes(clientes) {
+  const list = document.getElementById('clientes-list');
+  const count = document.getElementById('clientes-count');
+  if (!list) return;
+  const entries = Object.entries(clientes);
+  count.textContent = entries.length + ' cliente' + (entries.length !== 1 ? 's' : '');
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">Sin clientes activos aún</div>'; return; }
+  list.innerHTML = entries.map(([code, c]) => `
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:0.85rem;color:#ffd700;font-weight:700;letter-spacing:1px;">${code}</span>
+        <span style="font-size:0.72rem;color:var(--text-muted);">Expira: ${c.expira||'—'}</span>
+      </div>
+      <div style="font-size:0.8rem;color:#aaa;margin-top:3px;">${c.correo||'—'} · ${c.referencia||''}</div>
+    </div>`).join('');
 }
 
-function toggleCode(code, input) {
-  codesData[code] = input.checked;
-  db.ref('acceso360/codes/' + code).set(input.checked);
-  renderCodes();
+function usarSolicitud(correo, id) {
+  document.getElementById('gen-email').value = correo;
+  document.getElementById('gen-ref').value = '';
+  db.ref('acceso360/solicitudes/' + id + '/estado').set('procesando');
+  document.getElementById('gen-email').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => document.getElementById('gen-ref').focus(), 400);
 }
 
-function deleteCode(code) {
-  if (!confirm('¿Eliminar código ' + code + '?')) return;
-  delete codesData[code];
-  db.ref('acceso360/codes/' + code).remove();
-  renderCodes();
+function descartarSolicitud(id) {
+  if (!confirm('¿Descartar esta solicitud?')) return;
+  db.ref('acceso360/solicitudes/' + id + '/estado').set('descartada');
+  loadAcceso360Admin();
+}
+
+function generarCodigo() {
+  const email = document.getElementById('gen-email').value.trim();
+  const ref = document.getElementById('gen-ref').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Introduce un correo válido'); return; }
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'CB360-';
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  const expira = new Date(); expira.setMonth(expira.getMonth() + 1);
+  const expiraStr = expira.toLocaleDateString('es-ES');
+  document.getElementById('codigo-generado').textContent = code;
+  document.getElementById('email-preview-body').innerHTML = `
+    <div style="margin-bottom:8px;"><strong style="color:#ffd700;">Para:</strong> ${email}</div>
+    <div style="margin-bottom:8px;"><strong style="color:#ffd700;">Asunto:</strong> Tu acceso exclusivo ACCESO 360 — CityBUY360</div>
+    <hr style="border-color:#222;margin:10px 0;">
+    <p>¡Hola! 🎉 Bienvenido/a a <strong style="color:#ffd700;">ACCESO 360</strong> — la sección exclusiva de CityBUY360.</p>
+    <p>Tu código de acceso personal:</p>
+    <div style="background:#1a1100;border:1px solid #b8860b;border-radius:8px;padding:12px;text-align:center;font-size:1.2rem;font-weight:900;color:#ffd700;letter-spacing:3px;margin:12px 0;">${code}</div>
+    <p>Válido hasta el <strong>${expiraStr}</strong>. Visita <a href="https://citybuy360.onrender.com" style="color:#ffd700;">citybuy360.onrender.com</a>, pulsa <strong>✦ ACCESO 360</strong> e introduce tu código.</p>
+    <div style="color:#555;font-size:0.75rem;margin-top:12px;">CityBUY360 · citybuy360.contacto@gmail.com</div>`;
+  document.getElementById('email-preview-wrap').style.display = 'block';
+  document.getElementById('envio-status').textContent = '';
+  const cfg = getEmailjsConfig();
+  document.getElementById('emailjs-config-warn').style.display = (!cfg.service || !cfg.template || !cfg.pubkey) ? 'block' : 'none';
+  window._pendingAcceso = { code, email, ref, expira: expiraStr };
+}
+
+function enviarAcceso360() {
+  const p = window._pendingAcceso;
+  if (!p) return;
+  const cfg = getEmailjsConfig();
+  const statusEl = document.getElementById('envio-status');
+  const btn = document.getElementById('btn-enviar-acceso');
+  if (!cfg.service || !cfg.template || !cfg.pubkey) {
+    statusEl.style.color = '#ff9999'; statusEl.textContent = '⚠️ Configura EmailJS primero';
+    document.getElementById('emailjs-config-body').style.display = 'flex'; return;
+  }
+  btn.disabled = true; btn.textContent = 'Enviando…'; statusEl.textContent = '';
+  emailjs.init(cfg.pubkey);
+  emailjs.send(cfg.service, cfg.template, { to_email: p.email, codigo: p.code, expira: p.expira, referencia: p.ref })
+    .then(() => {
+      db.ref('acceso360/codes/' + p.code).set(true);
+      db.ref('acceso360/clientes/' + p.code).set({ correo: p.email, referencia: p.ref, fecha_activacion: new Date().toISOString().split('T')[0], expira: p.expira });
+      statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Correo enviado y código activado';
+      btn.textContent = '📧 Enviar correo de acceso'; btn.disabled = false;
+      document.getElementById('gen-email').value = ''; document.getElementById('gen-ref').value = '';
+      document.getElementById('email-preview-wrap').style.display = 'none';
+      window._pendingAcceso = null;
+      setTimeout(() => loadAcceso360Admin(), 1000);
+    }).catch(err => {
+      statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Error: ' + (err.text || err);
+      btn.textContent = '📧 Enviar correo de acceso'; btn.disabled = false;
+    });
+}
+
+function getEmailjsConfig() {
+  return { service: localStorage.getItem('ejs_service')||'', template: localStorage.getItem('ejs_template')||'', pubkey: localStorage.getItem('ejs_pubkey')||'' };
+}
+function loadEmailjsConfig() {
+  const cfg = getEmailjsConfig();
+  const s = document.getElementById('ejs-service'); const t = document.getElementById('ejs-template'); const p = document.getElementById('ejs-pubkey');
+  if (s) s.value = cfg.service; if (t) t.value = cfg.template; if (p) p.value = cfg.pubkey;
+}
+function saveEmailjsConfig() {
+  localStorage.setItem('ejs_service', document.getElementById('ejs-service').value.trim());
+  localStorage.setItem('ejs_template', document.getElementById('ejs-template').value.trim());
+  localStorage.setItem('ejs_pubkey', document.getElementById('ejs-pubkey').value.trim());
+  const msg = document.getElementById('emailjs-save-msg');
+  msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2500);
+}
+function toggleEmailjsConfig() {
+  const body = document.getElementById('emailjs-config-body');
+  const arrow = document.getElementById('emailjs-config-arrow');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'flex';
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
 }
 
 function checkPwd() {
@@ -928,7 +1057,7 @@ function renderControl() {
             <span class="product-row-name">${PRODUCT_NAMES[pid]||pid}</span>
             <span class="expiry-label">Expira:</span>
             <input type="date" class="expiry-input" data-prod-exp="${pid}" value="${pCfg.expires||''}" onchange="onProductExpiryChange(this)">
-            ${!isDestacado ? `<button class="dest-btn ${inDestacado ? 'active' : ''}" id="dest-${pid}" onclick="toggleDestacado('${pid}',this)" title="${inDestacado ? 'Quitar de Destacados' : 'Añadir a Destacados'}">${inDestacado ? '⭐' : '☆'}</button>` : ''}
+            ${!isDestacado ? `<button class="dest-btn ${inDestacado?'active':''}" id="dest-${pid}" onclick="toggleDestacado('${pid}',this)" title="${inDestacado?'Quitar de Destacados':'Añadir a Destacados'}">${inDestacado?'⭐':'☆'}</button>` : ''}
             <button class="mod-btn" onclick="editProduct('${pid}')" title="Modificar producto">✏️</button>
             <span class="prod-status ${on?'on':'off'}" id="pstatus-${pid}">${on?'Activo':'Inactivo'}</span>
             <label class="toggle">
