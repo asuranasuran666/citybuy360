@@ -124,6 +124,7 @@
         @media (max-width: 1024px) {
             aside { display: none; }
             .slide { padding: 0 50px 0 50px; text-align: left; justify-content: flex-start; }
+            #badge-360-header { display: none; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
             .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
@@ -308,6 +309,8 @@
         }
 
         .products-container { padding: 4px 20px 40px; width: 100%; box-sizing: border-box; }
+            #badge-360-header { display: inline-flex; }
+            #span-360 { cursor: default; pointer-events: none; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .grid-destacado { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 
@@ -606,6 +609,8 @@
             .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
             .card-nav-btn { display: none !important; }
             .card-photo-dots { display: none !important; }
+            #badge-360-header { display: inline-flex !important; }
+            .lifestyle-ribbon { flex-direction: row !important; }
         }
     
         /* ── MODAL VIP ACCESO 360 ── */
@@ -669,7 +674,7 @@
         <!-- SLIDER -->
 <header>
     <div class="header-brand">
-        <h1>CityBUY<span style="color:var(--brand-blue)">360</span></h1>
+        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;padding:2px 8px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 14px rgba(255,210,0,0.8),0 0 4px rgba(255,180,0,0.5);display:inline-block;">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
         <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')">✦ ACCESO 360</span>
@@ -1245,6 +1250,11 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
             if (interfaz.acceso360 === false) { badge360.classList.add('disabled'); }
             else { badge360.classList.remove('disabled'); }
         }
+        var span360 = document.getElementById('span-360');
+        if (span360) {
+            if (interfaz.acceso360 === false) { span360.style.pointerEvents='none'; span360.style.cursor='default'; }
+            else { span360.style.pointerEvents='auto'; span360.style.cursor='pointer'; }
+        }
         if (bottomNav) bottomNav.style.display = interfaz.bottomnav === false ? 'none' : '';
         ribbons.forEach(function(r) { r.style.display = interfaz.ribbons === false ? 'none' : ''; });
         if (secAcceso && interfaz.acceso360 === false) secAcceso.style.display = 'none';
@@ -1776,11 +1786,11 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         <button class="modal-close-btn" onclick="closeVipModal()">✕</button>
         <div class="modal-vip-badge">✦ ACCESO 360</div>
         <h2 class="modal-vip-title">Exclusividad<br>que se siente</h2>
-        <p class="modal-vip-sub">Accede a beneficios que el catálogo público no tiene.</p>
+        <p class="modal-vip-sub">Accede a beneficios <strong style="color:#ffd700;">SOLO</strong> para miembros suscritos.</p>
         <ul class="modal-vip-perks">
             <li>Productos exclusivos no disponibles al público</li>
             <li>Drops limitados con acceso anticipado</li>
-            <li>Videos IA de cómo te queda la ropa</li>
+            <li>Virtual Try-On, IA para validar antes de comprar</li>
             <li>Reserva antes del lanzamiento</li>
             <li>Envío prioritario</li>
         </ul>
