@@ -644,6 +644,62 @@
         .modal-step.active { display:block; }
         .modal-email-error { color:#ff6b6b;font-size:0.78rem;margin-bottom:8px;display:none; }
 
+        
+        /* ── ACCESO 360 ENTRADA ANIMADA ── */
+        #acceso360-welcome {
+            display: none; position: fixed; inset: 0; z-index: 9998;
+            background: rgba(0,0,0,0.95);
+            align-items: center; justify-content: center;
+            flex-direction: column; text-align: center;
+        }
+        #acceso360-welcome.show { display: flex; animation: fadeInOut 2.8s ease forwards; }
+        @keyframes fadeInOut { 0%{opacity:0} 20%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+        .welcome-badge { background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518); color:#1a0a00; font-size:0.8rem; font-weight:900; padding:5px 16px; border-radius:20px; letter-spacing:2px; margin-bottom:16px; }
+        .welcome-title { color:#ffd700; font-size:2rem; font-weight:900; line-height:1.2; text-shadow: 0 0 30px rgba(255,210,0,0.6); }
+        .welcome-sub { color:#aaa; font-size:0.9rem; margin-top:10px; }
+        #confetti-canvas { position: fixed; inset: 0; z-index: 9997; pointer-events: none; }
+
+        
+        /* ── CAMPANITA MENSAJES ── */
+        #bell-btn {
+            position: relative; background: none; border: none;
+            color: #aaa; font-size: 1.2rem; cursor: pointer;
+            padding: 4px 8px; flex-shrink: 0;
+            transition: color 0.2s;
+        }
+        #bell-btn:hover { color: #ffd700; }
+        #bell-badge {
+            display: none; position: absolute; top: 0; right: 2px;
+            background: #ff4444; color: #fff; font-size: 0.6rem;
+            font-weight: 900; border-radius: 50%; width: 16px; height: 16px;
+            align-items: center; justify-content: center;
+        }
+        #bell-badge.show { display: flex; }
+        #mensajes-panel {
+            display: none; position: fixed; top: 0; right: 0;
+            width: min(340px, 100vw); height: 100vh;
+            background: #111; border-left: 1px solid #222;
+            z-index: 9990; flex-direction: column;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.6);
+        }
+        #mensajes-panel.open { display: flex; }
+        .mensajes-header {
+            padding: 16px 18px; border-bottom: 1px solid #222;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .mensajes-header h3 { color: #ffd700; font-size: 0.95rem; margin: 0; }
+        .mensajes-close { background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; }
+        .mensajes-close:hover { color: #fff; }
+        .mensajes-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .mensaje-item {
+            background: #1a1a1a; border: 1px solid #252525; border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .mensaje-item.nuevo { border-color: #ffd70033; background: #1a1100; }
+        .mensaje-texto { color: #ddd; font-size: 0.85rem; line-height: 1.5; }
+        .mensaje-fecha { color: #555; font-size: 0.72rem; margin-top: 6px; }
+        .mensajes-empty { color: #555; font-size: 0.85rem; text-align: center; padding: 30px 0; }
+
         </style>
 </head>
 <body>
@@ -677,6 +733,7 @@
         <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;padding:2px 8px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 14px rgba(255,210,0,0.8),0 0 4px rgba(255,180,0,0.5);display:inline-block;">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
+        <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">🔔<span id="bell-badge" class="bell-badge"></span></button>
         <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')">✦ ACCESO 360</span>
     </div>
     <div class="header-slider">
@@ -741,10 +798,13 @@
 
 <div id="cat-bar">
     <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
-    <button class="cat-btn" onclick="filterCat('mujer',this)">Mujer</button>
-    <button class="cat-btn" onclick="filterCat('hombre',this)">Hombre</button>
-    <button class="cat-btn" onclick="filterCat('unisex',this)">Unisex</button>
-    <button class="cat-btn" onclick="filterCat('ninos',this)">Niños</button>
+    <button class="cat-btn" onclick="filterCat('mujer',this)">👗 Mujer</button>
+    <button class="cat-btn" onclick="filterCat('hombre',this)">👕 Hombre</button>
+    <button class="cat-btn" onclick="filterCat('unisex',this)">🔄 Unisex</button>
+    <button class="cat-btn" onclick="filterCat('ninos',this)">👶 Niños</button>
+    <button class="cat-btn" onclick="filterCat('electrodomesticos',this)">🔌 Electrodomésticos</button>
+    <button class="cat-btn" onclick="filterCat('aseo',this)">🧴 Aseo</button>
+    <button class="cat-btn" onclick="filterCat('servicios',this)">⚡ Servicios</button>
 </div>
 
         <div class="products-container">
@@ -776,7 +836,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="gorra">
+                <div class="card" data-product="gorra" data-genero="unisex">
     <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
         <img src="gorra.jpg" class="card-img" alt="Gorra">
         <div class="hover-tooltip">Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
@@ -796,7 +856,7 @@
     </div>
 </div>
 
-<div class="card" data-product="freedom">
+<div class="card" data-product="freedom" data-genero="mujer hombre">
     <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
         <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
         <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
@@ -816,7 +876,7 @@
     </div>
 </div>
 
-<div class="card" data-product="bolsomovil">
+<div class="card" data-product="bolsomovil" data-genero="mujer">
     <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
         <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
         <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
@@ -894,7 +954,7 @@
             <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">👕 ROPA Y MODA</div>
             <div class="grid">
 
-                <div class="card" data-product="paris">
+                <div class="card" data-product="paris" data-genero="mujer hombre">
     <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position: relative;">
         <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
         <div class="hover-tooltip">Look casual y elegante. Diseño sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.</div>
@@ -914,7 +974,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="ngu">
+                <div class="card" data-product="ngu" data-genero="mujer hombre">
     <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position: relative;">
         <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
         <div class="hover-tooltip">Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
@@ -934,7 +994,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="gdm">
+                <div class="card" data-product="gdm" data-genero="mujer hombre">
     <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position: relative;">
         <img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER">
         <div class="hover-tooltip">Lo más vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.</div>
@@ -954,7 +1014,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="aac">
+                <div class="card" data-product="aac" data-genero="mujer hombre">
                     <div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2">
                         <img src="aac.jpg" class="card-img" alt="Pulover Amor, Alegría y Cerveza Fría">
                     </div>
@@ -973,7 +1033,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="usa">
+                <div class="card" data-product="usa" data-genero="mujer hombre">
                     <div class="card-img-container" data-images="usa.jpg,hombre01usa.jpg,hombre02usa.jpg" data-count="2">
                         <img src="usa.jpg" class="card-img" alt="Pulover estampado USA">
                     </div>
@@ -992,7 +1052,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="freedom">
+                <div class="card" data-product="freedom" data-genero="mujer hombre">
     <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
         <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
         <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
@@ -1012,7 +1072,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="mblancas">
+                <div class="card" data-product="mblancas" data-genero="mujer hombre">
                     <div class="card-img-container" data-images="mblancas.jpg" data-count="1">
                         <img src="mblancas.jpg" class="card-img" alt="Medias Blancas">
                     </div>
@@ -1031,7 +1091,7 @@
                     </div>
                 </div>
 
-                <div class="card" data-product="mnegras">
+                <div class="card" data-product="mnegras" data-genero="mujer hombre">
                     <div class="card-img-container" data-images="mnegras.jpg" data-count="1">
                         <img src="mnegras.jpg" class="card-img" alt="Medias Negras">
                     </div>
@@ -1057,7 +1117,7 @@
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid">
 
-                <div class="card" data-product="bolsomovil">
+                <div class="card" data-product="bolsomovil" data-genero="mujer">
     <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
         <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
         <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
@@ -1077,7 +1137,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="gorrobebe">
+                <div class="card" data-product="gorrobebe" data-genero="ninos">
     <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position: relative;">
         <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé">
         <div class="hover-tooltip">Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.</div>
@@ -1097,7 +1157,7 @@
     </div>
 </div>
 
-                <div class="card" data-product="gorra">
+                <div class="card" data-product="gorra" data-genero="unisex">
     <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
         <img src="gorra.jpg" class="card-img" alt="Gorra">
         <div class="hover-tooltip">Diseño icónico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nítido. Un clásico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para máxima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
@@ -1123,7 +1183,7 @@
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid">
-                <div class="card" data-product="saldo">
+                <div class="card" data-product="saldo" data-genero="servicios">
                     <div class="card-img-container" data-images="saldo.jpg" data-count="1">
                         <img src="saldo.jpg" class="card-img" alt="Comprar Saldo - Recargas 360">
                     </div>
@@ -1141,7 +1201,7 @@
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="btn-lo-quiero">Recarga YA</a>
                     </div>
                 </div>
-<div class="card" data-product="citybuy360familia">
+<div class="card" data-product="citybuy360familia" data-genero="servicios">
     <div class="card-img-container" data-images="bolsas-azules.jpg" data-count="1" style="position: relative;">
         <img src="bolsas-azules.jpg" class="card-img" alt="Únete a CityBUY360">
         <div class="hover-tooltip">¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.</div>
@@ -1294,9 +1354,11 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         db.ref('acceso360/codes/' + code).once('value', function(snap) {
             if (snap.val() === true) {
                 sessionStorage.setItem('acceso360', 'true');
-                document.getElementById('acceso360-lock').style.display = 'none';
-                document.getElementById('acceso360-content').style.display = 'block';
                 errEl.textContent = '';
+                triggerAcceso360Welcome(function() {
+                    document.getElementById('acceso360-lock').style.display = 'none';
+                    document.getElementById('acceso360-content').style.display = 'block';
+                });
             } else {
                 errEl.textContent = 'Código inválido o expirado';
                 document.getElementById('acceso360-code').value = '';
@@ -1761,6 +1823,139 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         if (e.target === this) closeVipModal();
     });
 
+    
+    // ── ACCESO 360 ANIMACIÓN DE ENTRADA ──
+    function triggerAcceso360Welcome(callback) {
+        var welcome = document.getElementById('acceso360-welcome');
+        var canvas = document.getElementById('confetti-canvas');
+        welcome.classList.add('show');
+        launchConfetti(canvas);
+        setTimeout(function() {
+            welcome.classList.remove('show');
+            welcome.style.display = 'none';
+            if (callback) callback();
+        }, 2800);
+    }
+
+    function launchConfetti(canvas) {
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var particles = [];
+        var colors = ['#ffd700','#f5c518','#ffe566','#fff','#ffec5c','#b8860b'];
+        for (var i = 0; i < 120; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 6 + 2,
+                d: Math.random() * 80 + 20,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 10 - 10,
+                tiltSpeed: Math.random() * 0.1 + 0.05,
+                speed: Math.random() * 3 + 1.5,
+                angle: 0
+            });
+        }
+        var frame = 0;
+        var maxFrames = 100;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(function(p) {
+                ctx.beginPath();
+                ctx.fillStyle = p.color;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                // Star shape
+                for (var j = 0; j < 5; j++) {
+                    ctx.lineTo(Math.cos((18 + j*72)*Math.PI/180)*p.r, Math.sin((18+j*72)*Math.PI/180)*p.r);
+                    ctx.lineTo(Math.cos((54 + j*72)*Math.PI/180)*p.r*0.4, Math.sin((54+j*72)*Math.PI/180)*p.r*0.4);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                p.y += p.speed;
+                p.angle += p.tiltSpeed;
+                p.x += Math.sin(p.angle) * 1.5;
+                if (p.y > canvas.height) {
+                    p.y = -10;
+                    p.x = Math.random() * canvas.width;
+                }
+            });
+            frame++;
+            if (frame < maxFrames) requestAnimationFrame(draw);
+            else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+        }
+        draw();
+    }
+
+    
+    // ── SISTEMA DE MENSAJES CAMPANITA ──
+    var mensajesLoaded = false;
+    function loadMensajes() {
+        db.ref('mensajes').orderByChild('fecha').limitToLast(20).once('value', function(snap) {
+            var data = snap.val() || {};
+            var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
+            var items = Object.entries(data).reverse();
+            var nuevos = items.filter(function(e){ return !leidos.includes(e[0]); });
+            
+            var badge = document.getElementById('bell-badge');
+            if (badge) {
+                badge.textContent = nuevos.length || '';
+                badge.classList.toggle('show', nuevos.length > 0);
+            }
+
+            var list = document.getElementById('mensajes-list');
+            if (!list) return;
+            if (!items.length) {
+                list.innerHTML = '<div class="mensajes-empty">No hay mensajes aún</div>';
+                return;
+            }
+            list.innerHTML = items.map(function(e) {
+                var id = e[0]; var m = e[1];
+                var esNuevo = !leidos.includes(id);
+                var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+                return '<div class="mensaje-item' + (esNuevo?' nuevo':'') + '">' +
+                    '<div class="mensaje-texto">' + (m.texto||'') + '</div>' +
+                    '<div class="mensaje-fecha">' + fecha + (esNuevo ? ' · <span style="color:#ffd700;font-weight:700;">Nuevo</span>' : '') + '</div>' +
+                    '</div>';
+            }).join('');
+        });
+    }
+
+    function toggleMensajesPanel() {
+        var panel = document.getElementById('mensajes-panel');
+        var overlay = document.getElementById('mensajes-overlay');
+        var isOpen = panel.classList.contains('open');
+        panel.classList.toggle('open');
+        overlay.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            loadMensajes();
+            // Marcar todos como leídos
+            db.ref('mensajes').once('value', function(snap) {
+                var ids = Object.keys(snap.val() || {});
+                localStorage.setItem('mensajes_leidos', JSON.stringify(ids));
+                var badge = document.getElementById('bell-badge');
+                if (badge) { badge.textContent = ''; badge.classList.remove('show'); }
+            });
+        }
+    }
+
+    // Cargar badge count al inicio
+    window.addEventListener('load', function() {
+        db.ref('mensajes').once('value', function(snap) {
+            var data = snap.val() || {};
+            var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
+            var nuevos = Object.keys(data).filter(function(id){ return !leidos.includes(id); });
+            var badge = document.getElementById('bell-badge');
+            if (badge && nuevos.length > 0) {
+                badge.textContent = nuevos.length;
+                badge.classList.add('show');
+            }
+        });
+    });
+
     </script>
 
     <nav id="bottom-nav">
@@ -1812,6 +2007,28 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         </div>
     </div>
 </div>
+
+
+<!-- ── ACCESO 360 BIENVENIDA ── -->
+<canvas id="confetti-canvas"></canvas>
+<div id="acceso360-welcome">
+    <div class="welcome-badge">✦ ACCESO 360</div>
+    <div class="welcome-title">Bienvenido/a<br>al ACCESO 360</div>
+    <div class="welcome-sub">Tu acceso exclusivo está activo</div>
+</div>
+
+
+<!-- ── PANEL MENSAJES ── -->
+<div id="mensajes-panel">
+    <div class="mensajes-header">
+        <h3>📢 Mensajes de la tienda</h3>
+        <button class="mensajes-close" onclick="toggleMensajesPanel()">✕</button>
+    </div>
+    <div class="mensajes-list" id="mensajes-list">
+        <div class="mensajes-empty">Cargando mensajes…</div>
+    </div>
+</div>
+<div id="mensajes-overlay" style="display:none;position:fixed;inset:0;z-index:9989;background:rgba(0,0,0,0.5);" onclick="toggleMensajesPanel()"></div>
 
 </body>
 </html>

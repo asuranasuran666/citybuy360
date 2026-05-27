@@ -194,6 +194,15 @@
   .modal-btn-primary:hover { background: var(--brand-light); }
   .modal-btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 11px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
   .modal-btn-secondary:hover { border-color: var(--red); color: var(--red); }
+
+  .genero-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
+  .genero-chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; user-select: none; }
+  .genero-chip.selected { border-color: var(--primary); background: rgba(0,212,255,0.1); color: var(--primary); }
+  .genero-add-row { display: flex; gap: 8px; margin-top: 8px; }
+  .genero-add-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.82rem; }
+  .genero-add-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 0.82rem; }
+  .genero-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
@@ -226,6 +235,7 @@
     <button class="tab-btn" onclick="showTab('precios',this)">💲 Precios</button>
     <button class="tab-btn" onclick="showTab('interfaz',this)">🖥 Interfaz</button>
     <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
+    <button class="tab-btn" onclick="showTab('mensajes',this)">📢 Mensajes</button>
   </div>
 
   <!-- ── TAB: CONTROL ── -->
@@ -307,6 +317,23 @@
     </div>
 
     <div class="form-group">
+      <label>Categoría / Género</label>
+      <div class="genero-chips" id="genero-chips">
+        <span class="genero-chip" data-val="mujer" onclick="toggleGeneroChip(this)">👗 Mujer</span>
+        <span class="genero-chip" data-val="hombre" onclick="toggleGeneroChip(this)">👕 Hombre</span>
+        <span class="genero-chip" data-val="unisex" onclick="toggleGeneroChip(this)">🔄 Unisex</span>
+        <span class="genero-chip" data-val="ninos" onclick="toggleGeneroChip(this)">👶 Niños</span>
+        <span class="genero-chip" data-val="electrodomesticos" onclick="toggleGeneroChip(this)">🔌 Electro</span>
+        <span class="genero-chip" data-val="aseo" onclick="toggleGeneroChip(this)">🧴 Aseo</span>
+        <span class="genero-chip" data-val="servicios" onclick="toggleGeneroChip(this)">⚡ Servicios</span>
+      </div>
+      <div class="genero-add-row">
+        <input type="text" id="genero-custom-input" class="genero-add-input" placeholder="Nueva categoría…" maxlength="20">
+        <button class="genero-add-btn" onclick="addCustomGeneroChip()">+ Añadir</button>
+      </div>
+    </div>
+
+    <div class="form-group">
       <div class="checkbox-row">
         <input type="checkbox" id="prod-destacado">
         <label for="prod-destacado" style="text-transform:none;letter-spacing:0;font-size:0.88rem;color:var(--text);margin:0">Incluir también en ⭐ Lo más destacado</label>
@@ -323,7 +350,10 @@
       <textarea id="prod-tooltip" placeholder="Descripción detallada del producto que aparece al pasar el mouse…"></textarea>
     </div>
 
-    <button class="publish-btn" id="publish-btn" onclick="publishProduct()">🚀 Publicar producto</button>
+    <div style="display:flex;gap:10px;">
+      <button class="publish-btn" id="publish-btn" onclick="publishProduct()" style="flex:1;">🚀 Publicar producto</button>
+      <button onclick="cancelarFormulario()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:12px 18px;cursor:pointer;font-size:0.9rem;flex-shrink:0;">✕ Cancelar</button>
+    </div>
     <div class="publish-log" id="publish-log"></div>
   </div>
 
@@ -432,6 +462,31 @@
         <div id="emailjs-save-msg" style="font-size:0.78rem;color:#7fff7f;display:none;text-align:center;">✅ Configuración guardada</div>
       </div>
     </div>
+  </div>
+
+  <!-- ── TAB: MENSAJES ── -->
+  <div id="tab-mensajes" class="tab-content">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+        <span style="color:var(--text);font-weight:700;">📢 Enviar mensaje a todos los visitantes</span>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:0.8rem;color:var(--text-muted);">El mensaje aparecerá en la campanita 🔔 del catálogo para todos los visitantes.</div>
+        <textarea id="msg-texto" placeholder="Escribe tu mensaje aquí… (ej: ¡Nueva llegada esta semana! 🎉)" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:0.9rem;min-height:90px;resize:vertical;"></textarea>
+        <button onclick="publicarMensaje()" style="background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">📢 Publicar mensaje</button>
+        <div id="msg-status" style="font-size:0.82rem;text-align:center;"></div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:var(--text);font-weight:700;">Mensajes publicados</span>
+        <button onclick="loadMensajesAdmin()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;">↺ Refrescar</button>
+      </div>
+      <div id="mensajes-admin-list"><div class="empty-state">Cargando…</div></div>
+    </div>
+
   </div>
 
   <!-- ── TAB: VENTAS ── -->
@@ -629,7 +684,7 @@ async function ghPut(path, content64, message, sha) {
   return res.json();
 }
 
-function buildCardHTML(id, photos, name, price, tallas, colores, desc, tooltip, secName) {
+function buildCardHTML(id, photos, name, price, tallas, colores, desc, tooltip, secName, genero) {
   const imgList = photos.map(p => p.name).join(',');
   const imgCount = photos.length;
   const waText = encodeURIComponent(`Hola, quiero comprar: ${name} (${price} MN)`);
@@ -644,7 +699,7 @@ function buildCardHTML(id, photos, name, price, tallas, colores, desc, tooltip, 
     ? `\n        <div class="hover-tooltip">${tooltip}</div>` : '';
 
   return `
-                <div class="card" data-product="${id}">
+                <div class="card" data-product="${id}" data-genero="${genero}">
     <div class="card-img-container" data-images="${imgList}" data-count="${imgCount}" style="position: relative;">
         <img src="${photos[0].name}" class="card-img" alt="${name}">${tooltipHTML}
     </div>
@@ -704,7 +759,8 @@ async function publishProduct() {
     let indexHTML   = atob(indexFile.content.replace(/\n/g,''));
 
     // 3. Generar HTML de la card
-    const cardHTML = buildCardHTML(id, uploadedPhotos, name, price, tallas, colores, desc, tooltip, secName);
+    const genero = getSelectedGenero();
+    const cardHTML = buildCardHTML(id, uploadedPhotos, name, price, tallas, colores, desc, tooltip, secName, genero);
 
     // 4. Insertar en la sección correcta
     const sectionMarker = `data-section="${secId}"`;
@@ -991,6 +1047,7 @@ function logout() {
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(id, btn) {
+  if (id === 'mensajes') loadMensajesAdmin();
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
@@ -999,6 +1056,7 @@ function showTab(id, btn) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function initAdmin() {
+  loadCustomGeneros();
   loadToken();
   await loadStructureFromIndex();
   populateSections();
@@ -1118,6 +1176,9 @@ function editProduct(pid) {
     const SECTIONS_LOCAL = SECTIONS;
     const sec = SECTIONS_LOCAL.find(s => s.products.includes(pid));
     if (sec) document.getElementById('prod-seccion').value = sec.id;
+    // Load data-genero
+    const generoAttr = card.getAttribute('data-genero') || '';
+    setSelectedGenero(generoAttr);
     // Mostrar foto actual
     if (imgContainer) {
       const imgs = (imgContainer.dataset.images||'').split(',');
@@ -1438,7 +1499,8 @@ async function doPublish() {
     } catch(e) { log(`⚠️ Backup en GitHub no guardado: ${e.message}`); }
 
     // 4. Generar HTML de la card
-    const cardHTML = buildCardHTML(id, uploadedPhotos, name, price, tallas, colores, desc, tooltip, secName);
+    const genero2 = getSelectedGenero();
+    const cardHTML = buildCardHTML(id, uploadedPhotos, name, price, tallas, colores, desc, tooltip, secName, genero2);
 
     // 5. Insertar en la sección correcta
     const sectionMarker = `data-section="${secId}"`;
@@ -1503,6 +1565,128 @@ async function doPublish() {
     btn.disabled = false;
   }
 }
+
+// ── GENERO CHIPS ──
+function toggleGeneroChip(el) {
+  el.classList.toggle('selected');
+}
+
+function getSelectedGenero() {
+  return Array.from(document.querySelectorAll('.genero-chip.selected'))
+    .map(function(c){ return c.getAttribute('data-val'); })
+    .join(' ');
+}
+
+function setSelectedGenero(generoStr) {
+  document.querySelectorAll('.genero-chip').forEach(function(c){ c.classList.remove('selected'); });
+  if (!generoStr) return;
+  generoStr.split(' ').forEach(function(val) {
+    var chip = document.querySelector('.genero-chip[data-val="' + val + '"]');
+    if (chip) chip.classList.add('selected');
+  });
+}
+
+function addCustomGeneroChip() {
+  var input = document.getElementById('genero-custom-input');
+  var val = input.value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!val) return;
+  var container = document.getElementById('genero-chips');
+  // Check if already exists
+  if (container.querySelector('[data-val="' + val + '"]')) {
+    input.value = ''; return;
+  }
+  var chip = document.createElement('span');
+  chip.className = 'genero-chip selected';
+  chip.setAttribute('data-val', val);
+  chip.setAttribute('onclick', 'toggleGeneroChip(this)');
+  chip.textContent = input.value.trim();
+  container.appendChild(chip);
+  // Save to Firebase
+  db.ref('config/categorias/' + val).set(input.value.trim());
+  input.value = '';
+}
+
+function cancelarFormulario() {
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-price').value = '';
+  document.getElementById('prod-tallas').value = '';
+  document.getElementById('prod-colores').value = '';
+  document.getElementById('prod-desc').value = '';
+  document.getElementById('prod-tooltip').value = '';
+  document.getElementById('prod-destacado').checked = false;
+  document.getElementById('prod-seccion').value = '';
+  document.querySelectorAll('.genero-chip').forEach(function(c){ c.classList.remove('selected'); });
+  uploadedPhotos = [];
+  renderPreviews();
+  var btn = document.getElementById('publish-btn');
+  btn.textContent = '🚀 Publicar producto';
+  delete btn.dataset.editPid;
+  document.getElementById('publish-log').innerHTML = '';
+  loadCustomGeneros();
+}
+
+function loadCustomGeneros() {
+  db.ref('config/categorias').once('value', function(snap) {
+    var cats = snap.val() || {};
+    Object.entries(cats).forEach(function([val, label]) {
+      if (!document.querySelector('.genero-chip[data-val="' + val + '"]')) {
+        var container = document.getElementById('genero-chips');
+        if (!container) return;
+        var chip = document.createElement('span');
+        chip.className = 'genero-chip';
+        chip.setAttribute('data-val', val);
+        chip.setAttribute('onclick', 'toggleGeneroChip(this)');
+        chip.textContent = label;
+        container.appendChild(chip);
+      }
+    });
+  });
+}
+
+
+// ── MENSAJES ADMIN ──
+function loadMensajesAdmin() {
+  db.ref('mensajes').orderByChild('fecha').limitToLast(30).once('value', function(snap) {
+    var data = snap.val() || {};
+    var list = document.getElementById('mensajes-admin-list');
+    var items = Object.entries(data).reverse();
+    if (!items.length) { list.innerHTML = '<div class="empty-state">Sin mensajes publicados</div>'; return; }
+    list.innerHTML = items.map(function(e) {
+      var id = e[0]; var m = e[1];
+      var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      return '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;">' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:0.85rem;color:var(--text);line-height:1.5;">' + (m.texto||'') + '</div>' +
+          '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">' + fecha + '</div>' +
+        '</div>' +
+        '<button onclick="eliminarMensaje('' + id + '')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;flex-shrink:0;" title="Eliminar">🗑</button>' +
+      '</div>';
+    }).join('');
+  });
+}
+
+function publicarMensaje() {
+  var texto = document.getElementById('msg-texto').value.trim();
+  var status = document.getElementById('msg-status');
+  if (!texto) { status.style.color='#ff9999'; status.textContent='Escribe un mensaje primero'; return; }
+  status.textContent = 'Publicando…';
+  db.ref('mensajes').push({ texto: texto, fecha: new Date().toISOString() }).then(function() {
+    status.style.color = '#7fff7f';
+    status.textContent = '✅ Mensaje publicado';
+    document.getElementById('msg-texto').value = '';
+    loadMensajesAdmin();
+    setTimeout(function(){ status.textContent = ''; }, 3000);
+  }).catch(function(e) {
+    status.style.color = '#ff9999';
+    status.textContent = '❌ Error: ' + e.message;
+  });
+}
+
+function eliminarMensaje(id) {
+  if (!confirm('¿Eliminar este mensaje?')) return;
+  db.ref('mensajes/' + id).remove().then(function(){ loadMensajesAdmin(); });
+}
+
 </script>
 
   <!-- ── MODAL BACKUP ── -->
