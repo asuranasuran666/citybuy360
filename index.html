@@ -124,7 +124,7 @@
         @media (max-width: 1024px) {
             aside { display: none; }
             .slide { padding: 0 50px 0 50px; text-align: left; justify-content: flex-start; }
-            #badge-360-header { display: none; }
+            #badge-360-header { display: none !important; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
             .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
@@ -309,8 +309,6 @@
         }
 
         .products-container { padding: 4px 20px 40px; width: 100%; box-sizing: border-box; }
-            #badge-360-header { display: inline-flex; }
-            #span-360 { cursor: default; pointer-events: none; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .grid-destacado { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 
@@ -611,6 +609,8 @@
             .card-photo-dots { display: none !important; }
             #badge-360-header { display: inline-flex !important; }
             .lifestyle-ribbon { flex-direction: row !important; }
+            #bottom-nav { display: none !important; }
+            #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
         }
     
         /* ── MODAL VIP ACCESO 360 ── */
@@ -1112,7 +1112,7 @@
 
             </div>
 
-            <div class="lifestyle-ribbon"><div class="ribbon-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div><div class="ribbon-cta">CityBUY360 →</div></div>
+            <div class="lifestyle-ribbon"><div class="ribbon-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
 
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid">
@@ -1179,7 +1179,7 @@
 
             </div>
 
-            <div class="lifestyle-ribbon"><div class="ribbon-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div><div class="ribbon-cta">Lo quiero →</div></div>
+            <div class="lifestyle-ribbon"><div class="ribbon-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid">
