@@ -700,6 +700,30 @@
         .mensaje-fecha { color: #555; font-size: 0.72rem; margin-top: 6px; }
         .mensajes-empty { color: #555; font-size: 0.85rem; text-align: center; padding: 30px 0; }
 
+        
+        /* ── CARD TASAS DE CAMBIO ── */
+        #tasas-card {
+            background: linear-gradient(135deg, #0d1117, #161b22);
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        #tasas-card.visible { display: block; }
+        .tasas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .tasas-title { color: #e6edf3; font-size: 0.88rem; font-weight: 700; }
+        .tasas-source { color: #6e7681; font-size: 0.72rem; }
+        .tasas-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+        .tasa-item { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 12px 10px; text-align: center; }
+        .tasa-moneda { color: #8b949e; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+        .tasa-valor { color: #f0f6fc; font-size: 1.25rem; font-weight: 900; }
+        .tasa-label { color: #6e7681; font-size: 0.65rem; margin-top: 2px; }
+        .tasa-error { color: #f85149; font-size: 0.75rem; text-align: center; padding: 10px; }
+        .tasas-loading { color: #8b949e; font-size: 0.8rem; text-align: center; padding: 10px; }
+        .tasas-update { color: #6e7681; font-size: 0.68rem; text-align: right; margin-top: 10px; }
+        @media (max-width: 700px) { .tasas-grid { grid-template-columns: repeat(3,1fr); gap: 8px; } .tasa-valor { font-size: 1.05rem; } }
+
         </style>
 </head>
 <body>
@@ -806,6 +830,16 @@
     <button class="cat-btn" onclick="filterCat('aseo',this)">🧴 Aseo</button>
     <button class="cat-btn" onclick="filterCat('servicios',this)">⚡ Servicios</button>
 </div>
+
+        <!-- ── CARD TASAS DE CAMBIO ── -->
+        <div id="tasas-card">
+            <div class="tasas-header">
+                <span class="tasas-title">💱 Tasa de cambio en Cuba</span>
+                <span class="tasas-source">Fuente: elToque (informal)</span>
+            </div>
+            <div id="tasas-content" class="tasas-loading">Cargando tasas…</div>
+            <div class="tasas-update" id="tasas-update"></div>
+        </div>
 
         <div class="products-container">
 
@@ -1112,7 +1146,7 @@
 
             </div>
 
-            <div class="lifestyle-ribbon"><div class="ribbon-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
+            <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
 
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid">
@@ -1179,7 +1213,7 @@
 
             </div>
 
-            <div class="lifestyle-ribbon"><div class="ribbon-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
+            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid">
@@ -1942,8 +1976,9 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         }
     }
 
-    // Cargar badge count al inicio
+    // ── INIT ON LOAD ──
     window.addEventListener('load', function() {
+        loadRibbonsFromFirebase();
         db.ref('mensajes').once('value', function(snap) {
             var data = snap.val() || {};
             var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
@@ -1955,6 +1990,104 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
             }
         });
     });
+
+    
+    // ── TASAS DE CAMBIO (elToque via proxy) ──
+    function loadTasas() {
+        var card = document.getElementById('tasas-card');
+        if (!card) return;
+        var proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy');
+        fetch(proxy)
+            .then(function(r){ return r.text(); })
+            .then(function(html) {
+                // Extract __NEXT_DATA__ JSON
+                var match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+                if (!match) throw new Error('No data found');
+                var data = JSON.parse(match[1]);
+                // Navigate the Next.js page props to find rates
+                var props = data.props && data.props.pageProps;
+                var rates = {};
+                // Try different paths where elToque stores rates
+                var tryPaths = [
+                    props && props.rates,
+                    props && props.data && props.data.rates,
+                    props && props.trmi,
+                    props && props.tasas,
+                ];
+                for (var i=0; i<tryPaths.length; i++) {
+                    if (tryPaths[i] && typeof tryPaths[i] === 'object') {
+                        rates = tryPaths[i]; break;
+                    }
+                }
+                // Fallback: search for USD/EUR values in raw text
+                if (!rates.USD && !rates.usd) {
+                    var usdMatch = html.match(/"USD"[^:]*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/);
+                    var eurMatch = html.match(/"EUR"[^:]*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/);
+                    var mlcMatch = html.match(/"MLC"[^:]*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/);
+                    if (usdMatch) rates.USD = { value: parseFloat(usdMatch[1]) };
+                    if (eurMatch) rates.EUR = { value: parseFloat(eurMatch[1]) };
+                    if (mlcMatch) rates.MLC = { value: parseFloat(mlcMatch[1]) };
+                }
+                renderTasas(rates);
+            })
+            .catch(function(e) {
+                document.getElementById('tasas-content').innerHTML = '<div class="tasa-error">⚠️ No se pudieron cargar las tasas. ' + e.message + '</div>';
+            });
+    }
+
+    function renderTasas(rates) {
+        var content = document.getElementById('tasas-content');
+        var monedas = [
+            { key: 'USD', label: 'Dólar', sym: '$' },
+            { key: 'EUR', label: 'Euro', sym: '€' },
+            { key: 'MLC', label: 'MLC', sym: '₡' },
+        ];
+        var html = '<div class="tasas-grid">';
+        monedas.forEach(function(m) {
+            var r = rates[m.key] || rates[m.key.toLowerCase()] || {};
+            var val = r.value || r.avg || r.promedio || r.informal || '—';
+            if (typeof val === 'number') val = val.toFixed(0) + ' CUP';
+            html += '<div class="tasa-item">' +
+                '<div class="tasa-moneda">' + m.sym + ' ' + m.key + '</div>' +
+                '<div class="tasa-valor">' + val + '</div>' +
+                '<div class="tasa-label">' + m.label + '</div>' +
+                '</div>';
+        });
+        html += '</div>';
+        content.innerHTML = html;
+        document.getElementById('tasas-update').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+    }
+
+    // ── RIBBONS DESDE FIREBASE ──
+    function loadRibbonsFromFirebase() {
+        db.ref('interfaz/ribbon1').once('value', function(snap) {
+            if (snap.val()) {
+                var el = document.getElementById('ribbon-1-text');
+                if (el) el.textContent = snap.val();
+            }
+        });
+        db.ref('interfaz/ribbon2').once('value', function(snap) {
+            if (snap.val()) {
+                var el = document.getElementById('ribbon-2-text');
+                if (el) el.textContent = snap.val();
+            }
+        });
+        db.ref('interfaz/ribbon1active').once('value', function(snap) {
+            var el = document.getElementById('ribbon-1');
+            if (el && snap.val() === false) el.style.display = 'none';
+        });
+        db.ref('interfaz/ribbon2active').once('value', function(snap) {
+            var el = document.getElementById('ribbon-2');
+            if (el && snap.val() === false) el.style.display = 'none';
+        });
+        db.ref('interfaz/tasas').once('value', function(snap) {
+            var card = document.getElementById('tasas-card');
+            if (card && snap.val() === true) {
+                card.classList.add('visible');
+                loadTasas();
+            }
+        });
+    }
 
     </script>
 
