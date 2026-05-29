@@ -6,7 +6,7 @@
 <title>Admin — CityBUY360</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -204,7 +204,7 @@
   .genero-add-btn:hover { border-color: var(--primary); color: var(--primary); }
 
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
 </head>
 <body>
 
@@ -1066,7 +1066,7 @@ function checkPwd() {
   if (val === PASS) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-panel').style.display = 'block';
-    initAdmin();
+    try { initAdmin(); } catch(e) { console.error('initAdmin error:', e); }
   } else {
     document.getElementById('login-error').textContent = 'Contraseña incorrecta';
     document.getElementById('pwd-input').value = '';

@@ -608,7 +608,7 @@
             .card-photo-dots { display: none !important; }
             #badge-360-header { display: inline-flex !important; }
             .lifestyle-ribbon { flex-direction: row !important; }
-            #bottom-nav { display: none !important; }
+            #bottom-nav { display: block !important; }
             #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
         }
     
@@ -754,11 +754,11 @@
         <!-- SLIDER -->
 <header>
     <div class="header-brand">
-        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;padding:2px 8px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 14px rgba(255,210,0,0.8),0 0 4px rgba(255,180,0,0.5);display:inline-block;">360</span></h1>
+        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;padding:3px 10px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 18px rgba(255,210,0,0.9),0 0 6px rgba(255,180,0,0.6);display:inline-block;letter-spacing:0.5px;">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
         <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">🔔<span id="bell-badge" class="bell-badge"></span></button>
-        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')">✦ ACCESO 360</span>
+        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')" style="color:#1a0a00;font-weight:900;">ACCESO 360</span>
     </div>
     <div class="header-slider">
 
