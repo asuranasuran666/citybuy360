@@ -1695,17 +1695,19 @@ function loadMensajesAdmin() {
     var list = document.getElementById('mensajes-admin-list');
     var items = Object.entries(data).reverse();
     if (!items.length) { list.innerHTML = '<div class="empty-state">Sin mensajes publicados</div>'; return; }
-    list.innerHTML = items.map(function(e) {
+    var html = '';
+    items.forEach(function(e) {
       var id = e[0]; var m = e[1];
       var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
-      return '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;">' +
-        '<div style="flex:1;">' +
-          '<div style="font-size:0.85rem;color:var(--text);line-height:1.5;">' + (m.texto||'') + '</div>' +
-          '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">' + fecha + '</div>' +
-        '</div>' +
-        '<button onclick="eliminarMensaje('' + id + '')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;flex-shrink:0;" title="Eliminar">🗑</button>' +
-      '</div>';
-    }).join('');
+      html += '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;">';
+      html += '<div style="flex:1;">';
+      html += '<div style="font-size:0.85rem;color:var(--text);line-height:1.5;">' + (m.texto || '') + '</div>';
+      html += '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">' + fecha + '</div>';
+      html += '</div>';
+      html += '<button onclick="eliminarMensaje(' + JSON.stringify(id) + ')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;flex-shrink:0;" title="Eliminar">&#x1F5D1;&#xFE0F;</button>';
+      html += '</div>';
+    });
+    list.innerHTML = html;
   });
 }
 
