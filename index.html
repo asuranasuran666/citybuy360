@@ -608,7 +608,8 @@
             .card-photo-dots { display: none !important; }
             #badge-360-header { display: inline-flex !important; }
             .lifestyle-ribbon { flex-direction: row !important; }
-            #bottom-nav { display: block !important; }
+            #bottom-nav { display: flex !important; flex-direction: row !important; width: 100%; }
+            #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
             #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
         }
     
@@ -1828,7 +1829,8 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     }
     function irACodigoAcceso() {
         var sec = document.getElementById('sec-acceso360');
-        if (sec && sec.style.display !== 'none') {
+        if (sec) {
+            sec.style.display = 'block';
             sec.scrollIntoView({ behavior: 'smooth' });
             setTimeout(function(){ var inp = document.getElementById('acceso360-code'); if(inp) inp.focus(); }, 600);
         }
