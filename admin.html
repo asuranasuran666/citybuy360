@@ -533,6 +533,20 @@
 
 <script>
 const PASS = 'CityBUY360/-+*';
+
+// ── checkPwd definido PRIMERO — independiente de Firebase ──
+function checkPwd() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    try { initAdmin(); } catch(e) { console.error('initAdmin error:', e); }
+  } else {
+    document.getElementById('login-error').textContent = 'Contraseña incorrecta';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
   authDomain: "citybuy360.firebaseapp.com",
@@ -542,8 +556,14 @@ const firebaseConfig = {
   messagingSenderId: "701999748308",
   appId: "1:701999748308:web:85c320687f6eb10471d741"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let db;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(e) {
+  console.error('Firebase init error:', e);
+  document.getElementById('login-error').textContent = 'Error de conexión con Firebase: ' + e.message;
+}
 
 // ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
 let SECTIONS = [];
@@ -1061,17 +1081,7 @@ function toggleEmailjsConfig() {
   if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
 }
 
-function checkPwd() {
-  const val = document.getElementById('pwd-input').value;
-  if (val === PASS) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-    try { initAdmin(); } catch(e) { console.error('initAdmin error:', e); }
-  } else {
-    document.getElementById('login-error').textContent = 'Contraseña incorrecta';
-    document.getElementById('pwd-input').value = '';
-  }
-}
+
 function logout() {
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
