@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo CityBUY360</title>
+    <title>CatÃ¡logo CityBUY360</title>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -145,7 +145,7 @@
 
 
 
-        /* ── SLIDER DE FOTOS EN CARD ── */
+        /* ââ SLIDER DE FOTOS EN CARD ââ */
         .card-img-container { position: relative; overflow: hidden; }
         .card-nav-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
@@ -166,7 +166,7 @@
             background: rgba(255,255,255,0.4); transition: background 0.2s;
         }
         .card-photo-dot.active { background: white; }
-        /* ── ACCESO 360 ── */
+        /* ââ ACCESO 360 ââ */
         #sec-acceso360 { position: relative; }
         .acceso360-lock {
             position: absolute; inset: 0; z-index: 20;
@@ -187,7 +187,7 @@
         .acceso360-desc { color: #aaa; font-size: 0.82rem; line-height: 1.6; max-width: 320px; }
         .acceso360-perks { list-style: none; padding: 0; margin: 0; text-align: left; }
         .acceso360-perks li { color: #ccc; font-size: 0.8rem; padding: 3px 0; }
-        .acceso360-perks li::before { content: "✦ "; color: #ffd700; }
+        .acceso360-perks li::before { content: "â¦ "; color: #ffd700; }
         .acceso360-input-wrap { display: flex; gap: 8px; width: 100%; max-width: 300px; }
         .acceso360-input {
             flex: 1; background: #1a1a1a; border: 1px solid #444;
@@ -208,7 +208,7 @@
             height: 200px; display: flex; align-items: center; justify-content: center;
             color: #444; font-size: 0.8rem;
         }
-        /* ── BARRA DE CATEGORÍAS ── */
+        /* ââ BARRA DE CATEGORÃAS ââ */
         #cat-bar {
             display: flex; overflow-x: auto; gap: 8px;
             padding: 10px 20px; background: var(--bg-dark);
@@ -225,7 +225,7 @@
         .cat-btn.active { background: var(--brand-blue); color: white; border-color: var(--brand-blue); }
         .cat-btn:hover { border-color: var(--brand-blue); color: white; }
 
-        /* ── BARRA NAVEGACIÓN INFERIOR ── */
+        /* ââ BARRA NAVEGACIÃN INFERIOR ââ */
         #bottom-nav {
             display: none;
             position: fixed; bottom: 0; left: 0; right: 0;
@@ -322,7 +322,7 @@
             overflow: hidden;
         }
         .card-img-container:hover::after {
-            content: "🔍";
+            content: "ð";
             position: absolute;
             bottom: 8px;
             right: 8px;
@@ -332,7 +332,7 @@
             padding: 4px 6px;
             line-height: 1;
         }
-        /* Indicador de múltiples imágenes */
+        /* Indicador de mÃºltiples imÃ¡genes */
         .card-img-container[data-count="2"]::before {
             content: "1 / 2";
             position: absolute;
@@ -453,7 +453,7 @@
             letter-spacing: 1px;
         }
 
-        /* Zoom para imagen única */
+        /* Zoom para imagen Ãºnica */
         #lightbox-img.zoomable { cursor: zoom-in; }
         #lightbox-img.zoomed  { 
             transform: scale(2); 
@@ -530,7 +530,7 @@
             color: #999;
         }
 
-        /* ===== BOTTOM SHEET (MÓVIL) ===== */
+        /* ===== BOTTOM SHEET (MÃVIL) ===== */
         #bs-overlay {
             display: none;
             position: fixed;
@@ -613,7 +613,7 @@
             #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
         }
     
-        /* ── MODAL VIP ACCESO 360 ── */
+        /* ââ MODAL VIP ACCESO 360 ââ */
         #modal-vip-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px); }
         #modal-vip-overlay.open { display:flex; }
         #modal-vip-box { background:linear-gradient(160deg,#0d0d0d,#1a1100);border:1px solid #b8860b;border-radius:18px;padding:30px 26px 26px;max-width:370px;width:100%;position:relative;box-shadow:0 0 40px rgba(255,200,0,0.18),0 0 80px rgba(0,0,0,0.8);animation:vipIn 0.35s cubic-bezier(.34,1.56,.64,1); }
@@ -626,7 +626,7 @@
         .modal-vip-perks { list-style:none;padding:0;margin:0 0 20px; }
         .modal-vip-perks li { color:#ccc;font-size:0.82rem;padding:5px 0;border-bottom:1px solid #1f1f1f;display:flex;align-items:center;gap:8px; }
         .modal-vip-perks li:last-child { border-bottom:none; }
-        .modal-vip-perks li::before { content:'✦';color:#ffd700;font-size:0.68rem;flex-shrink:0; }
+        .modal-vip-perks li::before { content:'â¦';color:#ffd700;font-size:0.68rem;flex-shrink:0; }
         .modal-btn-si { width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;font-weight:900;font-size:0.98rem;cursor:pointer;margin-bottom:10px;transition:transform 0.15s,box-shadow 0.15s; }
         .modal-btn-si:hover { transform:scale(1.02);box-shadow:0 0 20px rgba(255,210,0,0.35); }
         .modal-btn-si:disabled { opacity:0.6;cursor:not-allowed;transform:none; }
@@ -645,7 +645,7 @@
         .modal-email-error { color:#ff6b6b;font-size:0.78rem;margin-bottom:8px;display:none; }
 
         
-        /* ── ACCESO 360 ENTRADA ANIMADA ── */
+        /* ââ ACCESO 360 ENTRADA ANIMADA ââ */
         #acceso360-welcome {
             display: none; position: fixed; inset: 0; z-index: 9998;
             background: rgba(0,0,0,0.95);
@@ -660,7 +660,7 @@
         #confetti-canvas { position: fixed; inset: 0; z-index: 9997; pointer-events: none; }
 
         
-        /* ── CAMPANITA MENSAJES ── */
+        /* ââ CAMPANITA MENSAJES ââ */
         #bell-btn {
             position: relative; background: none; border: none;
             color: #aaa; font-size: 1.2rem; cursor: pointer;
@@ -702,7 +702,7 @@
         .mensajes-empty { color: #555; font-size: 0.85rem; text-align: center; padding: 30px 0; }
 
         
-        /* ── CARD TASAS DE CAMBIO ── */
+        /* ââ CARD TASAS DE CAMBIO ââ */
         #tasas-card {
             background: linear-gradient(135deg, #0d1117, #161b22);
             border: 1px solid #30363d;
@@ -731,22 +731,22 @@
 
 <!-- LIGHTBOX -->
 <div id="lightbox">
-    <button id="lb-close" title="Cerrar">✕</button>
-    <button class="lb-btn" id="lb-prev"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">‹</span></button>
+    <button id="lb-close" title="Cerrar">â</button>
+    <button class="lb-btn" id="lb-prev"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">â¹</span></button>
     <img id="lightbox-img" src="" alt="Vista ampliada">
-    <button class="lb-btn" id="lb-next"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">›</span></button>
+    <button class="lb-btn" id="lb-next"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">âº</span></button>
     <div id="lb-counter"></div>
     <div id="lb-zoom-hint"></div>
 </div>
 
-<!-- BOTTOM SHEET (MÓVIL) -->
+<!-- BOTTOM SHEET (MÃVIL) -->
 <div id="bs-overlay"></div>
 <div id="bottom-sheet">
     <div id="bs-handle"></div>
-    <button id="bs-close">✕</button>
+    <button id="bs-close">â</button>
     <div id="bs-title"></div>
     <div id="bs-content"></div>
-    <button id="bs-ver-foto">📷 Ver foto</button>
+    <button id="bs-ver-foto">ð· Ver foto</button>
 </div>
 
 <div class="page-wrapper">
@@ -758,17 +758,17 @@
         <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;padding:3px 10px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 18px rgba(255,210,0,0.9),0 0 6px rgba(255,180,0,0.6);display:inline-block;letter-spacing:0.5px;">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
-        <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">🔔<span id="bell-badge" class="bell-badge"></span></button>
+        <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">ð<span id="bell-badge" class="bell-badge"></span></button>
         <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')" style="color:#1a0a00;font-weight:900;">ACCESO 360</span>
     </div>
     <div class="header-slider">
 
         <div class="slide" style="background: linear-gradient(135deg, #ff9800, #ff5722); display: flex;">
             <div>
-                <div class="slide-label" style="color: white; opacity: 0.85;">¡Dale vida a tu móvil!</div>
-                <div class="slide-title">Recarga 360 — 1,000 MN</div>
+                <div class="slide-label" style="color: white; opacity: 0.85;">Â¡Dale vida a tu mÃ³vil!</div>
+                <div class="slide-title">Recarga 360 â 1,000 MN</div>
             </div>
-            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="slide-cta" style="color: #ff5722;">Compra YA 🛒</a>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="slide-cta" style="color: #ff5722;">Compra YA ð</a>
         </div>
 
         <div class="slide" style="background: linear-gradient(135deg, #1a1a2e, #16213e); display: none;">
@@ -781,20 +781,20 @@
         <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none;">
             <div>
                 <div class="slide-label" style="color: #00d4ff;">Acaba de llegar</div>
-                <div class="slide-title">Nueva Mercancía</div>
+                <div class="slide-title">Nueva MercancÃ­a</div>
             </div>
         </div>
 
         <div class="slide" style="background: linear-gradient(135deg, #1b4332, #2d6a4f); display: none;">
             <div>
                 <div class="slide-label" style="color: #95d5b2;">Disponible ya</div>
-                <div class="slide-title">En nuestro almacén</div>
+                <div class="slide-title">En nuestro almacÃ©n</div>
             </div>
         </div>
 
         <div class="slide" style="background: linear-gradient(135deg, #7b2d8b, #c0392b); display: none;">
             <div>
-                <div class="slide-label" style="color: #ffd700;">¡A celebrar!</div>
+                <div class="slide-label" style="color: #ffd700;">Â¡A celebrar!</div>
                 <div class="slide-title">Hora de la Fiesta</div>
             </div>
         </div>
@@ -802,13 +802,13 @@
         <div class="slide" style="background: linear-gradient(135deg, #004e92, #000428); display: none;">
             <div>
                 <div class="slide-label" style="color: #00d4ff;">EMPRENDEDORES</div>
-                <div class="slide-title">¡Vende con nosotros!</div>
+                <div class="slide-title">Â¡Vende con nosotros!</div>
             </div>
-            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" class="slide-cta" style="color: #004e92;">Contáctanos</a>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" class="slide-cta" style="color: #004e92;">ContÃ¡ctanos</a>
         </div>
 
-        <button onclick="sliderPrev()" class="slider-nav-btn" style="left: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">‹</span></button>
-        <button onclick="sliderNext()" class="slider-nav-btn" style="right: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">›</span></button>
+        <button onclick="sliderPrev()" class="slider-nav-btn" style="left: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">â¹</span></button>
+        <button onclick="sliderNext()" class="slider-nav-btn" style="right: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">âº</span></button>
 
         <div id="slider-dots" style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
             <span class="dot active-dot" style="background: white;"></span>
@@ -823,65 +823,41 @@
 
 <div id="cat-bar">
     <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
-    <button class="cat-btn" onclick="filterCat('mujer',this)">👗 Mujer</button>
-    <button class="cat-btn" onclick="filterCat('hombre',this)">👕 Hombre</button>
-    <button class="cat-btn" onclick="filterCat('unisex',this)">🔄 Unisex</button>
-    <button class="cat-btn" onclick="filterCat('ninos',this)">👶 Niños</button>
-    <button class="cat-btn" onclick="filterCat('electrodomesticos',this)">🔌 Electrodomésticos</button>
-    <button class="cat-btn" onclick="filterCat('aseo',this)">🧴 Aseo</button>
-    <button class="cat-btn" onclick="filterCat('servicios',this)">⚡ Servicios</button>
+    <button class="cat-btn" onclick="filterCat('mujer',this)">ð Mujer</button>
+    <button class="cat-btn" onclick="filterCat('hombre',this)">ð Hombre</button>
+    <button class="cat-btn" onclick="filterCat('unisex',this)">ð Unisex</button>
+    <button class="cat-btn" onclick="filterCat('ninos',this)">ð¶ NiÃ±os</button>
+    <button class="cat-btn" onclick="filterCat('electrodomesticos',this)">ð ElectrodomÃ©sticos</button>
+    <button class="cat-btn" onclick="filterCat('aseo',this)">ð§´ Aseo</button>
+    <button class="cat-btn" onclick="filterCat('servicios',this)">â¡ Servicios</button>
 </div>
 
-        <!-- ── CARD TASAS DE CAMBIO ── -->
+        <!-- ââ CARD TASAS DE CAMBIO ââ -->
         <div id="tasas-card">
             <div class="tasas-header">
-                <span class="tasas-title">💱 Tasa de cambio en Cuba</span>
+                <span class="tasas-title">ð± Tasa de cambio en Cuba</span>
                 <span class="tasas-source">Fuente: elToque (informal)</span>
             </div>
-            <div id="tasas-content" class="tasas-loading">Cargando tasas…</div>
+            <div id="tasas-content" class="tasas-loading">Cargando tasasâ¦</div>
             <div class="tasas-update" id="tasas-update"></div>
         </div>
 
         <div class="products-container">
 
-            <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
+            <div class="section-title" id="sec-title-destacado" data-section="destacado">â­ LO MÃS DESTACADO</div>
             <div class="grid">
-
-                <div class="card" data-product="blumer" style="align-self: start;">
-                    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
-                        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
-                        <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
-                    </div>
-                    <div class="card-content">
-                        <div class="tag-category">ROPA INTERIOR</div>
-                        <div class="product-name">Blumer sin costuras</div>
-                        <div class="stars-container" data-product="blumer">
-                            <div class="stars">
-                                <span class="star" data-val="1">★</span>
-                                <span class="star" data-val="2">★</span>
-                                <span class="star" data-val="3">★</span>
-                                <span class="star" data-val="4">★</span>
-                                <span class="star" data-val="5">★</span>
-                            </div>
-                            <span class="stars-info">Sin votos</span>
-                        </div>
-                        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
-                        <div class="price">550 MN</div>
-                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
-                    </div>
-                </div>
 
                 <div class="card" data-product="gorra" data-genero="unisex">
     <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
         <img src="gorra.jpg" class="card-img" alt="Gorra">
-        <div class="hover-tooltip">Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+        <div class="hover-tooltip">DiseÃ±o icÃ³nico con monograma frontal bordado en negro de alto contraste. Un clÃ¡sico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para mÃ¡xima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ACCESORIOS</div>
         <div class="product-name">Gorra</div>
         <div class="stars-container" data-product="gorra">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
@@ -894,14 +870,14 @@
 <div class="card" data-product="freedom" data-genero="mujer hombre">
     <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
         <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
-        <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+        <div class="hover-tooltip">Un bÃ¡sico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ROPA Y MODA</div>
         <div class="product-name">Pulover estampado FREEDOM</div>
         <div class="stars-container" data-product="freedom">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
@@ -913,19 +889,19 @@
 
 <div class="card" data-product="bolsomovil" data-genero="mujer">
     <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
-        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
-        <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
+        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para mÃ³vil">
+        <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para mÃ³vil y accesorios esenciales. DiseÃ±o frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeÃ±o detalle floral.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ACCESORIOS</div>
-        <div class="product-name">Bolso Bandolera para Móvil</div>
+        <div class="product-name">Bolso Bandolera para MÃ³vil</div>
         <div class="stars-container" data-product="bolsomovil">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Material: Cuero sintético y Nylon.<br>Colores: Negro con detalles decorativos.</div>
+        <div class="details-block">Material: Cuero sintÃ©tico y Nylon.<br>Colores: Negro con detalles decorativos.</div>
         <div class="price">2,000 MN</div>
         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)" class="btn-lo-quiero">Lo quiero</a>
     </div>
@@ -933,24 +909,24 @@
 
             </div>
 
-            <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
+            <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">ð ROPA INTERIOR</div>
             <div class="grid">
 
                 <div class="card" data-product="blumer" style="align-self: start;">
                     <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
                         <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
-                        <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
+                        <div class="hover-tooltip">DiseÃ±o sin costuras, con bordes cortados con lÃ¡ser, lo que los hace prÃ¡cticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseÃ±o de cintura media/baja y un corte de cobertura mÃ­nima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elÃ¡stico, suave al tacto y de secado rÃ¡pido que se adapta al cuerpo como una segunda piel.</div>
                     </div>
                     <div class="card-content">
                         <div class="tag-category">ROPA INTERIOR</div>
                         <div class="product-name">Blumer sin costuras</div>
                         <div class="stars-container" data-product="blumer">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span>
-                                <span class="star" data-val="2">★</span>
-                                <span class="star" data-val="3">★</span>
-                                <span class="star" data-val="4">★</span>
-                                <span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span>
+                                <span class="star" data-val="2">â</span>
+                                <span class="star" data-val="3">â</span>
+                                <span class="star" data-val="4">â</span>
+                                <span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
@@ -963,18 +939,18 @@
                 <div class="card" data-product="sujetador" style="align-self: start;">
                     <div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position: relative;">
                         <img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras">
-                        <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
+                        <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. DiseÃ±o liso y minimalista, pensado para ser cÃ³modo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elÃ¡stico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
                     </div>
                     <div class="card-content">
                         <div class="tag-category">ROPA INTERIOR</div>
                         <div class="product-name">Ajustador sin costuras</div>
                         <div class="stars-container" data-product="sujetador">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span>
-                                <span class="star" data-val="2">★</span>
-                                <span class="star" data-val="3">★</span>
-                                <span class="star" data-val="4">★</span>
-                                <span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span>
+                                <span class="star" data-val="2">â</span>
+                                <span class="star" data-val="3">â</span>
+                                <span class="star" data-val="4">â</span>
+                                <span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
@@ -986,24 +962,24 @@
 
             </div>
 
-            <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">👕 ROPA Y MODA</div>
+            <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">ð ROPA Y MODA</div>
             <div class="grid">
 
                 <div class="card" data-product="paris" data-genero="mujer hombre">
     <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position: relative;">
         <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
-        <div class="hover-tooltip">Look casual y elegante. Diseño sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.</div>
+        <div class="hover-tooltip">Look casual y elegante. DiseÃ±o sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clÃ¡sico y entallado que garantiza comodidad durante todo el dÃ­a sin perder el estilo.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ROPA Y MODA</div>
         <div class="product-name">Pulover estampado PARIS</div>
         <div class="stars-container" data-product="paris">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, MarrÃ³n</div>
         <div class="price">2,900 MN</div>
         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
     </div>
@@ -1012,18 +988,18 @@
                 <div class="card" data-product="ngu" data-genero="mujer hombre">
     <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position: relative;">
         <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
-        <div class="hover-tooltip">Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
+        <div class="hover-tooltip">Recomendado por deportistas, fresco y transpirable. DiseÃ±o inspirador con mensaje motivacional. LÃ­nea diagonal en tono granate que rompe la monotonÃ­a y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ROPA Y MODA</div>
         <div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div>
         <div class="stars-container" data-product="ngu">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, MarrÃ³n</div>
         <div class="price">2,900 MN</div>
         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
     </div>
@@ -1031,19 +1007,19 @@
 
                 <div class="card" data-product="gdm" data-genero="mujer hombre">
     <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position: relative;">
-        <img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER">
-        <div class="hover-tooltip">Lo más vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.</div>
+        <img src="gdm.jpg" class="card-img" alt="PulÃ³ver GREAT DREAM MAKER">
+        <div class="hover-tooltip">Lo mÃ¡s vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasiÃ³n.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ROPA Y MODA</div>
-        <div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div>
+        <div class="product-name">PulÃ³ver GREAT DREAM MAKER (GRAN CREADOR DE SUEÃOS)</div>
         <div class="stars-container" data-product="gdm">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, Marrón</div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, MarrÃ³n</div>
         <div class="price">2,900 MN</div>
         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
     </div>
@@ -1051,14 +1027,14 @@
 
                 <div class="card" data-product="aac" data-genero="mujer hombre">
                     <div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2">
-                        <img src="aac.jpg" class="card-img" alt="Pulover Amor, Alegría y Cerveza Fría">
+                        <img src="aac.jpg" class="card-img" alt="Pulover Amor, AlegrÃ­a y Cerveza FrÃ­a">
                     </div>
                     <div class="card-content">
                         <div class="tag-category">ROPA Y MODA</div>
-                        <div class="product-name">Pulover Amor, Alegría y Cerveza Fría</div>
+                        <div class="product-name">Pulover Amor, AlegrÃ­a y Cerveza FrÃ­a</div>
                         <div class="stars-container" data-product="aac">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
@@ -1077,7 +1053,7 @@
                         <div class="product-name">Pulover estampado USA</div>
                         <div class="stars-container" data-product="usa">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
@@ -1090,14 +1066,14 @@
                 <div class="card" data-product="freedom" data-genero="mujer hombre">
     <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
         <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
-        <div class="hover-tooltip">Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+        <div class="hover-tooltip">Un bÃ¡sico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ROPA Y MODA</div>
         <div class="product-name">Pulover estampado FREEDOM</div>
         <div class="stars-container" data-product="freedom">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
@@ -1116,11 +1092,11 @@
                         <div class="product-name">Medias Blancas</div>
                         <div class="stars-container" data-product="mblancas">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
-                        <div class="details-block">Talla: Única | Transpirable</div>
+                        <div class="details-block">Talla: Ãnica | Transpirable</div>
                         <div class="price">250 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Blancas%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
                     </div>
@@ -1135,11 +1111,11 @@
                         <div class="product-name">Medias Negras</div>
                         <div class="stars-container" data-product="mnegras">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
-                        <div class="details-block">Talla: Única | Transpirable</div>
+                        <div class="details-block">Talla: Ãnica | Transpirable</div>
                         <div class="price">250 MN</div>
                         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Negras%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
                     </div>
@@ -1147,26 +1123,26 @@
 
             </div>
 
-            <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
+            <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"VÃ­stete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
 
-            <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
+            <div class="section-title" id="sec-title-accesorios" data-section="accesorios">ð ACCESORIOS</div>
             <div class="grid">
 
                 <div class="card" data-product="bolsomovil" data-genero="mujer">
     <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
-        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para móvil">
-        <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.</div>
+        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para mÃ³vil">
+        <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para mÃ³vil y accesorios esenciales. DiseÃ±o frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeÃ±o detalle floral.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ACCESORIOS</div>
-        <div class="product-name">Bolso Bandolera para Móvil</div>
+        <div class="product-name">Bolso Bandolera para MÃ³vil</div>
         <div class="stars-container" data-product="bolsomovil">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Material: Cuero sintético y Nylon.<br>Colores: Negro con detalles decorativos.</div>
+        <div class="details-block">Material: Cuero sintÃ©tico y Nylon.<br>Colores: Negro con detalles decorativos.</div>
         <div class="price">2,000 MN</div>
         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)" class="btn-lo-quiero">Lo quiero</a>
     </div>
@@ -1174,19 +1150,19 @@
 
                 <div class="card" data-product="gorrobebe" data-genero="ninos">
     <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position: relative;">
-        <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé">
-        <div class="hover-tooltip">Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.</div>
+        <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebÃ©">
+        <div class="hover-tooltip">DiseÃ±o suave y elÃ¡stico para no daÃ±ar la delicada piel del bebÃ©. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cÃ³modamente, adaptÃ¡ndose a la forma sin generar presiÃ³n excesiva.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ACCESORIOS</div>
-        <div class="product-name">Gorro para bebé</div>
+        <div class="product-name">Gorro para bebÃ©</div>
         <div class="stars-container" data-product="gorrobebe">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Material: Algodón elastano.<br>Colores: Pregunta el color que buscas.</div>
+        <div class="details-block">Material: AlgodÃ³n elastano.<br>Colores: Pregunta el color que buscas.</div>
         <div class="price">1,200 MN</div>
         <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a>
     </div>
@@ -1195,14 +1171,14 @@
                 <div class="card" data-product="gorra" data-genero="unisex">
     <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
         <img src="gorra.jpg" class="card-img" alt="Gorra">
-        <div class="hover-tooltip">Diseño icónico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nítido. Un clásico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para máxima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+        <div class="hover-tooltip">DiseÃ±o icÃ³nico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nÃ­tido. Un clÃ¡sico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para mÃ¡xima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">ACCESORIOS</div>
         <div class="product-name">Gorra</div>
         <div class="stars-container" data-product="gorra">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
@@ -1214,9 +1190,9 @@
 
             </div>
 
-            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
+            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"Â¿Por quÃ© elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
 
-            <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
+            <div class="section-title" id="sec-title-servicios" data-section="servicios">â¡ SERVICIOS</div>
             <div class="grid">
                 <div class="card" data-product="saldo" data-genero="servicios">
                     <div class="card-img-container" data-images="saldo.jpg" data-count="1">
@@ -1227,7 +1203,7 @@
                         <div class="product-name">COMPRAR SALDO (RECARGAS)</div>
                         <div class="stars-container" data-product="saldo">
                             <div class="stars">
-                                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
                             </div>
                             <span class="stars-info">Sin votos</span>
                         </div>
@@ -1238,30 +1214,30 @@
                 </div>
 <div class="card" data-product="citybuy360familia" data-genero="servicios">
     <div class="card-img-container" data-images="bolsas-azules.jpg" data-count="1" style="position: relative;">
-        <img src="bolsas-azules.jpg" class="card-img" alt="Únete a CityBUY360">
-        <div class="hover-tooltip">¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.</div>
+        <img src="bolsas-azules.jpg" class="card-img" alt="Ãnete a CityBUY360">
+        <div class="hover-tooltip">Â¿Eres emprendedor? Impulsa tu negocio con CityBUY360 â publica tus productos y descubre todo lo que podemos lograr en equipo.</div>
     </div>
     <div class="card-content">
         <div class="tag-category">SERVICIOS</div>
-        <div class="product-name">Únete a la familia CityBUY360</div>
+        <div class="product-name">Ãnete a la familia CityBUY360</div>
         <div class="stars-container" data-product="citybuy360familia">
             <div class="stars">
-                <span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span>
+                <span class="star" data-val="1">â</span><span class="star" data-val="2">â</span><span class="star" data-val="3">â</span><span class="star" data-val="4">â</span><span class="star" data-val="5">â</span>
             </div>
             <span class="stars-info">Sin votos</span>
         </div>
-        <div class="details-block">Publica tus productos en nuestro catálogo digital.</div>
+        <div class="details-block">Publica tus productos en nuestro catÃ¡logo digital.</div>
         <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-            <span class="arrow">▶</span> Ver más
+            <span class="arrow">â¶</span> Ver mÃ¡s
         </button>
-        <div class="details-block collapsible">¿Eres emprendedor? ¿Quieres vender por internet pero la parte técnica te frena? ¡Déjalo en nuestras manos! Impulsa tu negocio con NOSOTROS - publica tus productos y descubre todo lo que podemos lograr en equipo. 
-En CityBUY360 te agregamos una sección en nuestro catálogo online, para que tus clientes vean tus productos, precios y ofertas en un solo lugar.
-Eficiencia garantizada: Si tienes problemas de lentitud en la red, nuestro catálogo está optimizado para cargar de manera rápida y eficiente, consumiendo menos datos y garantizando que tus clientes siempre vean tus productos.
-¡Ahorra tiempo y vende las 24/7! Tu tienda siempre abierta, incluso cuando descansas.
-Escríbenos por privado y hablemos de tu proyecto.</div>
+        <div class="details-block collapsible">Â¿Eres emprendedor? Â¿Quieres vender por internet pero la parte tÃ©cnica te frena? Â¡DÃ©jalo en nuestras manos! Impulsa tu negocio con NOSOTROS - publica tus productos y descubre todo lo que podemos lograr en equipo. 
+En CityBUY360 te agregamos una secciÃ³n en nuestro catÃ¡logo online, para que tus clientes vean tus productos, precios y ofertas en un solo lugar.
+Eficiencia garantizada: Si tienes problemas de lentitud en la red, nuestro catÃ¡logo estÃ¡ optimizado para cargar de manera rÃ¡pida y eficiente, consumiendo menos datos y garantizando que tus clientes siempre vean tus productos.
+Â¡Ahorra tiempo y vende las 24/7! Tu tienda siempre abierta, incluso cuando descansas.
+EscrÃ­benos por privado y hablemos de tu proyecto.</div>
 
-        <div class="price">PROMOCIÓN</div>
-        <a href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D%20(0%20CUP)" class="btn-lo-quiero">Contáctanos</a>
+        <div class="price">PROMOCIÃN</div>
+        <a href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D%20(0%20CUP)" class="btn-lo-quiero">ContÃ¡ctanos</a>
     </div>
 </div>
             </div>
@@ -1269,26 +1245,26 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     </div>
 
 
-            <!-- ── SECCIÓN ACCESO 360 (desactivada por defecto) ── -->
+            <!-- ââ SECCIÃN ACCESO 360 (desactivada por defecto) ââ -->
             <div id="sec-acceso360" style="display:none; margin-top: 20px;">
                 <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
-                    ✦ ACCESO 360
+                    â¦ ACCESO 360
                 </div>
                 <div style="position: relative; min-height: 300px;">
                     <!-- Overlay de bloqueo -->
                     <div class="acceso360-lock" id="acceso360-lock">
                         <div class="acceso360-badge">ACCESO 360</div>
-                        <div class="acceso360-title">Sección Exclusiva</div>
-                        <div class="acceso360-desc">Accede a productos exclusivos, drops limitados y beneficios premium con tu código personal.</div>
+                        <div class="acceso360-title">SecciÃ³n Exclusiva</div>
+                        <div class="acceso360-desc">Accede a productos exclusivos, drops limitados y beneficios premium con tu cÃ³digo personal.</div>
                         <ul class="acceso360-perks">
-                            <li>Productos exclusivos no disponibles al público</li>
+                            <li>Productos exclusivos no disponibles al pÃºblico</li>
                             <li>Drops limitados con acceso anticipado</li>
-                            <li>Videos IA de cómo te queda la ropa</li>
+                            <li>Videos IA de cÃ³mo te queda la ropa</li>
                             <li>Reserva de productos antes del lanzamiento</li>
-                            <li>Envío prioritario</li>
+                            <li>EnvÃ­o prioritario</li>
                         </ul>
                         <div class="acceso360-input-wrap">
-                            <input type="text" class="acceso360-input" id="acceso360-code" placeholder="TU CÓDIGO" maxlength="12">
+                            <input type="text" class="acceso360-input" id="acceso360-code" placeholder="TU CÃDIGO" maxlength="12">
                             <button class="acceso360-btn" onclick="checkAcceso360()">Acceder</button>
                         </div>
                         <div class="acceso360-error" id="acceso360-error"></div>
@@ -1296,8 +1272,8 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                     <!-- Contenido desbloqueado -->
                     <div id="acceso360-content" style="display:none;">
                         <div class="grid">
-                            <div class="acceso360-placeholder-card">Próximamente</div>
-                            <div class="acceso360-placeholder-card">Próximamente</div>
+                            <div class="acceso360-placeholder-card">PrÃ³ximamente</div>
+                            <div class="acceso360-placeholder-card">PrÃ³ximamente</div>
                         </div>
                     </div>
                 </div>
@@ -1323,12 +1299,12 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ── Tracking de visitas ──────────────────────────────────────────────────
+    // ââ Tracking de visitas ââââââââââââââââââââââââââââââââââââââââââââââââââ
     const today = new Date().toISOString().split('T')[0];
     db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1);
 
-    // ── PRECIOS DESDE FIREBASE ───────────────────────────────────────────────
-    // ── Configuración de interfaz desde Firebase ─────────────────────────────
+    // ââ PRECIOS DESDE FIREBASE âââââââââââââââââââââââââââââââââââââââââââââââ
+    // ââ ConfiguraciÃ³n de interfaz desde Firebase âââââââââââââââââââââââââââââ
     db.ref('interfaz').once('value', function(snap) {
         var interfaz = snap.val();
         if (!interfaz) return;
@@ -1355,7 +1331,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         if (secAcceso && interfaz.acceso360 === false) secAcceso.style.display = 'none';
     });
 
-    // ── Estado sección Acceso 360 desde Firebase ──────────────────────────────
+    // ââ Estado secciÃ³n Acceso 360 desde Firebase ââââââââââââââââââââââââââââââ
     db.ref('acceso360/seccionActiva').once('value', function(snap) {
         var secAcceso = document.getElementById('sec-acceso360');
         if (secAcceso) secAcceso.style.display = snap.val() === true ? '' : 'none';
@@ -1372,8 +1348,8 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         });
     });
 
-    // ── ACCESO 360 ───────────────────────────────────────────────────────────
-    // Verificar si hay sesión activa de Acceso 360
+    // ââ ACCESO 360 âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    // Verificar si hay sesiÃ³n activa de Acceso 360
     var acceso360Active = sessionStorage.getItem('acceso360') === 'true';
     if (acceso360Active) {
         var lockEl = document.getElementById('acceso360-lock');
@@ -1385,7 +1361,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     function checkAcceso360() {
         var code = document.getElementById('acceso360-code').value.trim().toUpperCase();
         var errEl = document.getElementById('acceso360-error');
-        if (!code) { errEl.textContent = 'Introduce tu código'; return; }
+        if (!code) { errEl.textContent = 'Introduce tu cÃ³digo'; return; }
         db.ref('acceso360/codes/' + code).once('value', function(snap) {
             if (snap.val() === true) {
                 sessionStorage.setItem('acceso360', 'true');
@@ -1395,13 +1371,13 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                     document.getElementById('acceso360-content').style.display = 'block';
                 });
             } else {
-                errEl.textContent = 'Código inválido o expirado';
+                errEl.textContent = 'CÃ³digo invÃ¡lido o expirado';
                 document.getElementById('acceso360-code').value = '';
             }
         });
     }
 
-    // ── BARRA DE CATEGORÍAS ──────────────────────────────────────────────────
+    // ââ BARRA DE CATEGORÃAS ââââââââââââââââââââââââââââââââââââââââââââââââââ
     function filterCat(cat, btn) {
         document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
@@ -1414,7 +1390,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                 card.style.display = (genero === cat || genero.includes(cat)) ? '' : 'none';
             }
         });
-        // Ocultar secciones vacías
+        // Ocultar secciones vacÃ­as
         document.querySelectorAll('.section-title').forEach(function(title) {
             var grid = title.nextElementSibling;
             if (!grid) return;
@@ -1424,7 +1400,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         });
     }
 
-    // ── NAVEGACIÓN INFERIOR ──────────────────────────────────────────────────
+    // ââ NAVEGACIÃN INFERIOR ââââââââââââââââââââââââââââââââââââââââââââââââââ
     function navGo(dest, el) {
         document.querySelectorAll('#bottom-nav li').forEach(function(li) { li.classList.remove('active'); });
         if (el) el.classList.add('active');
@@ -1445,10 +1421,10 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         }
     }
 
-    // Añadir clase al body para padding bottom nav
+    // AÃ±adir clase al body para padding bottom nav
     if (window.innerWidth <= 1024) document.body.classList.add('has-bottom-nav');
 
-    // ── SLIDER DE FOTOS EN CARDS ─────────────────────────────────────────────
+    // ââ SLIDER DE FOTOS EN CARDS âââââââââââââââââââââââââââââââââââââââââââââ
     function initCardSliders() {
         document.querySelectorAll('.card-img-container').forEach(function(container) {
             var imagesStr = container.getAttribute('data-images') || '';
@@ -1462,10 +1438,10 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
             // Crear botones prev/next
             var prevBtn = document.createElement('button');
             prevBtn.className = 'card-nav-btn prev';
-            prevBtn.innerHTML = '‹';
+            prevBtn.innerHTML = 'â¹';
             var nextBtn = document.createElement('button');
             nextBtn.className = 'card-nav-btn next';
-            nextBtn.innerHTML = '›';
+            nextBtn.innerHTML = 'âº';
 
             // Crear dots
             var dotsWrap = document.createElement('div');
@@ -1502,7 +1478,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                 e.stopPropagation(); stopAuto(); goTo(current + 1); startAuto();
             });
 
-            // Swipe táctil
+            // Swipe tÃ¡ctil
             var touchStartX = 0;
             container.addEventListener('touchstart', function(e) {
                 touchStartX = e.touches[0].clientX;
@@ -1520,11 +1496,11 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         });
     }
 
-    // Inicializar sliders después de que cargue la página
+    // Inicializar sliders despuÃ©s de que cargue la pÃ¡gina
     document.addEventListener('DOMContentLoaded', initCardSliders);
     if (document.readyState !== 'loading') initCardSliders();
 
-    // ── Tracking de ventas al hacer clic en Lo quiero ────────────────────────
+    // ââ Tracking de ventas al hacer clic en Lo quiero ââââââââââââââââââââââââ
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-lo-quiero');
         if (!btn) return;
@@ -1534,7 +1510,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         if (pid) db.ref('sales/' + pid).transaction(c => (c || 0) + 1);
     });
 
-    // ── Leer config admin: mostrar/ocultar secciones y productos ─────────────
+    // ââ Leer config admin: mostrar/ocultar secciones y productos âââââââââââââ
     db.ref('config').once('value', snap => {
         const cfg = snap.val();
         if (!cfg) return;
@@ -1679,7 +1655,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         lbCounter.textContent = !single ? (current + 1) + ' / ' + images.length : '';
         if (single) {
             lbImg.classList.add('zoomable');
-            lbZoomHint.textContent = '🔍 Toca la imagen para hacer zoom';
+            lbZoomHint.textContent = 'ð Toca la imagen para hacer zoom';
         } else {
             lbImg.classList.remove('zoomable');
             lbZoomHint.textContent = '';
@@ -1691,7 +1667,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         e.stopPropagation();
         isZoomed = !isZoomed;
         lbImg.classList.toggle('zoomed', isZoomed);
-        lbZoomHint.textContent = isZoomed ? '🔍 Toca de nuevo para reducir' : '🔍 Toca la imagen para hacer zoom';
+        lbZoomHint.textContent = isZoomed ? 'ð Toca de nuevo para reducir' : 'ð Toca la imagen para hacer zoom';
     });
 
     lbPrev.addEventListener('click', function(e) {
@@ -1761,7 +1737,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                 if (content) {
                     openBottomSheet(title, content, imgs);
                 } else {
-                    // Sin tooltip — abrir lightbox directamente
+                    // Sin tooltip â abrir lightbox directamente
                     if (imgs.length > 0) openLightbox(imgs, 0);
                 }
             } else {
@@ -1809,7 +1785,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     });
     timer = setInterval(function() { goTo(sliderCurrent + 1); }, 3500);
 
-    // ── MODAL VIP ACCESO 360 ──
+    // ââ MODAL VIP ACCESO 360 ââ
     function openVipModal() {
         showModalStep(1);
         document.getElementById('modal-vip-overlay').classList.add('open');
@@ -1843,15 +1819,15 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         if (!valid) { errEl.style.display = 'block'; return; }
         errEl.style.display = 'none';
-        btn.disabled = true; btn.textContent = 'Enviando…';
+        btn.disabled = true; btn.textContent = 'Enviandoâ¦';
         db.ref('acceso360/solicitudes/' + Date.now()).set({
             correo: email, fecha: new Date().toISOString(), estado: 'pendiente'
         }).then(function(){
             showModalStep(3);
-            btn.disabled = false; btn.textContent = 'Solicitar acceso ✦';
+            btn.disabled = false; btn.textContent = 'Solicitar acceso â¦';
         }).catch(function(){
-            btn.disabled = false; btn.textContent = 'Solicitar acceso ✦';
-            errEl.textContent = 'Error al guardar. Inténtalo de nuevo.';
+            btn.disabled = false; btn.textContent = 'Solicitar acceso â¦';
+            errEl.textContent = 'Error al guardar. IntÃ©ntalo de nuevo.';
             errEl.style.display = 'block';
         });
     }
@@ -1860,7 +1836,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     });
 
     
-    // ── ACCESO 360 ANIMACIÓN DE ENTRADA ──
+    // ââ ACCESO 360 ANIMACIÃN DE ENTRADA ââ
     function triggerAcceso360Welcome(callback) {
         var welcome = document.getElementById('acceso360-welcome');
         var canvas = document.getElementById('confetti-canvas');
@@ -1927,7 +1903,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     }
 
     
-    // ── SISTEMA DE MENSAJES CAMPANITA ──
+    // ââ SISTEMA DE MENSAJES CAMPANITA ââ
     var mensajesLoaded = false;
     function loadMensajes() {
         db.ref('mensajes').orderByChild('fecha').limitToLast(20).once('value', function(snap) {
@@ -1945,7 +1921,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
             var list = document.getElementById('mensajes-list');
             if (!list) return;
             if (!items.length) {
-                list.innerHTML = '<div class="mensajes-empty">No hay mensajes aún</div>';
+                list.innerHTML = '<div class="mensajes-empty">No hay mensajes aÃºn</div>';
                 return;
             }
             list.innerHTML = items.map(function(e) {
@@ -1954,7 +1930,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                 var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
                 return '<div class="mensaje-item' + (esNuevo?' nuevo':'') + '">' +
                     '<div class="mensaje-texto">' + (m.texto||'') + '</div>' +
-                    '<div class="mensaje-fecha">' + fecha + (esNuevo ? ' · <span style="color:#ffd700;font-weight:700;">Nuevo</span>' : '') + '</div>' +
+                    '<div class="mensaje-fecha">' + fecha + (esNuevo ? ' Â· <span style="color:#ffd700;font-weight:700;">Nuevo</span>' : '') + '</div>' +
                     '</div>';
             }).join('');
         });
@@ -1968,7 +1944,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         overlay.style.display = isOpen ? 'none' : 'block';
         if (!isOpen) {
             loadMensajes();
-            // Marcar todos como leídos
+            // Marcar todos como leÃ­dos
             db.ref('mensajes').once('value', function(snap) {
                 var ids = Object.keys(snap.val() || {});
                 localStorage.setItem('mensajes_leidos', JSON.stringify(ids));
@@ -1978,7 +1954,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         }
     }
 
-    // ── INIT ON LOAD ──
+    // ââ INIT ON LOAD ââ
     window.addEventListener('load', function() {
         loadRibbonsFromFirebase();
         db.ref('mensajes').once('value', function(snap) {
@@ -1994,7 +1970,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     });
 
     
-    // ── TASAS DE CAMBIO (elToque via proxy) ──
+    // ââ TASAS DE CAMBIO (elToque via proxy) ââ
     function loadTasas() {
         var card = document.getElementById('tasas-card');
         if (!card) return;
@@ -2033,21 +2009,21 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                 renderTasas(rates);
             })
             .catch(function(e) {
-                document.getElementById('tasas-content').innerHTML = '<div class="tasa-error">⚠️ No se pudieron cargar las tasas. ' + e.message + '</div>';
+                document.getElementById('tasas-content').innerHTML = '<div class="tasa-error">â ï¸ No se pudieron cargar las tasas. ' + e.message + '</div>';
             });
     }
 
     function renderTasas(rates) {
         var content = document.getElementById('tasas-content');
         var monedas = [
-            { key: 'USD', label: 'Dólar', sym: '$' },
-            { key: 'EUR', label: 'Euro', sym: '€' },
-            { key: 'MLC', label: 'MLC', sym: '₡' },
+            { key: 'USD', label: 'DÃ³lar', sym: '$' },
+            { key: 'EUR', label: 'Euro', sym: 'â¬' },
+            { key: 'MLC', label: 'MLC', sym: 'â¡' },
         ];
         var html = '<div class="tasas-grid">';
         monedas.forEach(function(m) {
             var r = rates[m.key] || rates[m.key.toLowerCase()] || {};
-            var val = r.value || r.avg || r.promedio || r.informal || '—';
+            var val = r.value || r.avg || r.promedio || r.informal || 'â';
             if (typeof val === 'number') val = val.toFixed(0) + ' CUP';
             html += '<div class="tasa-item">' +
                 '<div class="tasa-moneda">' + m.sym + ' ' + m.key + '</div>' +
@@ -2060,7 +2036,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         document.getElementById('tasas-update').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
     }
 
-    // ── RIBBONS DESDE FIREBASE ──
+    // ââ RIBBONS DESDE FIREBASE ââ
     function loadRibbonsFromFirebase() {
         db.ref('interfaz/ribbon1').once('value', function(snap) {
             if (snap.val()) {
@@ -2096,71 +2072,71 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     <nav id="bottom-nav">
         <ul>
             <li class="active" onclick="navGo('inicio',this)">
-                <span class="nav-icon">🏠</span>
+                <span class="nav-icon">ð </span>
                 <span class="nav-label">Inicio</span>
             </li>
             <li onclick="navGo('categorias',this)">
-                <span class="nav-icon">☰</span>
-                <span class="nav-label">Categorías</span>
+                <span class="nav-icon">â°</span>
+                <span class="nav-label">CategorÃ­as</span>
             </li>
             <li class="nav-acceso" onclick="navGo('acceso360',this)">
-                <span class="nav-icon">✦</span>
+                <span class="nav-icon">â¦</span>
                 <span class="nav-label">Acceso 360</span>
             </li>
         </ul>
     </nav>
 
-<!-- ── MODAL VIP ACCESO 360 ── -->
+<!-- ââ MODAL VIP ACCESO 360 ââ -->
 <div id="modal-vip-overlay">
     <div id="modal-vip-box">
-        <button class="modal-close-btn" onclick="closeVipModal()">✕</button>
-        <div class="modal-vip-badge">✦ ACCESO 360</div>
+        <button class="modal-close-btn" onclick="closeVipModal()">â</button>
+        <div class="modal-vip-badge">â¦ ACCESO 360</div>
         <h2 class="modal-vip-title">Exclusividad<br>que se siente</h2>
         <p class="modal-vip-sub">Accede a beneficios <strong style="color:#ffd700;">SOLO</strong> para miembros suscritos.</p>
         <ul class="modal-vip-perks">
-            <li>Productos exclusivos no disponibles al público</li>
+            <li>Productos exclusivos no disponibles al pÃºblico</li>
             <li>Drops limitados con acceso anticipado</li>
             <li>Virtual Try-On, IA para validar antes de comprar</li>
             <li>Reserva antes del lanzamiento</li>
-            <li>Envío prioritario</li>
+            <li>EnvÃ­o prioritario</li>
         </ul>
         <div class="modal-step active" id="modal-step-1">
-            <button class="modal-btn-si" onclick="showModalStep(2)">Sí, quiero acceso ✦</button>
-            <button class="modal-btn-codigo" onclick="closeVipModal(); irACodigoAcceso()">Ya tengo mi código</button>
+            <button class="modal-btn-si" onclick="showModalStep(2)">SÃ­, quiero acceso â¦</button>
+            <button class="modal-btn-codigo" onclick="closeVipModal(); irACodigoAcceso()">Ya tengo mi cÃ³digo</button>
         </div>
         <div class="modal-step" id="modal-step-2">
-            <label class="modal-email-label">Tu correo electrónico para recibir tu acceso:</label>
+            <label class="modal-email-label">Tu correo electrÃ³nico para recibir tu acceso:</label>
             <input type="email" id="modal-email-input" class="modal-email-input" placeholder="tucorreo@email.com">
-            <div class="modal-email-error" id="modal-email-error">Introduce un correo válido</div>
-            <button class="modal-btn-si" id="modal-submit-btn" onclick="submitVipEmail()">Solicitar acceso ✦</button>
-            <button class="modal-back-btn" onclick="showModalStep(1)">← Volver</button>
+            <div class="modal-email-error" id="modal-email-error">Introduce un correo vÃ¡lido</div>
+            <button class="modal-btn-si" id="modal-submit-btn" onclick="submitVipEmail()">Solicitar acceso â¦</button>
+            <button class="modal-back-btn" onclick="showModalStep(1)">â Volver</button>
         </div>
         <div class="modal-step" id="modal-step-3">
-            <div class="modal-espera-icon">✦</div>
-            <div class="modal-espera-title">¡Estás en la lista!</div>
-            <div class="modal-espera-desc">Revisaremos tu solicitud y recibirás tu código de acceso en el correo indicado. Pronto serás parte de ACCESO 360.</div>
+            <div class="modal-espera-icon">â¦</div>
+            <div class="modal-espera-title">Â¡EstÃ¡s en la lista!</div>
+            <div class="modal-espera-desc">Revisaremos tu solicitud y recibirÃ¡s tu cÃ³digo de acceso en el correo indicado. Pronto serÃ¡s parte de ACCESO 360.</div>
         </div>
     </div>
 </div>
 
 
-<!-- ── ACCESO 360 BIENVENIDA ── -->
+<!-- ââ ACCESO 360 BIENVENIDA ââ -->
 <canvas id="confetti-canvas"></canvas>
 <div id="acceso360-welcome">
-    <div class="welcome-badge">✦ ACCESO 360</div>
+    <div class="welcome-badge">â¦ ACCESO 360</div>
     <div class="welcome-title">Bienvenido/a<br>al ACCESO 360</div>
-    <div class="welcome-sub">Tu acceso exclusivo está activo</div>
+    <div class="welcome-sub">Tu acceso exclusivo estÃ¡ activo</div>
 </div>
 
 
-<!-- ── PANEL MENSAJES ── -->
+<!-- ââ PANEL MENSAJES ââ -->
 <div id="mensajes-panel">
     <div class="mensajes-header">
-        <h3>📢 Mensajes de la tienda</h3>
-        <button class="mensajes-close" onclick="toggleMensajesPanel()">✕</button>
+        <h3>ð¢ Mensajes de la tienda</h3>
+        <button class="mensajes-close" onclick="toggleMensajesPanel()">â</button>
     </div>
     <div class="mensajes-list" id="mensajes-list">
-        <div class="mensajes-empty">Cargando mensajes…</div>
+        <div class="mensajes-empty">Cargando mensajesâ¦</div>
     </div>
 </div>
 <div id="mensajes-overlay" style="display:none;position:fixed;inset:0;z-index:9989;background:rgba(0,0,0,0.5);" onclick="toggleMensajesPanel()"></div>
