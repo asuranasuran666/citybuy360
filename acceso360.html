@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACCESO 360 — CityBUY360</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #f5c518;
+  --gold-light: #ffe566;
+  --gold-glow: rgba(255,210,0,0.8);
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #1a1a00;
+  --text: #e8e0cc;
+  --text-muted: #888;
+  --brand-blue: #00d4ff;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+/* ── HEADER ── */
+.vip-header {
+  background: linear-gradient(135deg, #0d0d00, #1a1a00);
+  border-bottom: 1px solid #b8860b44;
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.vip-logo { color: var(--gold); font-size: 1.1rem; font-weight: 900; letter-spacing: 2px; }
+.vip-logo span { color: var(--text-muted); font-size: 0.75rem; font-weight: 400; letter-spacing: 1px; display: block; }
+.vip-back { background: none; border: 1px solid #333; color: var(--text-muted); padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; transition: all 0.2s; }
+.vip-back:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; padding: 30px; gap: 0;
+}
+.login-box {
+  background: linear-gradient(160deg, #0d0d0d, #1a1100);
+  border: 1px solid #b8860b;
+  border-radius: 18px; padding: 36px 30px; max-width: 380px; width: 100%;
+  box-shadow: 0 0 40px rgba(255,200,0,0.15);
+}
+.login-badge { display: inline-block; background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518); color: #1a0a00; font-size: 0.72rem; font-weight: 900; padding: 4px 14px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 16px; }
+.login-title { color: var(--gold); font-size: 1.6rem; font-weight: 900; margin-bottom: 6px; }
+.login-sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+.login-input {
+  width: 100%; padding: 14px 16px; background: #0d0d0d; border: 1px solid #2a2a2a;
+  border-radius: 10px; color: #fff; font-size: 1rem; letter-spacing: 3px; text-align: center;
+  text-transform: uppercase; outline: none; transition: border-color 0.2s; margin-bottom: 12px;
+}
+.login-input:focus { border-color: var(--gold); }
+.login-btn {
+  width: 100%; padding: 14px; background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
+  border: none; border-radius: 10px; color: #1a0a00; font-weight: 900; font-size: 1rem;
+  cursor: pointer; letter-spacing: 1px; transition: transform 0.15s, box-shadow 0.15s;
+}
+.login-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255,210,0,0.4); }
+.login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.login-error { color: #ff6b6b; font-size: 0.82rem; text-align: center; margin-top: 10px; min-height: 20px; }
+.login-back-link { color: var(--text-muted); font-size: 0.8rem; text-align: center; margin-top: 14px; cursor: pointer; }
+.login-back-link:hover { color: var(--gold); }
+
+/* ── WELCOME MODAL ── */
+#welcome-modal {
+  display: none; position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,0.92); align-items: center; justify-content: center; padding: 20px;
+  backdrop-filter: blur(6px);
+}
+#welcome-modal.show { display: flex; }
+.welcome-box {
+  background: linear-gradient(160deg, #0d0d0d, #1a1100);
+  border: 1px solid #b8860b; border-radius: 20px;
+  padding: 36px 30px; max-width: 400px; width: 100%;
+  box-shadow: 0 0 60px rgba(255,200,0,0.25);
+  animation: modalIn 0.4s cubic-bezier(.34,1.56,.64,1);
+  text-align: center;
+}
+@keyframes modalIn { from{opacity:0;transform:scale(0.8) translateY(30px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.welcome-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.welcome-badge-text { display: inline-block; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518); color: #1a0a00; font-size: 0.72rem; font-weight: 900; padding: 4px 14px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 14px; }
+.welcome-title { color: var(--gold); font-size: 1.5rem; font-weight: 900; margin-bottom: 6px; }
+.welcome-sub { color: var(--text-muted); font-size: 0.84rem; margin-bottom: 20px; }
+.welcome-perks { list-style: none; text-align: left; margin-bottom: 24px; }
+.welcome-perks li { color: #ccc; font-size: 0.84rem; padding: 7px 0; border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; gap: 10px; }
+.welcome-perks li:last-child { border-bottom: none; }
+.welcome-perks li::before { content: '✦'; color: var(--gold); font-size: 0.7rem; flex-shrink: 0; }
+.welcome-perks li.coming { opacity: 0.5; font-style: italic; }
+.welcome-enter-btn {
+  width: 100%; padding: 14px; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518);
+  border: none; border-radius: 10px; color: #1a0a00; font-weight: 900; font-size: 1rem;
+  cursor: pointer; letter-spacing: 0.5px; transition: transform 0.15s;
+}
+.welcome-enter-btn:hover { transform: scale(1.02); }
+
+/* ── CONFETTI ── */
+#confetti-canvas { position: fixed; inset: 0; z-index: 9997; pointer-events: none; }
+
+/* ── VIP CONTENT ── */
+#vip-content { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.vip-section-title {
+  color: var(--gold); font-size: 1.2rem; font-weight: 900;
+  letter-spacing: 2px; text-align: center; margin: 20px 0;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.vip-section-title::before, .vip-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #b8860b, transparent); }
+.vip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media(min-width: 768px) { .vip-grid { grid-template-columns: repeat(3, 1fr); } }
+@media(min-width: 1024px) { .vip-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── VIP CARD ── */
+.vip-card {
+  background: var(--surface); border: 1px solid #b8860b33; border-radius: 14px;
+  overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+}
+.vip-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(255,200,0,0.12); }
+.vip-card-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.vip-card-body { padding: 12px; }
+.vip-card-category { color: var(--gold); font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.vip-card-name { color: var(--text); font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.vip-card-desc { color: var(--text-muted); font-size: 0.75rem; line-height: 1.4; margin-bottom: 10px; }
+.vip-card-price { color: var(--gold); font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; }
+.vip-card-btn {
+  width: 100%; padding: 10px; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518);
+  border: none; border-radius: 8px; color: #1a0a00; font-weight: 900; font-size: 0.85rem;
+  cursor: pointer; transition: transform 0.15s;
+}
+.vip-card-btn:hover { transform: scale(1.02); }
+.vip-empty { text-align: center; color: var(--text-muted); padding: 60px 20px; font-size: 0.9rem; }
+.vip-empty-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+
+/* ── GOLD SHIMMER ── */
+@keyframes goldshine { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- WELCOME MODAL -->
+<div id="welcome-modal">
+  <div class="welcome-box">
+    <div class="welcome-icon">✦</div>
+    <div class="welcome-badge-text">ACCESO 360</div>
+    <div class="welcome-title">Bienvenido/a</div>
+    <div class="welcome-sub">Tu acceso exclusivo está activo</div>
+    <ul class="welcome-perks">
+      <li>Productos exclusivos no disponibles al público</li>
+      <li>Drops limitados con acceso anticipado</li>
+      <li>Reserva antes del lanzamiento</li>
+      <li>Envío prioritario</li>
+      <li class="coming">Virtual Try-On con IA — próximamente</li>
+    </ul>
+    <button class="welcome-enter-btn" onclick="enterVip()">✦ Entrar al ACCESO 360</button>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-badge">✦ ACCESO 360</div>
+    <div class="login-title">Sección Exclusiva</div>
+    <div class="login-sub">Introduce tu código personal para acceder</div>
+    <input type="text" id="code-input" class="login-input" placeholder="TU CÓDIGO" maxlength="12" onkeydown="if(event.key==='Enter')checkCode()">
+    <button class="login-btn" id="login-btn" onclick="checkCode()">Acceder ✦</button>
+    <div class="login-error" id="code-error"></div>
+    <div class="login-back-link" onclick="window.location.href='index.html'">← Volver al catálogo</div>
+  </div>
+</div>
+
+<!-- VIP CONTENT -->
+<div id="vip-content">
+  <header class="vip-header">
+    <div class="vip-logo">✦ ACCESO 360 <span>SECCIÓN EXCLUSIVA</span></div>
+    <button class="vip-back" onclick="window.location.href='index.html'">← Catálogo</button>
+  </header>
+  <div class="vip-section-title">PRODUCTOS EXCLUSIVOS</div>
+  <div class="vip-grid" id="vip-grid">
+    <div class="vip-empty"><span class="vip-empty-icon">✦</span>Cargando productos exclusivos…</div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
+  authDomain: "citybuy360.firebaseapp.com",
+  databaseURL: "https://citybuy360-default-rtdb.firebaseio.com",
+  projectId: "citybuy360",
+  storageBucket: "citybuy360.firebasestorage.app",
+  messagingSenderId: "701999748308",
+  appId: "1:701999748308:web:85c320687f6eb10471d741"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const WA = '5353234567'; // Número WhatsApp de la tienda
+
+function checkCode() {
+  var code = document.getElementById('code-input').value.trim().toUpperCase();
+  var errEl = document.getElementById('code-error');
+  var btn = document.getElementById('login-btn');
+  if (!code) { errEl.textContent = 'Introduce tu código'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando…';
+  db.ref('acceso360/codes/' + code).once('value', function(snap) {
+    if (snap.val() === true) {
+      sessionStorage.setItem('acceso360_code', code);
+      unlockVip();
+    } else {
+      errEl.textContent = '❌ Código inválido o expirado';
+      btn.disabled = false; btn.textContent = 'Acceder ✦';
+    }
+  });
+}
+
+function unlockVip() {
+  document.getElementById('login-screen').style.display = 'none';
+  launchConfetti();
+  setTimeout(function() {
+    document.getElementById('welcome-modal').classList.add('show');
+  }, 300);
+}
+
+function enterVip() {
+  document.getElementById('welcome-modal').classList.remove('show');
+  document.getElementById('vip-content').style.display = 'block';
+  loadVipProducts();
+}
+
+function loadVipProducts() {
+  // Load products from index.html acceso360-content section
+  fetch('index.html')
+    .then(function(r){ return r.text(); })
+    .then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+      var grid = doc.getElementById('acceso360-content');
+      var cards = grid ? grid.querySelectorAll('.card') : [];
+      var vipGrid = document.getElementById('vip-grid');
+
+      if (!cards.length) {
+        vipGrid.innerHTML = '<div class="vip-empty"><span class="vip-empty-icon">✦</span>Próximamente productos exclusivos</div>';
+        return;
+      }
+
+      // Load prices from Firebase then render cards
+      db.ref('prices').once('value', function(snap) {
+        var prices = snap.val() || {};
+        var html = '';
+        cards.forEach(function(card) {
+          var pid = card.getAttribute('data-product');
+          if (!pid) return;
+          var imgEl = card.querySelector('.card-img-container');
+          var imgs = imgEl ? (imgEl.getAttribute('data-images') || '').split(',') : [];
+          var img = imgs[0] || '';
+          var nameEl = card.querySelector('h3');
+          var name = nameEl ? nameEl.textContent.trim() : pid;
+          var detailsEl = card.querySelector('.card-details');
+          var desc = detailsEl ? detailsEl.textContent.trim() : '';
+          var catEl = card.querySelector('.card-category');
+          var cat = catEl ? catEl.textContent.trim() : '';
+          var price = prices[pid] ? prices[pid] + ' MN' : '—';
+          var waMsg = encodeURIComponent('Hola, me interesa el producto ' + name + ' (ACCESO 360)');
+          html += '<div class="vip-card">';
+          if (img) html += '<img src="' + img + '" class="vip-card-img" alt="' + name + '" onerror="this.style.display=\'none\'">';
+          html += '<div class="vip-card-body">';
+          if (cat) html += '<div class="vip-card-category">' + cat + '</div>';
+          html += '<div class="vip-card-name">' + name + '</div>';
+          if (desc) html += '<div class="vip-card-desc">' + desc.substring(0, 80) + '</div>';
+          html += '<div class="vip-card-price">' + price + '</div>';
+          html += '<button class="vip-card-btn" onclick="window.open(\'https://wa.me/' + WA + '?text=' + waMsg + '\',\'_blank\')">✦ Lo quiero</button>';
+          html += '</div></div>';
+        });
+        vipGrid.innerHTML = html || '<div class="vip-empty"><span class="vip-empty-icon">✦</span>Próximamente productos exclusivos</div>';
+      });
+    })
+    .catch(function() {
+      document.getElementById('vip-grid').innerHTML = '<div class="vip-empty"><span class="vip-empty-icon">✦</span>Próximamente productos exclusivos</div>';
+    });
+}
+
+function launchConfetti() {
+  var canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var ctx = canvas.getContext('2d');
+  var colors = ['#ffd700','#f5c518','#ffe566','#fff','#ffec5c','#b8860b','#ffffff'];
+  var particles = [];
+  for (var i = 0; i < 150; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 7 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speed: Math.random() * 3 + 1.5,
+      angle: 0, tiltSpeed: Math.random() * 0.1 + 0.05,
+      shape: Math.random() > 0.5 ? 'star' : 'rect',
+      w: Math.random() * 8 + 4, h: Math.random() * 4 + 2
+    });
+  }
+  var frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(function(p) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'star') {
+        ctx.beginPath();
+        for (var j = 0; j < 5; j++) {
+          ctx.lineTo(Math.cos((18+j*72)*Math.PI/180)*p.r, Math.sin((18+j*72)*Math.PI/180)*p.r);
+          ctx.lineTo(Math.cos((54+j*72)*Math.PI/180)*p.r*0.4, Math.sin((54+j*72)*Math.PI/180)*p.r*0.4);
+        }
+        ctx.closePath(); ctx.fill();
+      } else {
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      }
+      ctx.restore();
+      p.y += p.speed; p.angle += p.tiltSpeed;
+      p.x += Math.sin(p.angle) * 1.5;
+      if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+    });
+    frame++;
+    if (frame < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// Check if already authenticated
+window.addEventListener('load', function() {
+  var savedCode = sessionStorage.getItem('acceso360_code');
+  if (savedCode) {
+    db.ref('acceso360/codes/' + savedCode).once('value', function(snap) {
+      if (snap.val() === true) {
+        unlockVip();
+      } else {
+        sessionStorage.removeItem('acceso360_code');
+      }
+    });
+  }
+  document.getElementById('code-input').focus();
+});
+</script>
+</body>
+</html>
