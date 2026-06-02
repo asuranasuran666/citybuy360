@@ -68,11 +68,12 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
 /* ── WELCOME MODAL ── */
 #welcome-modal {
   display: none; position: fixed; inset: 0; z-index: 9998;
-  background: rgba(0,0,0,0.92); align-items: center; justify-content: center; padding: 20px;
-  backdrop-filter: blur(6px);
+  pointer-events: none;
+  background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 20px;
 }
 #welcome-modal.show { display: flex; }
 .welcome-box {
+  pointer-events: all;
   background: linear-gradient(160deg, #0d0d0d, #1a1100);
   border: 1px solid #b8860b; border-radius: 20px;
   padding: 36px 30px; max-width: 400px; width: 100%;
@@ -98,7 +99,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
 .welcome-enter-btn:hover { transform: scale(1.02); }
 
 /* ── CONFETTI ── */
-#confetti-canvas { position: fixed; inset: 0; z-index: 9997; pointer-events: none; }
+#confetti-canvas { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
 
 /* ── VIP CONTENT ── */
 #vip-content { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
@@ -196,7 +197,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const WA = '5353234567'; // Número WhatsApp de la tienda
+const WA = '5353255813'; // Número WhatsApp de la tienda
 
 function checkCode() {
   var code = document.getElementById('code-input').value.trim().toUpperCase();
@@ -217,10 +218,8 @@ function checkCode() {
 
 function unlockVip() {
   document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('welcome-modal').classList.add('show');
   launchConfetti();
-  setTimeout(function() {
-    document.getElementById('welcome-modal').classList.add('show');
-  }, 300);
 }
 
 function enterVip() {
@@ -324,7 +323,7 @@ function launchConfetti() {
       if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
     });
     frame++;
-    if (frame < 180) requestAnimationFrame(draw);
+    if (frame < 360) requestAnimationFrame(draw);
     else ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
   draw();

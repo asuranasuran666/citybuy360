@@ -275,6 +275,19 @@
         .nav-acceso .nav-label { color: #b8860b !important; }
         @media (max-width: 1024px) { #bottom-nav { display: block; } }
         body.has-bottom-nav { padding-bottom: 58px; }
+        #span-360 {
+            background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
+            background-size: 200% 200%;
+            animation: goldshine 3s ease infinite;
+            color: #1a0a00;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            font-weight: 900 !important;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(255,210,0,0.95), 0 0 8px rgba(255,180,0,0.7) !important;
+            display: inline-block !important;
+            letter-spacing: 0.5px;
+        }
         .badge-360 {
             display: inline-flex;
             align-items: center;
@@ -607,11 +620,20 @@
             .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
             .card-nav-btn { display: none !important; }
             .card-photo-dots { display: none !important; }
+            #badge-360-header { display: inline-flex !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; color: #1a0a00 !important; box-shadow: 0 0 14px rgba(255,215,0,0.8) !important; }
+            .lifestyle-ribbon { flex-direction: row !important; }
+            #bottom-nav { display: flex !important; }
+            #bottom-nav ul { display: flex !important; flex-direction: row !important; width: 100%; }
+            #bottom-nav ul li { flex: 1; }
+            #span-360 { background: #f5c518 !important; color: #1a0a00 !important; padding: 4px 10px !important; border-radius: 6px !important; box-shadow: 0 0 16px #ffd700 !important; cursor: default !important; pointer-events: none !important; }
+        }
+            .card-photo-dots { display: none !important; }
             #badge-360-header { display: inline-flex !important; }
             .lifestyle-ribbon { flex-direction: row !important; }
-            #bottom-nav { display: flex !important; flex-direction: row !important; width: 100%; }
-            #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
-            #span-360 { background: none !important; box-shadow: none !important; color: var(--brand-blue) !important; padding: 0 !important; cursor: default !important; pointer-events: none !important; border-radius: 0 !important; }
+            #bottom-nav { display: flex !important; }
+            #bottom-nav ul { display: flex !important; flex-direction: row !important; width: 100%; }
+            #bottom-nav ul li { flex: 1; }
+            #span-360 { cursor: default !important; pointer-events: none !important; box-shadow: 0 0 20px rgba(255,215,0,1), 0 0 8px rgba(255,180,0,0.9) !important; }
         }
     
         /* ── MODAL VIP ACCESO 360 ── */
@@ -726,6 +748,65 @@
         .tasas-update { color: #6e7681; font-size: 0.68rem; text-align: right; margin-top: 10px; }
         @media (max-width: 700px) { .tasas-grid { grid-template-columns: repeat(3,1fr); gap: 8px; } .tasa-valor { font-size: 1.05rem; } }
 
+        
+        /* ── TICKER / MARQUESINA ── */
+        #ticker-wrap {
+            background: linear-gradient(90deg, var(--brand-blue), #0099bb);
+            color: #000; font-size: 0.8rem; font-weight: 700;
+            padding: 7px 0; overflow: hidden; white-space: nowrap;
+            display: none;
+        }
+        #ticker-wrap.visible { display: block; }
+        .ticker-content {
+            display: inline-block;
+            animation: ticker-scroll 20s linear infinite;
+            padding-left: 100%;
+        }
+        @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .ticker-sep { margin: 0 30px; opacity: 0.5; }
+
+        
+        /* ── MARQUESINA ── */
+        .marquesina-wrap {
+            background: #111; border-top: 1px solid #222; border-bottom: 1px solid #222;
+            overflow: hidden; padding: 8px 0; display: none;
+        }
+        .marquesina-wrap.visible { display: block; }
+        .marquesina-track {
+            display: flex; gap: 60px; white-space: nowrap;
+            animation: marquesina-move 25s linear infinite;
+        }
+        .marquesina-track:hover { animation-play-state: paused; }
+        @keyframes marquesina-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .marquesina-text { color: #00d4ff; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; }
+        .marquesina-sep { color: #333; }
+
+        
+        /* ── MARQUESINA ── */
+        .ticker-wrap {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            border-top: 1px solid #00d4ff33;
+            border-bottom: 1px solid #00d4ff33;
+            overflow: hidden; padding: 8px 0;
+            display: block;
+        }
+        .ticker-wrap.hidden { display: none; }
+        .ticker-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker-scroll 30s linear infinite;
+            color: #00d4ff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .ticker-content:hover { animation-play-state: paused; }
+        .ticker-sep { color: #f5c518; margin: 0 20px; }
+        @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+
         </style>
 </head>
 <body>
@@ -756,11 +837,11 @@
         <!-- SLIDER -->
 <header>
     <div class="header-brand">
-        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;padding:3px 10px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 18px rgba(255,210,0,0.9),0 0 6px rgba(255,180,0,0.6);display:inline-block;letter-spacing:0.5px;">360</span></h1>
+        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:#f5c518;color:#1a0a00;padding:4px 10px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 16px #ffd700,0 0 6px #f5c518;display:inline-block;">360</span></h1>
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
         <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">🔔<span id="bell-badge" class="bell-badge"></span></button>
-        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')" style="color:#1a0a00;font-weight:900;">ACCESO 360</span>
+        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')" >✦ ACCESO 360</span>
     </div>
     <div class="header-slider">
 
@@ -833,15 +914,6 @@
     <button class="cat-btn" onclick="filterCat('servicios',this)">⚡ Servicios</button>
 </div>
 
-        <!-- ── CARD TASAS DE CAMBIO ── -->
-        <div id="tasas-card">
-            <div class="tasas-header">
-                <span class="tasas-title">💱 Tasa de cambio en Cuba</span>
-                <span class="tasas-source">Fuente: elToque (informal)</span>
-            </div>
-            <div id="tasas-content" class="tasas-loading">Cargando tasas…</div>
-            <div class="tasas-update" id="tasas-update"></div>
-        </div>
 
         <div class="products-container">
 
@@ -1265,6 +1337,43 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         <a href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D%20(0%20CUP)" class="btn-lo-quiero">Contáctanos</a>
     </div>
 </div>
+            
+                <!-- ── CARD TASAS DE CAMBIO ── -->
+                <div class="card" id="tasas-card-servicios" data-product="tasas" data-genero="servicios">
+                    <div class="card-img-container" style="background:#0d1117;display:flex;align-items:center;justify-content:center;min-height:160px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:2rem;">💱</div>
+                            <div style="color:#00d4ff;font-size:0.75rem;font-weight:700;margin-top:6px;">TASAS EN VIVO</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">SERVICIOS</div>
+                        <div class="product-name">Tasa de cambio en Cuba</div>
+                        <div class="card-details" id="tasas-card-content">Cargando…</div>
+                        <div style="font-size:0.65rem;color:#888;margin-top:4px;" id="tasas-update-time"></div>
+                        <div style="font-size:0.65rem;color:#555;margin-top:2px;">Fuente: elToque (informal)</div>
+                    </div>
+                </div>
+
+                <div class="card" data-product="tasas-cambio" data-genero="servicios" id="tasas-card-inner">
+                    <div class="card-img-container" style="background:linear-gradient(135deg,#0d1117,#161b22);display:flex;align-items:center;justify-content:center;min-height:140px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:6px;">💱</div>
+                            <div id="tasas-mini-usd" style="color:#f5c518;font-size:1.1rem;font-weight:900;">USD —</div>
+                            <div id="tasas-mini-eur" style="color:#aaa;font-size:0.9rem;">EUR —</div>
+                            <div id="tasas-mini-mlc" style="color:#aaa;font-size:0.9rem;">MLC —</div>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-category">SERVICIOS</div>
+                        <h3>Tasas de Cambio</h3>
+                        <div class="card-details">Fuente: elToque (informal)<br><span id="tasas-update-mini" style="font-size:0.7rem;color:#666;"></span></div>
+                        <div class="card-price-row">
+                            <span class="card-price" style="font-size:0.85rem;color:#888;">En tiempo real</span>
+                        </div>
+                        <a href="https://eltoque.com" target="_blank" class="btn-lo-quiero" style="text-decoration:none;text-align:center;display:block;">Ver en elToque</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1326,7 +1435,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
 
     // ── Tracking de visitas ──────────────────────────────────────────────────
     const today = new Date().toISOString().split('T')[0];
-    db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1);
+    if (!localStorage.getItem('cb360_admin')) { db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1); }
 
     // ── PRECIOS DESDE FIREBASE ───────────────────────────────────────────────
     // ── Configuración de interfaz desde Firebase ─────────────────────────────
@@ -1972,6 +2081,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     // ── INIT ON LOAD ──
     window.addEventListener('load', function() {
         loadRibbonsFromFirebase();
+        loadTasas();
         db.ref('mensajes').once('value', function(snap) {
             var data = snap.val() || {};
             var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
@@ -1987,12 +2097,24 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     
     // ── TASAS DE CAMBIO (elToque via proxy) ──
     function loadTasas() {
-        var card = document.getElementById('tasas-card');
-        if (!card) return;
-        var proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy');
-        fetch(proxy)
-            .then(function(r){ return r.text(); })
-            .then(function(html) {
+        
+        var proxies = [
+            'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy'),
+            'https://corsproxy.io/?' + encodeURIComponent('https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy')
+        ];
+        var proxyIdx = 0;
+        function tryProxy() {
+            if (proxyIdx >= proxies.length) {
+                var c = document.getElementById('tasas-card-content');
+                if(c) c.innerHTML = '<span style="color:#888;font-size:0.75rem;">Tasas no disponibles</span>';
+                return;
+            }
+            fetch(proxies[proxyIdx++])
+              .then(function(r){ return r.text(); })
+              .then(parseTasas)
+              .catch(function(){ tryProxy(); });
+        }
+        function parseTasas(html) {
                 // Extract __NEXT_DATA__ JSON
                 var match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
                 if (!match) throw new Error('No data found');
@@ -2029,7 +2151,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     }
 
     function renderTasas(rates) {
-        var content = document.getElementById('tasas-content');
+        var content = document.getElementById('tasas-card-content');
         var monedas = [
             { key: 'USD', label: 'Dólar', sym: '$' },
             { key: 'EUR', label: 'Euro', sym: '€' },
@@ -2048,7 +2170,13 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         });
         html += '</div>';
         content.innerHTML = html;
-        document.getElementById('tasas-update').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+        var upEl = document.getElementById('tasas-update-time'); if(upEl) upEl.textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+        // Update mini card in servicios
+        var getVal = function(key) { var r = rates[key]||rates[key.toLowerCase()]||{}; var v = r.value||r.avg||r.promedio||r.informal||'—'; return typeof v==='number' ? Math.round(v)+' CUP' : String(v); };
+        var usdEl = document.getElementById('tasas-mini-usd'); if(usdEl) usdEl.textContent = '$ USD ' + getVal('USD');
+        var eurEl = document.getElementById('tasas-mini-eur'); if(eurEl) eurEl.textContent = '€ EUR ' + getVal('EUR');
+        var mlcEl = document.getElementById('tasas-mini-mlc'); if(mlcEl) mlcEl.textContent = '₡ MLC ' + getVal('MLC');
+        var upMini = document.getElementById('tasas-update-mini'); if(upMini) upMini.textContent = 'Act: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
     }
 
     // ── RIBBONS DESDE FIREBASE ──
@@ -2073,14 +2201,44 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
             var el = document.getElementById('ribbon-2');
             if (el && snap.val() === false) el.style.display = 'none';
         });
+        db.ref('interfaz/marquesina').once('value', function(snap) {
+            var wrap = document.getElementById('marquesina-wrap');
+            var t1 = document.getElementById('marquesina-text-1');
+            var t2 = document.getElementById('marquesina-text-2');
+            if (snap.val()) {
+                var d = snap.val();
+                if (d.activa && wrap) wrap.classList.add('visible');
+                if (d.texto && t1) t1.textContent = d.texto;
+                if (d.texto && t2) t2.textContent = d.texto;
+            }
+        });
         db.ref('interfaz/tasas').once('value', function(snap) {
-            var card = document.getElementById('tasas-card');
-            if (card && snap.val() === true) {
-                card.classList.add('visible');
+            if (snap.val() === true) {
                 loadTasas();
             }
         });
+        db.ref('interfaz/ticker').once('value', function(snap) {
+            var wrap = document.getElementById('ticker-wrap');
+            var text = document.getElementById('ticker-text');
+            if (snap.val() && snap.val().activo && wrap) {
+                wrap.classList.add('visible');
+                if (snap.val().texto && text) text.innerHTML = snap.val().texto;
+            }
+        });
     }
+
+    
+    // ── TICKER/MARQUESINA ──
+    db.ref('interfaz/ticker').once('value', function(snap) {
+        var ticker = document.getElementById('ticker-content');
+        var wrap = document.getElementById('ticker-wrap');
+        if (snap.val()) {
+            if (ticker) ticker.innerHTML = snap.val();
+        }
+        if (snap.val() === false) {
+            if (wrap) wrap.classList.add('hidden');
+        }
+    });
 
     </script>
 
