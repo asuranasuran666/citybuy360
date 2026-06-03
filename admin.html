@@ -573,6 +573,7 @@ try {
 // ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
 let SECTIONS = [];
 let PRODUCT_NAMES = {};
+let pendingDestacados = {};
 
 async function loadStructureFromIndex() {
   try {
@@ -814,7 +815,7 @@ async function publishProduct() {
     log('📥 Leyendo index.html…');
     const indexFile = await ghGet('index.html');
     const indexSha  = indexFile.sha;
-    let indexHTML   = atob(indexFile.content.replace(/\n/g,''));
+    let indexHTML   = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g,''))));
 
     // 3. Generar HTML de la card
     const genero = getSelectedGenero();
@@ -1241,81 +1242,104 @@ function editProduct(pid) {
   }).catch(e => alert('Error cargando producto: ' + e.message));
 }
 
-async function toggleDestacado(pid, btn) {
+function toggleDestacado(pid, btn) {
+  // Acumula cambios visualmente — se aplican al hacer clic en "Guardar cambios de Destacados"
+  if (!pendingDestacados) pendingDestacados = {};
+  const alreadyIn = btn.classList.contains('active');
+
+  if (alreadyIn) {
+    pendingDestacados[pid] = 'remove';
+    btn.classList.remove('active');
+    btn.title = 'Añadir a Destacados';
+    btn.textContent = '☆';
+  } else {
+    pendingDestacados[pid] = 'add';
+    btn.classList.add('active');
+    btn.title = 'Quitar de Destacados';
+    btn.textContent = '⭐';
+  }
+  updateDestacadosSaveBtn();
+}
+
+function updateDestacadosSaveBtn() {
+  var pending = Object.keys(pendingDestacados || {}).length;
+  var btn = document.getElementById('save-destacados-btn');
+  if (btn) {
+    btn.style.display = pending > 0 ? 'block' : 'none';
+    btn.textContent = '💾 Guardar cambios de Destacados (' + pending + ')';
+  }
+}
+
+async function saveDestacados() {
+  if (!pendingDestacados || !Object.keys(pendingDestacados).length) return;
+  const btn = document.getElementById('save-destacados-btn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
   const token = localStorage.getItem('gh_token');
-  if (!token) { alert('Necesitas el token de GitHub en el tab Nuevo producto'); return; }
-  btn.disabled = true;
+  if (!token) { alert('Necesitas el token de GitHub'); btn.disabled=false; updateDestacadosSaveBtn(); return; }
   try {
     const indexFile = await ghGet('index.html');
-    let indexHTML = atob(indexFile.content.replace(/\n/g,''));
-    const destSection = SECTIONS.find(s => s.id === 'destacado');
-    const cardEl = document.querySelector(`[data-section="destacado"]`);
+    let indexHTML = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g,''))));
 
-    // Buscar si el producto ya está en Destacados
-    const destMarker = `data-section="destacado"`;
-    const destIdx = indexHTML.indexOf(destMarker);
-    const gridStart = indexHTML.indexOf('<div class="grid', destIdx);
-    let depth = 0, pos = gridStart, gridEnd = -1;
-    while (pos < indexHTML.length) {
-      if (indexHTML.slice(pos,pos+4)==='<div'){depth++;pos+=4;}
-      else if (indexHTML.slice(pos,pos+6)==='</div>'){depth--;if(depth===0){gridEnd=pos;break;}pos+=6;}
-      else pos++;
-    }
-    const gridContent = indexHTML.slice(gridStart, gridEnd+6);
-    const alreadyIn = gridContent.includes(`data-product="${pid}"`);
+    for (const [pid, action] of Object.entries(pendingDestacados)) {
+      const destMarker = 'data-section="destacado"';
+      const destIdx = indexHTML.indexOf(destMarker);
+      const gridStart = indexHTML.indexOf('<div class="grid', destIdx);
+      let depth = 0, pos = gridStart, gridEnd = -1;
+      while (pos < indexHTML.length) {
+        if (indexHTML.slice(pos,pos+4)==='<div'){depth++;pos+=4;}
+        else if (indexHTML.slice(pos,pos+6)==='</div>'){depth--;if(depth===0){gridEnd=pos;break;}pos+=6;}
+        else pos++;
+      }
+      const gridContent = indexHTML.slice(gridStart, gridEnd+6);
+      const alreadyIn = gridContent.includes(`data-product="${pid}"`);
 
-    if (alreadyIn) {
-      // Quitar de Destacados: encontrar y eliminar la card
-      const cardStart = gridContent.indexOf(`data-product="${pid}"`);
-      const beforeCard = gridContent.lastIndexOf('<div class="card"', cardStart);
-      let d2=0, p2=beforeCard;
-      while(p2<gridContent.length){
-        if(gridContent.slice(p2,p2+4)==='<div'){d2++;p2+=4;}
-        else if(gridContent.slice(p2,p2+6)==='</div>'){d2--;if(d2===0){p2+=6;break;}p2+=6;}
-        else p2++;
+      if (action === 'remove' && alreadyIn) {
+        const cardStart = gridContent.indexOf(`data-product="${pid}"`);
+        const beforeCard = gridContent.lastIndexOf('<div class="card"', cardStart);
+        let d2=0, p2=beforeCard;
+        while(p2<gridContent.length){
+          if(gridContent.slice(p2,p2+4)==='<div'){d2++;p2+=4;}
+          else if(gridContent.slice(p2,p2+6)==='</div>'){d2--;if(d2===0){p2+=6;break;}p2+=6;}
+          else p2++;
+        }
+        const newGrid = gridContent.slice(0, beforeCard) + gridContent.slice(p2).trimStart();
+        indexHTML = indexHTML.slice(0, gridStart) + newGrid + indexHTML.slice(gridEnd+6);
+      } else if (action === 'add' && !alreadyIn) {
+        const prodSec = SECTIONS.find(s => s.products.includes(pid) && s.id !== 'destacado');
+        if (!prodSec) continue;
+        const secMarker = `data-section="${prodSec.id}"`;
+        const secIdx = indexHTML.indexOf(secMarker);
+        const secGrid = indexHTML.indexOf('<div class="grid', secIdx);
+        let d3=0, p3=secGrid;
+        while(p3<indexHTML.length){
+          if(indexHTML.slice(p3,p3+4)==='<div'){d3++;p3+=4;}
+          else if(indexHTML.slice(p3,p3+6)==='</div>'){d3--;if(d3===0){p3+=6;break;}p3+=6;}
+          else p3++;
+        }
+        const secGrid2 = indexHTML.slice(secGrid, p3);
+        const cStart2 = secGrid2.indexOf(`data-product="${pid}"`);
+        const bCard2 = secGrid2.lastIndexOf('<div class="card"', cStart2);
+        let d4=0, p4=bCard2;
+        while(p4<secGrid2.length){
+          if(secGrid2.slice(p4,p4+4)==='<div'){d4++;p4+=4;}
+          else if(secGrid2.slice(p4,p4+6)==='</div>'){d4--;if(d4===0){p4+=6;break;}p4+=6;}
+          else p4++;
+        }
+        const cardCopy = '\n' + secGrid2.slice(bCard2, p4);
+        indexHTML = indexHTML.slice(0, gridEnd) + cardCopy + '\n            ' + indexHTML.slice(gridEnd);
       }
-      const newGrid = gridContent.slice(0, beforeCard) + gridContent.slice(p2).trimStart();
-      indexHTML = indexHTML.slice(0, gridStart) + newGrid + indexHTML.slice(gridEnd+6);
-      btn.classList.remove('active');
-      btn.title = 'Añadir a Destacados';
-      btn.textContent = '☆';
-    } else {
-      // Añadir a Destacados: copiar la card de su sección original
-      const prodSec = SECTIONS.find(s => s.products.includes(pid) && s.id !== 'destacado');
-      if (!prodSec) { alert('Producto no encontrado en ninguna sección'); btn.disabled=false; return; }
-      const secMarker = `data-section="${prodSec.id}"`;
-      const secIdx = indexHTML.indexOf(secMarker);
-      const secGrid = indexHTML.indexOf('<div class="grid', secIdx);
-      let d3=0, p3=secGrid;
-      while(p3<indexHTML.length){
-        if(indexHTML.slice(p3,p3+4)==='<div'){d3++;p3+=4;}
-        else if(indexHTML.slice(p3,p3+6)==='</div>'){d3--;if(d3===0){p3+=6;break;}p3+=6;}
-        else p3++;
-      }
-      const secGrid2 = indexHTML.slice(secGrid, p3);
-      const cStart2 = secGrid2.indexOf(`data-product="${pid}"`);
-      const bCard2 = secGrid2.lastIndexOf('<div class="card"', cStart2);
-      let d4=0, p4=bCard2;
-      while(p4<secGrid2.length){
-        if(secGrid2.slice(p4,p4+4)==='<div'){d4++;p4+=4;}
-        else if(secGrid2.slice(p4,p4+6)==='</div>'){d4--;if(d4===0){p4+=6;break;}p4+=6;}
-        else p4++;
-      }
-      const cardCopy = '\n' + secGrid2.slice(bCard2, p4);
-      const insertAt2 = gridEnd;
-      indexHTML = indexHTML.slice(0, insertAt2) + cardCopy + '\n            ' + indexHTML.slice(insertAt2);
-      btn.classList.add('active');
-      btn.title = 'Quitar de Destacados';
-      btn.textContent = '⭐';
     }
 
     const newContent64 = btoa(unescape(encodeURIComponent(indexHTML)));
-    await ghPut('index.html', newContent64, `${alreadyIn?'quitar':'añadir'} ${pid} de destacados`, indexFile.sha);
-    alert(alreadyIn ? `${pid} quitado de Destacados. Render desplegará en ~2 min.` : `${pid} añadido a Destacados. Render desplegará en ~2 min.`);
+    await ghPut('index.html', newContent64, 'actualizar destacados', indexFile.sha);
+    pendingDestacados = {};
+    updateDestacadosSaveBtn();
+    alert('Destacados guardados. Render desplegará en ~2 min.');
   } catch(e) {
     alert('Error: ' + e.message);
   } finally {
     btn.disabled = false;
+    updateDestacadosSaveBtn();
   }
 }
 
@@ -1475,7 +1499,7 @@ async function downloadBackup() {
     const token = localStorage.getItem('gh_token');
     if (!token) return;
     const indexFile = await ghGet('index.html');
-    const content = atob(indexFile.content.replace(/\n/g,''));
+    const content = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g,''))));
     const blob = new Blob([content], { type: 'text/html' });
     const url  = URL.createObjectURL(blob);
     const now  = new Date();
@@ -1532,7 +1556,7 @@ async function doPublish() {
     log('📥 Leyendo index.html…');
     const indexFile = await ghGet('index.html');
     const indexSha  = indexFile.sha;
-    let indexHTML   = atob(indexFile.content.replace(/\n/g,''));
+    let indexHTML   = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g,''))));
 
     // 3. Backup automático en /backups/ en GitHub
     log('💾 Guardando backup en GitHub…');
