@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CatÃÂ¡logo CityBUY360</title>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --brand-blue: #007bff;
+            --brand-orange-light: #ff9800;
+            --brand-orange-dark: #ff5722;
+            --dark-header: #1a1a1a;
+            --white: #ffffff;
+            --gray-bg: #f4f4f4;
+            --tag-orange: #ff6600;
+            --price-green: #2ecc71;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; }
+        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+
+        header { padding: 0; display: flex; flex-direction: column; width: 100%; }
+
+        .header-brand {
+            width: 100%;
+            background: var(--dark-header);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 20px;
+            box-sizing: border-box;
+        }
+        .header-brand h1 {
+            color: var(--brand-blue);
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 1.3rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .header-brand p {
+            margin: 0;
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.75);
+            white-space: nowrap;
+        }
+        .header-brand .brand-sep {
+            color: rgba(255,255,255,0.3);
+            font-size: 1rem;
+        }
+        .header-slider {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            height: 70px;
+        }
+        .slide {
+            width: 100%;
+            position: relative;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 80px;
+            height: 70px;
+            box-sizing: border-box;
+        }
+        .slide-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .slide-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .slide-cta {
+            position: absolute;
+            right: 50px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: 0.85rem;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .slider-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        @media (max-width: 1024px) {
+            aside { display: none; }
+            .slide { padding: 0 50px 0 50px; text-align: left; justify-content: flex-start; }
+            #badge-360-header { display: none !important; }
+            #span-360 { box-shadow: 0 0 18px rgba(255,210,0,0.95), 0 0 8px rgba(255,180,0,0.7), 0 0 2px rgba(255,210,0,1) !important; }
+            .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
+            .slide-title { font-size: 0.95rem; }
+            .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
+        }
+        @media (max-width: 700px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .grid-destacado { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .products-container { padding: 0 8px 40px; }
+            .card-img-container { height: 180px; }
+            .card-content { padding: 8px 8px 10px; }
+            .product-name { font-size: 0.92rem; min-height: unset; margin-bottom: 4px; }
+            .price { font-size: 1.1rem; margin-top: 4px; }
+            .btn-lo-quiero { display: none; }
+            .stars-container { display: none; }
+            .tag-category { display: none; }
+            .details-block { display: none; }
+    
+
+
+
+        /* Ã¢ÂÂÃ¢ÂÂ SLIDER DE FOTOS EN CARD Ã¢ÂÂÃ¢ÂÂ */
+        .card-img-container { position: relative; overflow: hidden; }
+        .card-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.45); border: none; color: white;
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+            font-size: 0.8rem; display: none; align-items: center;
+            justify-content: center; z-index: 5; font-weight: 700;
+        }
+        .card-img-container:hover .card-nav-btn { display: flex; }
+        .card-nav-btn.prev { left: 5px; }
+        .card-nav-btn.next { right: 5px; }
+        .card-photo-dots {
+            position: absolute; bottom: 5px; left: 50%;
+            transform: translateX(-50%); display: flex; gap: 4px; z-index: 5;
+        }
+        .card-photo-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: rgba(255,255,255,0.4); transition: background 0.2s;
+        }
+        .card-photo-dot.active { background: white; }
+        /* Ã¢ÂÂÃ¢ÂÂ ACCESO 360 Ã¢ÂÂÃ¢ÂÂ */
+        #sec-acceso360 { position: relative; }
+        .acceso360-lock {
+            position: absolute; inset: 0; z-index: 20;
+            background: linear-gradient(135deg, rgba(0,0,0,0.92), rgba(20,10,0,0.95));
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 16px; border-radius: 8px;
+            padding: 30px; text-align: center;
+        }
+        .acceso360-badge {
+            background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
+            background-size: 200% 200%; animation: goldshine 3s ease infinite;
+            color: #1a1a1a; font-weight: 900; font-size: 1.3rem;
+            padding: 8px 24px; border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+            letter-spacing: 2px;
+        }
+        .acceso360-title { color: #ffd700; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; }
+        .acceso360-desc { color: #aaa; font-size: 0.82rem; line-height: 1.6; max-width: 320px; }
+        .acceso360-perks { list-style: none; padding: 0; margin: 0; text-align: left; }
+        .acceso360-perks li { color: #ccc; font-size: 0.8rem; padding: 3px 0; }
+        .acceso360-perks li::before { content: "Ã¢ÂÂ¦ "; color: #ffd700; }
+        .acceso360-input-wrap { display: flex; gap: 8px; width: 100%; max-width: 300px; }
+        .acceso360-input {
+            flex: 1; background: #1a1a1a; border: 1px solid #444;
+            color: white; padding: 10px 14px; border-radius: 8px;
+            font-size: 0.9rem; outline: none; text-align: center;
+            letter-spacing: 3px; font-weight: 700;
+        }
+        .acceso360-input:focus { border-color: #ffd700; }
+        .acceso360-btn {
+            background: linear-gradient(135deg, #b8860b, #ffd700);
+            color: #1a1a1a; border: none; padding: 10px 16px;
+            border-radius: 8px; font-weight: 900; cursor: pointer;
+            font-size: 0.85rem; white-space: nowrap;
+        }
+        .acceso360-error { color: #ef5350; font-size: 0.78rem; }
+        .acceso360-placeholder-card {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+            height: 200px; display: flex; align-items: center; justify-content: center;
+            color: #444; font-size: 0.8rem;
+        }
+        /* Ã¢ÂÂÃ¢ÂÂ BARRA DE CATEGORÃÂAS Ã¢ÂÂÃ¢ÂÂ */
+        #cat-bar {
+            display: flex; overflow-x: auto; gap: 8px;
+            padding: 10px 20px; background: var(--bg-dark);
+            border-bottom: 1px solid #222;
+            scrollbar-width: none; position: sticky; top: 0; z-index: 50;
+        }
+        #cat-bar::-webkit-scrollbar { display: none; }
+        .cat-btn {
+            flex-shrink: 0; background: #1e1e1e; color: #aaa;
+            border: 1px solid #333; border-radius: 20px;
+            padding: 6px 16px; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .cat-btn.active { background: var(--brand-blue); color: white; border-color: var(--brand-blue); }
+        .cat-btn:hover { border-color: var(--brand-blue); color: white; }
+
+        /* Ã¢ÂÂÃ¢ÂÂ BARRA NAVEGACIÃÂN INFERIOR Ã¢ÂÂÃ¢ÂÂ */
+        #bottom-nav {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15,15,15,0.97);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #2a2a2a;
+            z-index: 200; height: 58px;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+        }
+        #bottom-nav ul {
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            height: 100%;
+            margin: 0; padding: 0;
+            width: 100%;
+        }
+        #bottom-nav ul li {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            gap: 3px;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #bottom-nav ul li:active { background: #1a1a1a; }
+        #bottom-nav ul li .nav-icon {
+            font-size: 1.15rem;
+            line-height: 1;
+            display: block;
+        }
+        #bottom-nav ul li .nav-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+        }
+        #bottom-nav ul li.active .nav-label { color: var(--brand-blue); }
+        #bottom-nav ul li.active .nav-icon { filter: brightness(1.5); }
+        .nav-acceso .nav-label { color: #b8860b !important; }
+        @media (max-width: 1024px) { #bottom-nav { display: block; } }
+        body.has-bottom-nav { padding-bottom: 58px; }
+        #span-360 {
+            background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
+            background-size: 200% 200%;
+            animation: goldshine 3s ease infinite;
+            color: #1a0a00;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            font-weight: 900 !important;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(255,210,0,0.95), 0 0 8px rgba(255,180,0,0.7) !important;
+            display: inline-block !important;
+            letter-spacing: 0.5px;
+        }
+        .badge-360 {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
+            background-size: 200% 200%;
+            animation: goldshine 3s ease infinite;
+            color: #1a0a00;
+            font-size: 0.82rem;
+            font-weight: 900;
+            padding: 5px 12px;
+            border-radius: 6px;
+            box-shadow: 0 0 12px rgba(255,215,0,0.7), 0 0 4px rgba(255,215,0,0.4);
+            cursor: pointer;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        @keyframes goldshine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .badge-360:hover { box-shadow: 0 0 22px rgba(255,215,0,0.95); transform: scale(1.05); transition: all 0.2s; }
+        .badge-360.disabled { pointer-events: none; opacity: 0.45; }
+        .section-title { font-size: 0.9rem; padding: 10px 12px; }
+        }
+
+        .section-title { 
+            background: white; padding: 15px 25px; margin: 4px 0 6px; font-weight: bold; 
+            text-transform: uppercase; border-left: 6px solid var(--brand-orange-dark);
+            font-size: 1.1rem; text-align: center; color: #111;
+        }
+
+        .products-container { padding: 4px 20px 40px; width: 100%; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .grid-destacado { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; min-width: 0; }
+
+        /* Imagen clickeable */
+        .card-img-container { 
+            height: 190px; display: flex; align-items: center; justify-content: center; 
+            padding: 10px; border-bottom: 1px solid #eee;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-img-container:hover::after {
+            content: "Ã°ÂÂÂ";
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            padding: 4px 6px;
+            line-height: 1;
+        }
+        /* Indicador de mÃÂºltiples imÃÂ¡genes */
+        .card-img-container[data-count="2"]::before {
+            content: "1 / 2";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.7rem;
+            background: var(--brand-orange-dark);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 7px;
+            font-weight: 700;
+        }
+
+        .card-img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.35s ease; }
+        .card-img-container:hover .card-img { transform: scale(1.08); }
+        .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .tag-category { font-size: 0.75rem; color: var(--tag-orange); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 8px; min-height: 2.4em; }
+        .details-block { font-size: 0.8rem; color: #666; margin-bottom: 12px; line-height: 1.4; flex-grow: 1; }
+        .price { font-size: 1.4rem; color: var(--price-green); font-weight: 800; margin-top: auto; }
+        .ventas-counter { font-size: 0.75rem; color: #888; margin-top: 3px; }
+        .btn-lo-quiero { 
+            display: block; text-align: center; background: var(--brand-blue); color: white; 
+            text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 15px;
+        }
+
+        aside { display: none !important; }
+        .sidebar-logo { 
+            width: 130px; 
+            height: auto;
+            object-fit: contain;
+        }
+
+        
+        .lifestyle-ribbon {
+            background: linear-gradient(90deg, var(--brand-orange-light) 0%, var(--brand-orange-dark) 100%);
+            color: white;
+            padding: 20px 28px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            margin: 30px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .ribbon-text { flex: 1; text-align: left; }
+        .ribbon-cta { white-space: nowrap; background: rgba(255,255,255,0.2); padding: 8px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 900; flex-shrink: 0; }
+        @media (max-width: 700px) { .lifestyle-ribbon { flex-direction: column; text-align: center; gap: 10px; padding: 18px; } .ribbon-text { text-align: center; } }
+
+        /* ===== LIGHTBOX ===== */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        #lightbox.active { display: flex; }
+
+        #lightbox-img {
+            max-width: 88vw;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            user-select: none;
+        }
+
+        .lb-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            font-size: 2.2rem;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 10001;
+        }
+        .lb-btn:hover { background: rgba(255,255,255,0.28); }
+        .lb-btn.hidden { display: none; }
+
+        #lb-prev { left: 16px; }
+        #lb-next { right: 16px; }
+
+        #lb-close {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2.4rem;
+            cursor: pointer;
+            z-index: 10001;
+            line-height: 1;
+        }
+
+        #lb-counter {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* Zoom para imagen ÃÂºnica */
+        #lightbox-img.zoomable { cursor: zoom-in; }
+        #lightbox-img.zoomed  { 
+            transform: scale(2); 
+            cursor: zoom-out; 
+            transition: transform 0.25s ease;
+        }
+        #lightbox-img { transition: transform 0.25s ease; }
+
+        #lb-zoom-hint {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.55);
+            font-size: 0.85rem;
+            font-family: 'Segoe UI', sans-serif;
+            pointer-events: none;
+        }
+
+        .details-block.collapsible { display: none; }
+        .details-block.collapsible.open { display: block; }
+
+        .toggle-details {
+            background: none; border: none; cursor: pointer;
+            font-size: 0.75rem; color: #999; padding: 0 0 8px 0;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .toggle-details .arrow { display: inline-block; transition: transform 0.2s; }
+        .toggle-details.open .arrow { transform: rotate(90deg); }
+
+        .hover-tooltip {
+            display: none;
+            position: fixed;
+            background: rgba(255, 255, 255, 0.95);
+            color: #111;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            padding: 12px 14px;
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 220px;
+            width: 260px;
+            z-index: 99999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            pointer-events: none;
+        }
+
+        /* ===== ESTRELLAS ===== */
+        .stars-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .stars {
+            display: flex;
+            gap: 2px;
+        }
+        .star {
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.15s;
+            line-height: 1;
+        }
+        .star.filled { color: #f5a623; }
+        .stars:not(.voted) .star:hover,
+        .stars:not(.voted) .star:hover ~ .star { color: #ddd; }
+        .stars:not(.voted) .star:hover,
+        .stars:not(.voted) .star.hover-fill { color: #f5a623; }
+        .stars.voted { pointer-events: none; }
+        .stars-info {
+            font-size: 0.72rem;
+            color: #999;
+        }
+
+        /* ===== BOTTOM SHEET (MÃÂVIL) ===== */
+        #bs-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 19998;
+        }
+        #bs-overlay.active { display: block; }
+
+        #bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            z-index: 19999;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        #bottom-sheet.active { transform: translateY(0); }
+
+        #bs-handle {
+            width: 40px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        #bs-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #888;
+            line-height: 1;
+        }
+        #bs-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 10px;
+            padding-right: 30px;
+        }
+        #bs-content {
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        #bs-ver-foto {
+            display: block;
+            text-align: center;
+            background: var(--brand-blue);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        /* ===== CARRUSEL ===== */
+        @media (min-width: 1025px) {
+            .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+            .card-nav-btn { display: none !important; }
+            .card-photo-dots { display: none !important; }
+            #badge-360-header { display: inline-flex !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; color: #1a0a00 !important; box-shadow: 0 0 14px rgba(255,215,0,0.8) !important; }
+            .lifestyle-ribbon { flex-direction: row !important; }
+            #bottom-nav { display: flex !important; }
+            #bottom-nav ul { display: flex !important; flex-direction: row !important; width: 100%; }
+            #bottom-nav ul li { flex: 1; }
+            #span-360 { background: #f5c518 !important; color: #1a0a00 !important; padding: 4px 10px !important; border-radius: 6px !important; box-shadow: 0 0 16px #ffd700 !important; cursor: default !important; pointer-events: none !important; }
+        }
+            .card-photo-dots { display: none !important; }
+            #badge-360-header { display: inline-flex !important; }
+            .lifestyle-ribbon { flex-direction: row !important; }
+            #bottom-nav { display: flex !important; }
+            #bottom-nav ul { display: flex !important; flex-direction: row !important; width: 100%; }
+            #bottom-nav ul li { flex: 1; }
+            #span-360 { cursor: default !important; pointer-events: none !important; box-shadow: 0 0 20px rgba(255,215,0,1), 0 0 8px rgba(255,180,0,0.9) !important; }
+        }
+    
+        /* Ã¢ÂÂÃ¢ÂÂ MODAL VIP ACCESO 360 Ã¢ÂÂÃ¢ÂÂ */
+        #modal-vip-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px); }
+        #modal-vip-overlay.open { display:flex; }
+        #modal-vip-box { background:linear-gradient(160deg,#0d0d0d,#1a1100);border:1px solid #b8860b;border-radius:18px;padding:30px 26px 26px;max-width:370px;width:100%;position:relative;box-shadow:0 0 40px rgba(255,200,0,0.18),0 0 80px rgba(0,0,0,0.8);animation:vipIn 0.35s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes vipIn { from{opacity:0;transform:scale(0.85) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .modal-close-btn { position:absolute;top:14px;right:16px;background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer; }
+        .modal-close-btn:hover { color:#ffd700; }
+        .modal-vip-badge { display:inline-block;background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;font-size:0.72rem;font-weight:900;padding:4px 12px;border-radius:20px;letter-spacing:1.5px;margin-bottom:14px; }
+        .modal-vip-title { color:#ffd700;font-size:1.35rem;font-weight:900;margin:0 0 5px;line-height:1.2; }
+        .modal-vip-sub { color:#888;font-size:0.82rem;margin-bottom:16px; }
+        .modal-vip-perks { list-style:none;padding:0;margin:0 0 20px; }
+        .modal-vip-perks li { color:#ccc;font-size:0.82rem;padding:5px 0;border-bottom:1px solid #1f1f1f;display:flex;align-items:center;gap:8px; }
+        .modal-vip-perks li:last-child { border-bottom:none; }
+        .modal-vip-perks li::before { content:'Ã¢ÂÂ¦';color:#ffd700;font-size:0.68rem;flex-shrink:0; }
+        .modal-btn-si { width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,#f5c518,#ffe566,#f5c518);color:#1a0a00;font-weight:900;font-size:0.98rem;cursor:pointer;margin-bottom:10px;transition:transform 0.15s,box-shadow 0.15s; }
+        .modal-btn-si:hover { transform:scale(1.02);box-shadow:0 0 20px rgba(255,210,0,0.35); }
+        .modal-btn-si:disabled { opacity:0.6;cursor:not-allowed;transform:none; }
+        .modal-btn-codigo { width:100%;padding:11px;border-radius:10px;border:1px solid #2a2a2a;background:transparent;color:#777;font-size:0.86rem;cursor:pointer;transition:border-color 0.2s,color 0.2s; }
+        .modal-btn-codigo:hover { border-color:#ffd700;color:#ffd700; }
+        .modal-email-label { color:#aaa;font-size:0.82rem;margin-bottom:8px;display:block; }
+        .modal-email-input { width:100%;box-sizing:border-box;padding:12px 14px;background:#111;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:0.95rem;margin-bottom:12px;outline:none;transition:border-color 0.2s; }
+        .modal-email-input:focus { border-color:#ffd700; }
+        .modal-back-btn { background:none;border:none;color:#555;font-size:0.8rem;cursor:pointer;margin-top:6px;display:block;width:100%;text-align:center; }
+        .modal-back-btn:hover { color:#aaa; }
+        .modal-espera-icon { font-size:2.2rem;margin-bottom:12px;text-align:center; }
+        .modal-espera-title { color:#ffd700;font-size:1.15rem;font-weight:900;margin-bottom:10px;text-align:center; }
+        .modal-espera-desc { color:#aaa;font-size:0.83rem;line-height:1.6;text-align:center; }
+        .modal-step { display:none; }
+        .modal-step.active { display:block; }
+        .modal-email-error { color:#ff6b6b;font-size:0.78rem;margin-bottom:8px;display:none; }
+
+        
+        /* Ã¢ÂÂÃ¢ÂÂ ACCESO 360 ENTRADA ANIMADA Ã¢ÂÂÃ¢ÂÂ */
+        #acceso360-welcome {
+            display: none; position: fixed; inset: 0; z-index: 9998;
+            background: rgba(0,0,0,0.95);
+            align-items: center; justify-content: center;
+            flex-direction: column; text-align: center;
+        }
+        #acceso360-welcome.show { display: flex; animation: fadeInOut 2.8s ease forwards; }
+        @keyframes fadeInOut { 0%{opacity:0} 20%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+        .welcome-badge { background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518); color:#1a0a00; font-size:0.8rem; font-weight:900; padding:5px 16px; border-radius:20px; letter-spacing:2px; margin-bottom:16px; }
+        .welcome-title { color:#ffd700; font-size:2rem; font-weight:900; line-height:1.2; text-shadow: 0 0 30px rgba(255,210,0,0.6); }
+        .welcome-sub { color:#aaa; font-size:0.9rem; margin-top:10px; }
+        #confetti-canvas { position: fixed; inset: 0; z-index: 9997; pointer-events: none; }
+
+        
+        /* Ã¢ÂÂÃ¢ÂÂ CAMPANITA MENSAJES Ã¢ÂÂÃ¢ÂÂ */
+        #bell-btn {
+            position: relative; background: none; border: none;
+            color: #aaa; font-size: 1.2rem; cursor: pointer;
+            padding: 4px 8px; flex-shrink: 0;
+            transition: color 0.2s;
+            margin-left: auto;
+        }
+        #bell-btn:hover { color: #ffd700; }
+        #bell-badge {
+            display: none; position: absolute; top: 0; right: 2px;
+            background: #ff4444; color: #fff; font-size: 0.6rem;
+            font-weight: 900; border-radius: 50%; width: 16px; height: 16px;
+            align-items: center; justify-content: center;
+        }
+        #bell-badge.show { display: flex; }
+        #mensajes-panel {
+            display: none; position: fixed; top: 0; right: 0;
+            width: min(340px, 100vw); height: 100vh;
+            background: #111; border-left: 1px solid #222;
+            z-index: 9990; flex-direction: column;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.6);
+        }
+        #mensajes-panel.open { display: flex; }
+        .mensajes-header {
+            padding: 16px 18px; border-bottom: 1px solid #222;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .mensajes-header h3 { color: #ffd700; font-size: 0.95rem; margin: 0; }
+        .mensajes-close { background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; }
+        .mensajes-close:hover { color: #fff; }
+        .mensajes-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .mensaje-item {
+            background: #1a1a1a; border: 1px solid #252525; border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .mensaje-item.nuevo { border-color: #ffd70033; background: #1a1100; }
+        .mensaje-texto { color: #ddd; font-size: 0.85rem; line-height: 1.5; }
+        .mensaje-fecha { color: #555; font-size: 0.72rem; margin-top: 6px; }
+        .mensajes-empty { color: #555; font-size: 0.85rem; text-align: center; padding: 30px 0; }
+
+        
+        /* Ã¢ÂÂÃ¢ÂÂ CARD TASAS DE CAMBIO Ã¢ÂÂÃ¢ÂÂ */
+        #tasas-card {
+            background: linear-gradient(135deg, #0d1117, #161b22);
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        #tasas-card.visible { display: block; }
+        .tasas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .tasas-title { color: #e6edf3; font-size: 0.88rem; font-weight: 700; }
+        .tasas-source { color: #6e7681; font-size: 0.72rem; }
+        .tasas-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+        .tasa-item { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 12px 10px; text-align: center; }
+        .tasa-moneda { color: #8b949e; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+        .tasa-valor { color: #f0f6fc; font-size: 1.25rem; font-weight: 900; }
+        .tasa-label { color: #6e7681; font-size: 0.65rem; margin-top: 2px; }
+        .tasa-error { color: #f85149; font-size: 0.75rem; text-align: center; padding: 10px; }
+        .tasas-loading { color: #8b949e; font-size: 0.8rem; text-align: center; padding: 10px; }
+        .tasas-update { color: #6e7681; font-size: 0.68rem; text-align: right; margin-top: 10px; }
+        @media (max-width: 700px) { .tasas-grid { grid-template-columns: repeat(3,1fr); gap: 8px; } .tasa-valor { font-size: 1.05rem; } }
+
+        
+        /* Ã¢ÂÂÃ¢ÂÂ TICKER / MARQUESINA Ã¢ÂÂÃ¢ÂÂ */
+        #ticker-wrap {
+            background: linear-gradient(90deg, var(--brand-blue), #0099bb);
+            color: #000; font-size: 0.8rem; font-weight: 700;
+            padding: 7px 0; overflow: hidden; white-space: nowrap;
+            display: none;
+        }
+        #ticker-wrap.visible { display: block; }
+        .ticker-content {
+            display: inline-block;
+            animation: ticker-scroll 20s linear infinite;
+            padding-left: 100%;
+        }
+        @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .ticker-sep { margin: 0 30px; opacity: 0.5; }
+
+        
+        /* Ã¢ÂÂÃ¢ÂÂ MARQUESINA Ã¢ÂÂÃ¢ÂÂ */
+        .marquesina-wrap {
+            background: #111; border-top: 1px solid #222; border-bottom: 1px solid #222;
+            overflow: hidden; padding: 8px 0; display: none;
+        }
+        .marquesina-wrap.visible { display: block; }
+        .marquesina-track {
+            display: flex; gap: 60px; white-space: nowrap;
+            animation: marquesina-move 25s linear infinite;
+        }
+        .marquesina-track:hover { animation-play-state: paused; }
+        @keyframes marquesina-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .marquesina-text { color: #00d4ff; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; }
+        .marquesina-sep { color: #333; }
+
+        
+        /* Ã¢ÂÂÃ¢ÂÂ MARQUESINA Ã¢ÂÂÃ¢ÂÂ */
+        .ticker-wrap {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            border-top: 1px solid #00d4ff33;
+            border-bottom: 1px solid #00d4ff33;
+            overflow: hidden; padding: 8px 0;
+            display: block;
+        }
+        .ticker-wrap.hidden { display: none; }
+        .ticker-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker-scroll 30s linear infinite;
+            color: #00d4ff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .ticker-content:hover { animation-play-state: paused; }
+        .ticker-sep { color: #f5c518; margin: 0 20px; }
+        @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+
+        </style>
+</head>
+<body>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+    <button id="lb-close" title="Cerrar">Ã¢ÂÂ</button>
+    <button class="lb-btn" id="lb-prev"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">Ã¢ÂÂ¹</span></button>
+    <img id="lightbox-img" src="" alt="Vista ampliada">
+    <button class="lb-btn" id="lb-next"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">Ã¢ÂÂº</span></button>
+    <div id="lb-counter"></div>
+    <div id="lb-zoom-hint"></div>
+</div>
+
+<!-- BOTTOM SHEET (MÃÂVIL) -->
+<div id="bs-overlay"></div>
+<div id="bottom-sheet">
+    <div id="bs-handle"></div>
+    <button id="bs-close">Ã¢ÂÂ</button>
+    <div id="bs-title"></div>
+    <div id="bs-content"></div>
+    <button id="bs-ver-foto">Ã°ÂÂÂ· Ver foto</button>
+</div>
+
+<div class="page-wrapper">
+    <div class="main-content">
+        
+        <!-- SLIDER -->
+<header>
+    <div class="header-brand">
+        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')" style="background:#f5c518;color:#1a0a00;padding:4px 10px;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 16px #ffd700,0 0 6px #f5c518;display:inline-block;">360</span></h1>
+        <span class="brand-sep">|</span>
+        <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
+        <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">Ã°ÂÂÂ<span id="bell-badge" class="bell-badge"></span></button>
+        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')" >Ã¢ÂÂ¦ ACCESO 360</span>
+    </div>
+    <div class="header-slider">
+
+        <div class="slide" style="background: linear-gradient(135deg, #ff9800, #ff5722); display: flex;">
+            <div>
+                <div class="slide-label" style="color: white; opacity: 0.85;">ÃÂ¡Dale vida a tu mÃÂ³vil!</div>
+                <div class="slide-title">Recarga 360 Ã¢ÂÂ 1,000 MN</div>
+            </div>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="slide-cta" style="color: #ff5722;">Compra YA Ã°ÂÂÂ</a>
+        </div>
+
+        <div class="slide" style="background: linear-gradient(135deg, #1a1a2e, #16213e); display: none;">
+            <div>
+                <div class="slide-label" style="color: #f5a623;">CityBUY360</div>
+                <div class="slide-title">Mejores Ofertas</div>
+            </div>
+        </div>
+
+        <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none;">
+            <div>
+                <div class="slide-label" style="color: #00d4ff;">Acaba de llegar</div>
+                <div class="slide-title">Nueva MercancÃÂ­a</div>
+            </div>
+        </div>
+
+        <div class="slide" style="background: linear-gradient(135deg, #1b4332, #2d6a4f); display: none;">
+            <div>
+                <div class="slide-label" style="color: #95d5b2;">Disponible ya</div>
+                <div class="slide-title">En nuestro almacÃÂ©n</div>
+            </div>
+        </div>
+
+        <div class="slide" style="background: linear-gradient(135deg, #7b2d8b, #c0392b); display: none;">
+            <div>
+                <div class="slide-label" style="color: #ffd700;">ÃÂ¡A celebrar!</div>
+                <div class="slide-title">Hora de la Fiesta</div>
+            </div>
+        </div>
+
+        <div class="slide" style="background: linear-gradient(135deg, #004e92, #000428); display: none;">
+            <div>
+                <div class="slide-label" style="color: #00d4ff;">EMPRENDEDORES</div>
+                <div class="slide-title">ÃÂ¡Vende con nosotros!</div>
+            </div>
+            <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D" class="slide-cta" style="color: #004e92;">ContÃÂ¡ctanos</a>
+        </div>
+
+        <button onclick="sliderPrev()" class="slider-nav-btn" style="left: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">Ã¢ÂÂ¹</span></button>
+        <button onclick="sliderNext()" class="slider-nav-btn" style="right: 10px; z-index: 10;"><span style="display:block;line-height:1;font-size:0.9rem;font-weight:700">Ã¢ÂÂº</span></button>
+
+        <div id="slider-dots" style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
+            <span class="dot active-dot" style="background: white;"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+            <span class="dot" style="background: rgba(255,255,255,0.4);"></span>
+        </div>
+    </div>
+</header>
+
+<div id="cat-bar">
+    <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
+    <button class="cat-btn" onclick="filterCat('mujer',this)">Ã°ÂÂÂ Mujer</button>
+    <button class="cat-btn" onclick="filterCat('hombre',this)">Ã°ÂÂÂ Hombre</button>
+    <button class="cat-btn" onclick="filterCat('unisex',this)">Ã°ÂÂÂ Unisex</button>
+    <button class="cat-btn" onclick="filterCat('ninos',this)">Ã°ÂÂÂ¶ NiÃÂ±os</button>
+    <button class="cat-btn" onclick="filterCat('electrodomesticos',this)">Ã°ÂÂÂ ElectrodomÃÂ©sticos</button>
+    <button class="cat-btn" onclick="filterCat('aseo',this)">Ã°ÂÂ§Â´ Aseo</button>
+    <button class="cat-btn" onclick="filterCat('servicios',this)">Ã¢ÂÂ¡ Servicios</button>
+</div>
+
+
+        <div class="products-container">
+
+            <div class="section-title" id="sec-title-destacado" data-section="destacado">Ã¢Â­Â LO MÃÂS DESTACADO</div>
+            <div class="grid">
+
+                <div class="card" data-product="blumer" style="align-self: start;">
+                    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
+                        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
+                        <div class="hover-tooltip">DiseÃÂ±o sin costuras, con bordes cortados con lÃÂ¡ser, lo que los hace prÃÂ¡cticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseÃÂ±o de cintura media/baja y un corte de cobertura mÃÂ­nima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elÃÂ¡stico, suave al tacto y de secado rÃÂ¡pido que se adapta al cuerpo como una segunda piel.</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA INTERIOR</div>
+                        <div class="product-name">Blumer sin costuras</div>
+                        <div class="stars-container" data-product="blumer">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span>
+                                <span class="star" data-val="2">Ã¢ÂÂ</span>
+                                <span class="star" data-val="3">Ã¢ÂÂ</span>
+                                <span class="star" data-val="4">Ã¢ÂÂ</span>
+                                <span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
+                        <div class="price">550 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card" data-product="gorra" data-genero="unisex">
+    <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
+        <img src="gorra.jpg" class="card-img" alt="Gorra">
+        <div class="hover-tooltip">DiseÃÂ±o icÃÂ³nico con monograma frontal bordado en negro de alto contraste. Un clÃÂ¡sico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para mÃÂ¡xima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Gorra</div>
+        <div class="stars-container" data-product="gorra">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Calidad<br>Colores: Varios</div>
+        <div class="price">2,800 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+</div>
+
+            <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">Ã°ÂÂÂ ROPA INTERIOR</div>
+            <div class="grid">
+
+                <div class="card" data-product="blumer" style="align-self: start;">
+                    <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
+                        <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
+                        <div class="hover-tooltip">DiseÃÂ±o sin costuras, con bordes cortados con lÃÂ¡ser, lo que los hace prÃÂ¡cticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseÃÂ±o de cintura media/baja y un corte de cobertura mÃÂ­nima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elÃÂ¡stico, suave al tacto y de secado rÃÂ¡pido que se adapta al cuerpo como una segunda piel.</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA INTERIOR</div>
+                        <div class="product-name">Blumer sin costuras</div>
+                        <div class="stars-container" data-product="blumer">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span>
+                                <span class="star" data-val="2">Ã¢ÂÂ</span>
+                                <span class="star" data-val="3">Ã¢ÂÂ</span>
+                                <span class="star" data-val="4">Ã¢ÂÂ</span>
+                                <span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Pregunta el color que buscas</div>
+                        <div class="price">550 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card" data-product="sujetador" style="align-self: start;">
+                    <div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position: relative;">
+                        <img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras">
+                        <div class="hover-tooltip">Sin costuras y con aros/copas moldeadas. DiseÃÂ±o liso y minimalista, pensado para ser cÃÂ³modo y ofrecer un efecto invisible o de "segunda piel" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elÃÂ¡stico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA INTERIOR</div>
+                        <div class="product-name">Ajustador sin costuras</div>
+                        <div class="stars-container" data-product="sujetador">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span>
+                                <span class="star" data-val="2">Ã¢ÂÂ</span>
+                                <span class="star" data-val="3">Ã¢ÂÂ</span>
+                                <span class="star" data-val="4">Ã¢ÂÂ</span>
+                                <span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Tallas: S, M, L<br>Colores: Pregunta el color que buscas</div>
+                        <div class="price">1,500 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Ajustador%20sin%20costuras%20%F0%9F%A9%B1%20(1%2C500%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">Ã°ÂÂÂ ROPA Y MODA</div>
+            <div class="grid">
+
+                <div class="card" data-product="paris" data-genero="mujer hombre">
+    <div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position: relative;">
+        <img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS">
+        <div class="hover-tooltip">Look casual y elegante. DiseÃÂ±o sofisticado con estampado central con la palabra "PARIS" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clÃÂ¡sico y entallado que garantiza comodidad durante todo el dÃÂ­a sin perder el estilo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado PARIS</div>
+        <div class="stars-container" data-product="paris">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, MarrÃÂ³n</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+                <div class="card" data-product="ngu" data-genero="mujer hombre">
+    <div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position: relative;">
+        <img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP">
+        <div class="hover-tooltip">Recomendado por deportistas, fresco y transpirable. DiseÃÂ±o inspirador con mensaje motivacional. LÃÂ­nea diagonal en tono granate que rompe la monotonÃÂ­a y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div>
+        <div class="stars-container" data-product="ngu">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, MarrÃÂ³n</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+                <div class="card" data-product="gdm" data-genero="mujer hombre">
+    <div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position: relative;">
+        <img src="gdm.jpg" class="card-img" alt="PulÃÂ³ver GREAT DREAM MAKER">
+        <div class="hover-tooltip">Lo mÃÂ¡s vendido. Minimalista y elegante, con el sello "GREAT DREAM MAKER" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasiÃÂ³n.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">PulÃÂ³ver GREAT DREAM MAKER (GRAN CREADOR DE SUEÃÂOS)</div>
+        <div class="stars-container" data-product="gdm">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco, Negro, Azul, MarrÃÂ³n</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+                <div class="card" data-product="aac" data-genero="mujer hombre">
+                    <div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2">
+                        <img src="aac.jpg" class="card-img" alt="Pulover Amor, AlegrÃÂ­a y Cerveza FrÃÂ­a">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover Amor, AlegrÃÂ­a y Cerveza FrÃÂ­a</div>
+                        <div class="stars-container" data-product="aac">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Estilo casual. El alma de la FIESTA<br>Tallas: S, M, L</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card" data-product="usa" data-genero="mujer hombre">
+                    <div class="card-img-container" data-images="usa.jpg,hombre01usa.jpg,hombre02usa.jpg" data-count="2">
+                        <img src="usa.jpg" class="card-img" alt="Pulover estampado USA">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Pulover estampado USA</div>
+                        <div class="stars-container" data-product="usa">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Estilo Americano Classic<br>Tallas: S, M, L, XL</div>
+                        <div class="price">2,900 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20USA%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card" data-product="freedom" data-genero="mujer hombre">
+    <div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="2" style="position: relative;">
+        <img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM">
+        <div class="hover-tooltip">Un bÃÂ¡sico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ROPA Y MODA</div>
+        <div class="product-name">Pulover estampado FREEDOM</div>
+        <div class="stars-container" data-product="freedom">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Tallas: S, M, L, XL<br>Colores: Blanco con franjas negras</div>
+        <div class="price">2,900 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+                <div class="card" data-product="mblancas" data-genero="mujer hombre">
+                    <div class="card-img-container" data-images="mblancas.jpg" data-count="1">
+                        <img src="mblancas.jpg" class="card-img" alt="Medias Blancas">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Medias Blancas</div>
+                        <div class="stars-container" data-product="mblancas">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Talla: ÃÂnica | Transpirable</div>
+                        <div class="price">250 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Blancas%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+                <div class="card" data-product="mnegras" data-genero="mujer hombre">
+                    <div class="card-img-container" data-images="mnegras.jpg" data-count="1">
+                        <img src="mnegras.jpg" class="card-img" alt="Medias Negras">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">ROPA Y MODA</div>
+                        <div class="product-name">Medias Negras</div>
+                        <div class="stars-container" data-product="mnegras">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Talla: ÃÂnica | Transpirable</div>
+                        <div class="price">250 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Negras%20%F0%9F%A7%A6%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"VÃÂ­stete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
+
+            <div class="section-title" id="sec-title-accesorios" data-section="accesorios">Ã°ÂÂÂ ACCESORIOS</div>
+            <div class="grid">
+
+                <div class="card" data-product="bolsomovil" data-genero="mujer">
+    <div class="card-img-container" data-images="bolsomovil.jpg" data-count="1" style="position: relative;">
+        <img src="bolsomovil.jpg" class="card-img" alt="Bolso Bandolera para mÃÂ³vil">
+        <div class="hover-tooltip">Con correas ajustables. Resistente, elegante e impermeable. Para mÃÂ³vil y accesorios esenciales. DiseÃÂ±o frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeÃÂ±o detalle floral.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Bolso Bandolera para MÃÂ³vil</div>
+        <div class="stars-container" data-product="bolsomovil">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Cuero sintÃÂ©tico y Nylon.<br>Colores: Negro con detalles decorativos.</div>
+        <div class="price">2,000 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+                <div class="card" data-product="gorrobebe" data-genero="ninos">
+    <div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position: relative;">
+        <img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebÃÂ©">
+        <div class="hover-tooltip">DiseÃÂ±o suave y elÃÂ¡stico para no daÃÂ±ar la delicada piel del bebÃÂ©. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cÃÂ³modamente, adaptÃÂ¡ndose a la forma sin generar presiÃÂ³n excesiva.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Gorro para bebÃÂ©</div>
+        <div class="stars-container" data-product="gorrobebe">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: AlgodÃÂ³n elastano.<br>Colores: Pregunta el color que buscas.</div>
+        <div class="price">1,200 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+                <div class="card" data-product="gorra" data-genero="unisex">
+    <div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position: relative;">
+        <img src="gorra.jpg" class="card-img" alt="Gorra">
+        <div class="hover-tooltip">DiseÃÂ±o icÃÂ³nico con monograma frontal de "LA" bordado en negro de alto contraste sobre un fondo blanco nÃÂ­tido. Un clÃÂ¡sico que nunca pasa de moda. Ajuste perfecto con sistema de cierre de velcro en la parte posterior para mÃÂ¡xima comodidad y adaptabilidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">ACCESORIOS</div>
+        <div class="product-name">Gorra</div>
+        <div class="stars-container" data-product="gorra">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Material: Calidad<br>Colores: Varios</div>
+        <div class="price">2,800 MN</div>
+        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a>
+    </div>
+</div>
+
+            </div>
+
+            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"ÃÂ¿Por quÃÂ© elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
+
+            <div class="section-title" id="sec-title-servicios" data-section="servicios">Ã¢ÂÂ¡ SERVICIOS</div>
+            <div class="grid">
+                <div class="card" data-product="saldo" data-genero="servicios">
+                    <div class="card-img-container" data-images="saldo.jpg" data-count="1">
+                        <img src="saldo.jpg" class="card-img" alt="Comprar Saldo - Recargas 360">
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">SERVICIOS</div>
+                        <div class="product-name">COMPRAR SALDO (RECARGAS)</div>
+                        <div class="stars-container" data-product="saldo">
+                            <div class="stars">
+                                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+                            </div>
+                            <span class="stars-info">Sin votos</span>
+                        </div>
+                        <div class="details-block">Recargas 360 SALDO</div>
+                        <div class="price">1,000 MN</div>
+                        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)" class="btn-lo-quiero">Recarga YA</a>
+                    </div>
+                </div>
+<div class="card" data-product="citybuy360familia" data-genero="servicios">
+    <div class="card-img-container" data-images="bolsas-azules.jpg" data-count="1" style="position: relative;">
+        <img src="bolsas-azules.jpg" class="card-img" alt="ÃÂnete a CityBUY360">
+        <div class="hover-tooltip">ÃÂ¿Eres emprendedor? Impulsa tu negocio con CityBUY360 Ã¢ÂÂ publica tus productos y descubre todo lo que podemos lograr en equipo.</div>
+    </div>
+    <div class="card-content">
+        <div class="tag-category">SERVICIOS</div>
+        <div class="product-name">ÃÂnete a la familia CityBUY360</div>
+        <div class="stars-container" data-product="citybuy360familia">
+            <div class="stars">
+                <span class="star" data-val="1">Ã¢ÂÂ</span><span class="star" data-val="2">Ã¢ÂÂ</span><span class="star" data-val="3">Ã¢ÂÂ</span><span class="star" data-val="4">Ã¢ÂÂ</span><span class="star" data-val="5">Ã¢ÂÂ</span>
+            </div>
+            <span class="stars-info">Sin votos</span>
+        </div>
+        <div class="details-block">Publica tus productos en nuestro catÃÂ¡logo digital.</div>
+        <button class="toggle-details" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <span class="arrow">Ã¢ÂÂ¶</span> Ver mÃÂ¡s
+        </button>
+        <div class="details-block collapsible">ÃÂ¿Eres emprendedor? ÃÂ¿Quieres vender por internet pero la parte tÃÂ©cnica te frena? ÃÂ¡DÃÂ©jalo en nuestras manos! Impulsa tu negocio con NOSOTROS - publica tus productos y descubre todo lo que podemos lograr en equipo. 
+En CityBUY360 te agregamos una secciÃÂ³n en nuestro catÃÂ¡logo online, para que tus clientes vean tus productos, precios y ofertas en un solo lugar.
+Eficiencia garantizada: Si tienes problemas de lentitud en la red, nuestro catÃÂ¡logo estÃÂ¡ optimizado para cargar de manera rÃÂ¡pida y eficiente, consumiendo menos datos y garantizando que tus clientes siempre vean tus productos.
+ÃÂ¡Ahorra tiempo y vende las 24/7! Tu tienda siempre abierta, incluso cuando descansas.
+EscrÃÂ­benos por privado y hablemos de tu proyecto.</div>
+
+        <div class="price">PROMOCIÃÂN</div>
+        <a href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D%20(0%20CUP)" class="btn-lo-quiero">ContÃÂ¡ctanos</a>
+    </div>
+</div>
+            
+                <!-- Ã¢ÂÂÃ¢ÂÂ CARD TASAS DE CAMBIO Ã¢ÂÂÃ¢ÂÂ -->
+                <div class="card" id="tasas-card-servicios" data-product="tasas" data-genero="servicios">
+                    <div class="card-img-container" style="background:#0d1117;display:flex;align-items:center;justify-content:center;min-height:160px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:2rem;">Ã°ÂÂÂ±</div>
+                            <div style="color:#00d4ff;font-size:0.75rem;font-weight:700;margin-top:6px;">TASAS EN VIVO</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="tag-category">SERVICIOS</div>
+                        <div class="product-name">Tasa de cambio en Cuba</div>
+                        <div class="card-details" id="tasas-card-content">CargandoÃ¢ÂÂ¦</div>
+                        <div style="font-size:0.65rem;color:#888;margin-top:4px;" id="tasas-update-time"></div>
+                        <div style="font-size:0.65rem;color:#555;margin-top:2px;">Fuente: elToque (informal)</div>
+                    </div>
+                </div>
+
+                <div class="card" data-product="tasas-cambio" data-genero="servicios" id="tasas-card-inner">
+                    <div class="card-img-container" style="background:linear-gradient(135deg,#0d1117,#161b22);display:flex;align-items:center;justify-content:center;min-height:140px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:6px;">Ã°ÂÂÂ±</div>
+                            <div id="tasas-mini-usd" style="color:#f5c518;font-size:1.1rem;font-weight:900;">USD Ã¢ÂÂ</div>
+                            <div id="tasas-mini-eur" style="color:#aaa;font-size:0.9rem;">EUR Ã¢ÂÂ</div>
+                            <div id="tasas-mini-mlc" style="color:#aaa;font-size:0.9rem;">MLC Ã¢ÂÂ</div>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-category">SERVICIOS</div>
+                        <h3>Tasas de Cambio</h3>
+                        <div class="card-details">Fuente: elToque (informal)<br><span id="tasas-update-mini" style="font-size:0.7rem;color:#666;"></span></div>
+                        <div class="card-price-row">
+                            <span class="card-price" style="font-size:0.85rem;color:#888;">En tiempo real</span>
+                        </div>
+                        <a href="https://eltoque.com" target="_blank" class="btn-lo-quiero" style="text-decoration:none;text-align:center;display:block;">Ver en elToque</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+            <!-- Ã¢ÂÂÃ¢ÂÂ SECCIÃÂN ACCESO 360 (desactivada por defecto) Ã¢ÂÂÃ¢ÂÂ -->
+            <div id="sec-acceso360" style="display:none; margin-top: 20px;">
+                <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
+                    Ã¢ÂÂ¦ ACCESO 360
+                </div>
+                <div style="position: relative; min-height: 300px;">
+                    <!-- Overlay de bloqueo -->
+                    <div class="acceso360-lock" id="acceso360-lock">
+                        <div class="acceso360-badge">ACCESO 360</div>
+                        <div class="acceso360-title">SecciÃÂ³n Exclusiva</div>
+                        <div class="acceso360-desc">Accede a productos exclusivos, drops limitados y beneficios premium con tu cÃÂ³digo personal.</div>
+                        <ul class="acceso360-perks">
+                            <li>Productos exclusivos no disponibles al pÃÂºblico</li>
+                            <li>Drops limitados con acceso anticipado</li>
+                            <li>Videos IA de cÃÂ³mo te queda la ropa</li>
+                            <li>Reserva de productos antes del lanzamiento</li>
+                            <li>EnvÃÂ­o prioritario</li>
+                        </ul>
+                        <div class="acceso360-input-wrap">
+                            <input type="text" class="acceso360-input" id="acceso360-code" placeholder="TU CÃÂDIGO" maxlength="12">
+                            <button class="acceso360-btn" onclick="checkAcceso360()">Acceder</button>
+                        </div>
+                        <div class="acceso360-error" id="acceso360-error"></div>
+                    </div>
+                    <!-- Contenido desbloqueado -->
+                    <div id="acceso360-content" style="display:none;">
+                        <div class="grid">
+                            <div class="acceso360-placeholder-card">PrÃÂ³ximamente</div>
+                            <div class="acceso360-placeholder-card">PrÃÂ³ximamente</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    <aside>
+        
+    </aside>
+</div>
+
+<script>
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
+        authDomain: "citybuy360.firebaseapp.com",
+        databaseURL: "https://citybuy360-default-rtdb.firebaseio.com",
+        projectId: "citybuy360",
+        storageBucket: "citybuy360.firebasestorage.app",
+        messagingSenderId: "701999748308",
+        appId: "1:701999748308:web:85c320687f6eb10471d741",
+        measurementId: "G-BM5N0W6KJE"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Ã¢ÂÂÃ¢ÂÂ Tracking de visitas Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    const today = new Date().toISOString().split('T')[0];
+    if (!localStorage.getItem('cb360_admin')) { db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1); }
+
+    // Ã¢ÂÂÃ¢ÂÂ PRECIOS DESDE FIREBASE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // Ã¢ÂÂÃ¢ÂÂ ConfiguraciÃÂ³n de interfaz desde Firebase Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    db.ref('interfaz').once('value', function(snap) {
+        var interfaz = snap.val();
+        if (!interfaz) return;
+        var catBar = document.getElementById('cat-bar');
+        var headerSlider = document.querySelector('.header-slider');
+        var badge360 = document.getElementById('badge-360-header');
+        var bottomNav = document.getElementById('bottom-nav');
+        var ribbons = document.querySelectorAll('.lifestyle-ribbon');
+        var secAcceso = document.getElementById('sec-acceso360');
+
+        if (catBar) catBar.style.display = interfaz.catbar === false ? 'none' : '';
+        if (headerSlider) headerSlider.style.display = interfaz.slider === false ? 'none' : '';
+        if (badge360) {
+            if (interfaz.acceso360 === false) { badge360.classList.add('disabled'); }
+            else { badge360.classList.remove('disabled'); }
+        }
+        var span360 = document.getElementById('span-360');
+        if (span360) {
+            if (interfaz.acceso360 === false) { span360.style.pointerEvents='none'; span360.style.cursor='default'; }
+            else { span360.style.pointerEvents='auto'; span360.style.cursor='pointer'; }
+        }
+        if (bottomNav) bottomNav.style.display = interfaz.bottomnav === false ? 'none' : '';
+        ribbons.forEach(function(r) { r.style.display = interfaz.ribbons === false ? 'none' : ''; });
+        if (secAcceso && interfaz.acceso360 === false) secAcceso.style.display = 'none';
+    });
+
+    // Ã¢ÂÂÃ¢ÂÂ Estado secciÃÂ³n Acceso 360 desde Firebase Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    db.ref('acceso360/seccionActiva').once('value', function(snap) {
+        var secAcceso = document.getElementById('sec-acceso360');
+        if (secAcceso) secAcceso.style.display = snap.val() === true ? '' : 'none';
+    });
+
+    db.ref('prices').once('value', function(snap) {
+        var prices = snap.val();
+        if (!prices) return;
+        document.querySelectorAll('[data-product]').forEach(function(card) {
+            var pid = card.getAttribute('data-product');
+            if (!pid || !prices[pid]) return;
+            var priceEl = card.querySelector('.price');
+            if (priceEl) priceEl.textContent = prices[pid];
+        });
+    });
+
+    // Ã¢ÂÂÃ¢ÂÂ ACCESO 360 Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    // Verificar si hay sesiÃÂ³n activa de Acceso 360
+    var acceso360Active = sessionStorage.getItem('acceso360') === 'true';
+    if (acceso360Active) {
+        var lockEl = document.getElementById('acceso360-lock');
+        var contentEl = document.getElementById('acceso360-content');
+        if (lockEl) lockEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
+    }
+
+    function checkAcceso360() {
+        var code = document.getElementById('acceso360-code').value.trim().toUpperCase();
+        var errEl = document.getElementById('acceso360-error');
+        if (!code) { errEl.textContent = 'Introduce tu cÃÂ³digo'; return; }
+        db.ref('acceso360/codes/' + code).once('value', function(snap) {
+            if (snap.val() === true) {
+                sessionStorage.setItem('acceso360', 'true');
+                errEl.textContent = '';
+                window.location.href = 'acceso360.html';
+            } else {
+                errEl.textContent = 'CÃÂ³digo invÃÂ¡lido o expirado';
+                document.getElementById('acceso360-code').value = '';
+            }
+        });
+    }
+
+    // Ã¢ÂÂÃ¢ÂÂ BARRA DE CATEGORÃÂAS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    function filterCat(cat, btn) {
+        document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var cards = document.querySelectorAll('.card');
+        cards.forEach(function(card) {
+            if (cat === 'todos') {
+                card.style.display = '';
+            } else {
+                var genero = (card.getAttribute('data-genero') || '').toLowerCase();
+                card.style.display = (genero === cat || genero.includes(cat)) ? '' : 'none';
+            }
+        });
+        // Ocultar secciones vacÃÂ­as
+        document.querySelectorAll('.section-title').forEach(function(title) {
+            var grid = title.nextElementSibling;
+            if (!grid) return;
+            var visible = grid.querySelectorAll('.card:not([style*="display: none"])').length > 0;
+            title.style.display = visible || cat === 'todos' ? '' : 'none';
+            grid.style.display = visible || cat === 'todos' ? '' : 'none';
+        });
+    }
+
+    // Ã¢ÂÂÃ¢ÂÂ NAVEGACIÃÂN INFERIOR Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    function navGo(dest, el) {
+        document.querySelectorAll('#bottom-nav li').forEach(function(li) { li.classList.remove('active'); });
+        if (el) el.classList.add('active');
+        if (dest === 'inicio') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (dest === 'categorias') {
+            var catBar = document.getElementById('cat-bar');
+            if (catBar) catBar.scrollIntoView({ behavior: 'smooth' });
+        } else if (dest === 'acceso360') {
+            openVipModal();
+        }
+    }
+
+    // AÃÂ±adir clase al body para padding bottom nav
+    if (window.innerWidth <= 1024) document.body.classList.add('has-bottom-nav');
+
+    // Ã¢ÂÂÃ¢ÂÂ SLIDER DE FOTOS EN CARDS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    function initCardSliders() {
+        document.querySelectorAll('.card-img-container').forEach(function(container) {
+            var imagesStr = container.getAttribute('data-images') || '';
+            var images = imagesStr.split(',').filter(Boolean);
+            if (images.length <= 1) return;
+
+            var imgEl = container.querySelector('.card-img');
+            var current = 0;
+            var timer = null;
+
+            // Crear botones prev/next
+            var prevBtn = document.createElement('button');
+            prevBtn.className = 'card-nav-btn prev';
+            prevBtn.innerHTML = 'Ã¢ÂÂ¹';
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'card-nav-btn next';
+            nextBtn.innerHTML = 'Ã¢ÂÂº';
+
+            // Crear dots
+            var dotsWrap = document.createElement('div');
+            dotsWrap.className = 'card-photo-dots';
+            images.forEach(function(_, i) {
+                var dot = document.createElement('span');
+                dot.className = 'card-photo-dot' + (i === 0 ? ' active' : '');
+                dotsWrap.appendChild(dot);
+            });
+
+            container.appendChild(prevBtn);
+            container.appendChild(nextBtn);
+            container.appendChild(dotsWrap);
+
+            function goTo(n) {
+                current = (n + images.length) % images.length;
+                if (imgEl) imgEl.src = images[current];
+                // Actualizar badge
+                var badge = container.getAttribute('data-count');
+                dotsWrap.querySelectorAll('.card-photo-dot').forEach(function(d, i) {
+                    d.classList.toggle('active', i === current);
+                });
+            }
+
+            function startAuto() {
+                timer = setInterval(function() { goTo(current + 1); }, 3000);
+            }
+            function stopAuto() { clearInterval(timer); }
+
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); stopAuto(); goTo(current - 1); startAuto();
+            });
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); stopAuto(); goTo(current + 1); startAuto();
+            });
+
+            // Swipe tÃÂ¡ctil
+            var touchStartX = 0;
+            container.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            container.addEventListener('touchend', function(e) {
+                var diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 30) {
+                    stopAuto();
+                    goTo(diff > 0 ? current + 1 : current - 1);
+                    startAuto();
+                }
+            }, { passive: true });
+
+            startAuto();
+        });
+    }
+
+    // Inicializar sliders despuÃÂ©s de que cargue la pÃÂ¡gina
+    document.addEventListener('DOMContentLoaded', initCardSliders);
+    if (document.readyState !== 'loading') initCardSliders();
+
+    // Ã¢ÂÂÃ¢ÂÂ Tracking de ventas al hacer clic en Lo quiero Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-lo-quiero');
+        if (!btn) return;
+        const card = btn.closest('[data-product]');
+        if (!card) return;
+        const pid = card.getAttribute('data-product');
+        if (pid) db.ref('sales/' + pid).transaction(c => (c || 0) + 1);
+    });
+
+    // Ã¢ÂÂÃ¢ÂÂ Leer config admin: mostrar/ocultar secciones y productos Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+    db.ref('config').once('value', snap => {
+        const cfg = snap.val();
+        if (!cfg) return;
+        const now = new Date();
+
+        // Secciones
+        if (cfg.sections) {
+            Object.entries(cfg.sections).forEach(([secId, data]) => {
+                const titleEl = document.querySelector('[data-section="' + secId + '"]');
+                if (!titleEl) return;
+                let visible = data.active !== false;
+                if (visible && data.expires) {
+                    visible = new Date(data.expires) > now;
+                }
+                const gridEl = titleEl.nextElementSibling;
+                titleEl.style.display = visible ? '' : 'none';
+                if (gridEl) gridEl.style.display = visible ? '' : 'none';
+            });
+        }
+
+        // Productos
+        if (cfg.products) {
+            Object.entries(cfg.products).forEach(([pid, data]) => {
+                const cards = document.querySelectorAll('[data-product="' + pid + '"]');
+                let visible = data.active !== false;
+                if (visible && data.expires) {
+                    visible = new Date(data.expires) > now;
+                }
+                cards.forEach(card => {
+                    if (card.classList.contains('card')) {
+                        card.style.display = visible ? '' : 'none';
+                    }
+                });
+            });
+        }
+    });
+
+    // ===== ESTRELLAS =====
+    function renderStars(starsEl, avg) {
+        var stars = starsEl.querySelectorAll('.star');
+        stars.forEach(function(s, i) {
+            s.classList.toggle('filled', i < Math.round(avg));
+        });
+    }
+
+    function updateInfo(infoEl, avg, count) {
+        if (count === 0) {
+            infoEl.textContent = 'Sin votos';
+        } else {
+            infoEl.textContent = avg.toFixed(1) + ' (' + count + ' voto' + (count > 1 ? 's' : '') + ')';
+        }
+    }
+
+    document.querySelectorAll('.stars-container').forEach(function(container) {
+        var productId = container.getAttribute('data-product');
+        var starsEl   = container.querySelector('.stars');
+        var infoEl    = container.querySelector('.stars-info');
+        var starEls   = starsEl.querySelectorAll('.star');
+        var ref       = db.ref('ratings/' + productId);
+        var voted     = localStorage.getItem('voted_' + productId);
+
+        if (voted) starsEl.classList.add('voted');
+
+        // Escuchar cambios en tiempo real
+        ref.on('value', function(snap) {
+            var data  = snap.val() || { total: 0, count: 0 };
+            var avg   = data.count > 0 ? data.total / data.count : 0;
+            renderStars(starsEl, avg);
+            updateInfo(infoEl, avg, data.count);
+        });
+
+        // Hover
+        starEls.forEach(function(star, idx) {
+            star.addEventListener('mouseover', function() {
+                if (starsEl.classList.contains('voted')) return;
+                starEls.forEach(function(s, i) {
+                    s.classList.toggle('filled', i <= idx);
+                });
+            });
+            star.addEventListener('mouseout', function() {
+                if (starsEl.classList.contains('voted')) return;
+                ref.once('value', function(snap) {
+                    var data = snap.val() || { total: 0, count: 0 };
+                    var avg  = data.count > 0 ? data.total / data.count : 0;
+                    renderStars(starsEl, avg);
+                });
+            });
+        });
+
+        // Votar
+        starsEl.addEventListener('click', function(e) {
+            if (starsEl.classList.contains('voted')) return;
+            var star = e.target.closest('.star');
+            if (!star) return;
+            var val = parseInt(star.getAttribute('data-val'));
+            ref.transaction(function(current) {
+                var d = current || { total: 0, count: 0 };
+                return { total: d.total + val, count: d.count + 1 };
+            });
+            localStorage.setItem('voted_' + productId, '1');
+            starsEl.classList.add('voted');
+        });
+    });
+
+    // ===== LIGHTBOX =====
+    const lightbox   = document.getElementById('lightbox');
+    const lbImg      = document.getElementById('lightbox-img');
+    const lbPrev     = document.getElementById('lb-prev');
+    const lbNext     = document.getElementById('lb-next');
+    const lbClose    = document.getElementById('lb-close');
+    const lbCounter  = document.getElementById('lb-counter');
+    const lbZoomHint = document.getElementById('lb-zoom-hint');
+
+    let images  = [];
+    let current = 0;
+    let isZoomed = false;
+
+    function openLightbox(imgs, startIndex) {
+        images   = imgs;
+        current  = startIndex;
+        isZoomed = false;
+        lbImg.classList.remove('zoomed');
+        showImage();
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+        isZoomed = false;
+        lbImg.classList.remove('zoomed', 'zoomable');
+    }
+
+    function showImage() {
+        lbImg.src = images[current];
+        isZoomed = false;
+        lbImg.classList.remove('zoomed');
+        var single = images.length === 1;
+        lbPrev.classList.toggle('hidden', single || current === 0);
+        lbNext.classList.toggle('hidden', single || current === images.length - 1);
+        lbCounter.textContent = !single ? (current + 1) + ' / ' + images.length : '';
+        if (single) {
+            lbImg.classList.add('zoomable');
+            lbZoomHint.textContent = 'Ã°ÂÂÂ Toca la imagen para hacer zoom';
+        } else {
+            lbImg.classList.remove('zoomable');
+            lbZoomHint.textContent = '';
+        }
+    }
+
+    lbImg.addEventListener('click', function(e) {
+        if (images.length !== 1) return;
+        e.stopPropagation();
+        isZoomed = !isZoomed;
+        lbImg.classList.toggle('zoomed', isZoomed);
+        lbZoomHint.textContent = isZoomed ? 'Ã°ÂÂÂ Toca de nuevo para reducir' : 'Ã°ÂÂÂ Toca la imagen para hacer zoom';
+    });
+
+    lbPrev.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (current > 0) { current--; showImage(); }
+    });
+
+    lbNext.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (current < images.length - 1) { current++; showImage(); }
+    });
+
+    lbClose.addEventListener('click', closeLightbox);
+
+    lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    
+    // ===== BOTTOM SHEET + TOOLTIP =====
+    var bsOverlay    = document.getElementById('bs-overlay');
+    var bottomSheet  = document.getElementById('bottom-sheet');
+    var bsTitle      = document.getElementById('bs-title');
+    var bsContent    = document.getElementById('bs-content');
+    var bsClose      = document.getElementById('bs-close');
+    var bsVerFoto    = document.getElementById('bs-ver-foto');
+    var bsImgs       = [];
+
+    function isMobile() {
+        return window.innerWidth <= 1024;
+    }
+
+    function openBottomSheet(title, content, imgs) {
+        bsTitle.textContent   = title;
+        bsContent.innerHTML   = content;
+        bsImgs                = imgs;
+        bsOverlay.classList.add('active');
+        bottomSheet.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeBottomSheet() {
+        bsOverlay.classList.remove('active');
+        bottomSheet.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    bsClose.addEventListener('click', closeBottomSheet);
+    bsOverlay.addEventListener('click', closeBottomSheet);
+
+    bsVerFoto.addEventListener('click', function() {
+        closeBottomSheet();
+        if (bsImgs.length > 0) openLightbox(bsImgs, 0);
+    });
+
+    document.querySelectorAll('.card-img-container').forEach(function(container) {
+        container.addEventListener('click', function() {
+            var raw  = container.getAttribute('data-images') || '';
+            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+            if (isMobile()) {
+                var tooltip = container.querySelector('.hover-tooltip');
+                var card    = container.closest('.card');
+                var title   = card ? (card.querySelector('.product-name') || {}).textContent || '' : '';
+                var content = tooltip ? tooltip.innerHTML : '';
+
+                if (content) {
+                    openBottomSheet(title, content, imgs);
+                } else {
+                    // Sin tooltip Ã¢ÂÂ abrir lightbox directamente
+                    if (imgs.length > 0) openLightbox(imgs, 0);
+                }
+            } else {
+                if (imgs.length > 0) openLightbox(imgs, 0);
+            }
+        });
+    });
+
+    // Tooltip solo en PC
+    document.querySelectorAll('.card-img-container').forEach(function(container) {
+        var tooltip = container.querySelector('.hover-tooltip');
+        if (!tooltip) return;
+        container.addEventListener('mouseenter', function() {
+            if (isMobile()) return;
+            var rect = container.getBoundingClientRect();
+            tooltip.style.display = 'block';
+            tooltip.style.top  = (rect.top + rect.height / 2) + 'px';
+            tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+        });
+        container.addEventListener('mouseleave', function() {
+            tooltip.style.display = 'none';
+        });
+    });
+
+    var slides  = document.querySelectorAll('.slide');
+    var dots    = document.querySelectorAll('.dot');
+    var sliderCurrent = 0;
+    var timer;
+
+    function goTo(n) {
+        slides[sliderCurrent].style.display = 'none';
+        dots[sliderCurrent].style.background = 'rgba(255,255,255,0.4)';
+        sliderCurrent = (n + slides.length) % slides.length;
+        slides[sliderCurrent].style.display = 'flex';
+        dots[sliderCurrent].style.background = 'white';
+    }
+    function sliderNext() { goTo(sliderCurrent + 1); resetTimer(); }
+    function sliderPrev() { goTo(sliderCurrent - 1); resetTimer(); }
+    function resetTimer() {
+        clearInterval(timer);
+        timer = setInterval(function() { goTo(sliderCurrent + 1); }, 3500);
+    }
+    dots.forEach(function(dot, i) {
+        dot.addEventListener('click', function() { goTo(i); resetTimer(); });
+    });
+    timer = setInterval(function() { goTo(sliderCurrent + 1); }, 3500);
+
+    // Ã¢ÂÂÃ¢ÂÂ MODAL VIP ACCESO 360 Ã¢ÂÂÃ¢ÂÂ
+    function openVipModal() {
+        showModalStep(1);
+        document.getElementById('modal-vip-overlay').classList.add('open');
+    }
+    function closeVipModal() {
+        document.getElementById('modal-vip-overlay').classList.remove('open');
+    }
+    function showModalStep(n) {
+        document.querySelectorAll('.modal-step').forEach(function(s){ s.classList.remove('active'); });
+        var el = document.getElementById('modal-step-' + n);
+        if (el) el.classList.add('active');
+        if (n === 2) {
+            var inp = document.getElementById('modal-email-input');
+            if (inp) { inp.value = ''; setTimeout(function(){ inp.focus(); }, 100); }
+            document.getElementById('modal-email-error').style.display = 'none';
+        }
+    }
+    function irACodigoAcceso() {
+        var sec = document.getElementById('sec-acceso360');
+        if (sec) {
+            sec.style.display = 'block';
+            sec.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(function(){ var inp = document.getElementById('acceso360-code'); if(inp) inp.focus(); }, 600);
+        }
+    }
+    function submitVipEmail() {
+        var emailEl = document.getElementById('modal-email-input');
+        var errEl = document.getElementById('modal-email-error');
+        var btn = document.getElementById('modal-submit-btn');
+        var email = emailEl ? emailEl.value.trim() : '';
+        var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!valid) { errEl.style.display = 'block'; return; }
+        errEl.style.display = 'none';
+        btn.disabled = true; btn.textContent = 'EnviandoÃ¢ÂÂ¦';
+        db.ref('acceso360/solicitudes/' + Date.now()).set({
+            correo: email, fecha: new Date().toISOString(), estado: 'pendiente'
+        }).then(function(){
+            showModalStep(3);
+            btn.disabled = false; btn.textContent = 'Solicitar acceso Ã¢ÂÂ¦';
+        }).catch(function(){
+            btn.disabled = false; btn.textContent = 'Solicitar acceso Ã¢ÂÂ¦';
+            errEl.textContent = 'Error al guardar. IntÃÂ©ntalo de nuevo.';
+            errEl.style.display = 'block';
+        });
+    }
+    document.getElementById('modal-vip-overlay').addEventListener('click', function(e){
+        if (e.target === this) closeVipModal();
+    });
+
+    
+    // Ã¢ÂÂÃ¢ÂÂ ACCESO 360 ANIMACIÃÂN DE ENTRADA Ã¢ÂÂÃ¢ÂÂ
+    function triggerAcceso360Welcome(callback) {
+        var welcome = document.getElementById('acceso360-welcome');
+        var canvas = document.getElementById('confetti-canvas');
+        welcome.classList.add('show');
+        launchConfetti(canvas);
+        setTimeout(function() {
+            welcome.classList.remove('show');
+            welcome.style.display = 'none';
+            if (callback) callback();
+        }, 2800);
+    }
+
+    function launchConfetti(canvas) {
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var particles = [];
+        var colors = ['#ffd700','#f5c518','#ffe566','#fff','#ffec5c','#b8860b'];
+        for (var i = 0; i < 120; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 6 + 2,
+                d: Math.random() * 80 + 20,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 10 - 10,
+                tiltSpeed: Math.random() * 0.1 + 0.05,
+                speed: Math.random() * 3 + 1.5,
+                angle: 0
+            });
+        }
+        var frame = 0;
+        var maxFrames = 100;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(function(p) {
+                ctx.beginPath();
+                ctx.fillStyle = p.color;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                // Star shape
+                for (var j = 0; j < 5; j++) {
+                    ctx.lineTo(Math.cos((18 + j*72)*Math.PI/180)*p.r, Math.sin((18+j*72)*Math.PI/180)*p.r);
+                    ctx.lineTo(Math.cos((54 + j*72)*Math.PI/180)*p.r*0.4, Math.sin((54+j*72)*Math.PI/180)*p.r*0.4);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                p.y += p.speed;
+                p.angle += p.tiltSpeed;
+                p.x += Math.sin(p.angle) * 1.5;
+                if (p.y > canvas.height) {
+                    p.y = -10;
+                    p.x = Math.random() * canvas.width;
+                }
+            });
+            frame++;
+            if (frame < maxFrames) requestAnimationFrame(draw);
+            else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+        }
+        draw();
+    }
+
+    
+    // Ã¢ÂÂÃ¢ÂÂ SISTEMA DE MENSAJES CAMPANITA Ã¢ÂÂÃ¢ÂÂ
+    var mensajesLoaded = false;
+    function loadMensajes() {
+        db.ref('mensajes').orderByChild('fecha').limitToLast(20).once('value', function(snap) {
+            var data = snap.val() || {};
+            var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
+            var items = Object.entries(data).reverse();
+            var nuevos = items.filter(function(e){ return !leidos.includes(e[0]); });
+            
+            var badge = document.getElementById('bell-badge');
+            if (badge) {
+                badge.textContent = nuevos.length || '';
+                badge.classList.toggle('show', nuevos.length > 0);
+            }
+
+            var list = document.getElementById('mensajes-list');
+            if (!list) return;
+            if (!items.length) {
+                list.innerHTML = '<div class="mensajes-empty">No hay mensajes aÃÂºn</div>';
+                return;
+            }
+            list.innerHTML = items.map(function(e) {
+                var id = e[0]; var m = e[1];
+                var esNuevo = !leidos.includes(id);
+                var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+                return '<div class="mensaje-item' + (esNuevo?' nuevo':'') + '">' +
+                    '<div class="mensaje-texto">' + (m.texto||'') + '</div>' +
+                    '<div class="mensaje-fecha">' + fecha + (esNuevo ? ' ÃÂ· <span style="color:#ffd700;font-weight:700;">Nuevo</span>' : '') + '</div>' +
+                    '</div>';
+            }).join('');
+        });
+    }
+
+    function toggleMensajesPanel() {
+        var panel = document.getElementById('mensajes-panel');
+        var overlay = document.getElementById('mensajes-overlay');
+        var isOpen = panel.classList.contains('open');
+        panel.classList.toggle('open');
+        overlay.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            loadMensajes();
+            // Marcar todos como leÃÂ­dos
+            db.ref('mensajes').once('value', function(snap) {
+                var ids = Object.keys(snap.val() || {});
+                localStorage.setItem('mensajes_leidos', JSON.stringify(ids));
+                var badge = document.getElementById('bell-badge');
+                if (badge) { badge.textContent = ''; badge.classList.remove('show'); }
+            });
+        }
+    }
+
+    // Ã¢ÂÂÃ¢ÂÂ INIT ON LOAD Ã¢ÂÂÃ¢ÂÂ
+    window.addEventListener('load', function() {
+        loadRibbonsFromFirebase();
+        loadTasas();
+        db.ref('mensajes').once('value', function(snap) {
+            var data = snap.val() || {};
+            var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
+            var nuevos = Object.keys(data).filter(function(id){ return !leidos.includes(id); });
+            var badge = document.getElementById('bell-badge');
+            if (badge && nuevos.length > 0) {
+                badge.textContent = nuevos.length;
+                badge.classList.add('show');
+            }
+        });
+    });
+
+    
+    // Ã¢ÂÂÃ¢ÂÂ TASAS DE CAMBIO (elToque via proxy) Ã¢ÂÂÃ¢ÂÂ
+    function loadTasas() {
+        
+        var proxies = [
+            'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy'),
+            'https://corsproxy.io/?' + encodeURIComponent('https://eltoque.com/tasas-de-cambio-de-moneda-en-cuba-hoy')
+        ];
+        var proxyIdx = 0;
+        function tryProxy() {
+            if (proxyIdx >= proxies.length) {
+                var c = document.getElementById('tasas-card-content');
+                if(c) c.innerHTML = '<span style="color:#888;font-size:0.75rem;">Tasas no disponibles</span>';
+                return;
+            }
+            fetch(proxies[proxyIdx++])
+              .then(function(r){ return r.text(); })
+              .then(parseTasas)
+              .catch(function(){ tryProxy(); });
+        }
+        function parseTasas(html) {
+                // Extract __NEXT_DATA__ JSON
+                var match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+                if (!match) throw new Error('No data found');
+                var data = JSON.parse(match[1]);
+                // Navigate the Next.js page props to find rates
+                var props = data.props && data.props.pageProps;
+                var rates = {};
+                // Try different paths where elToque stores rates
+                var tryPaths = [
+                    props && props.rates,
+                    props && props.data && props.data.rates,
+                    props && props.trmi,
+                    props && props.tasas,
+                ];
+                for (var i=0; i<tryPaths.length; i++) {
+                    if (tryPaths[i] && typeof tryPaths[i] === 'object') {
+                        rates = tryPaths[i]; break;
+                    }
+                }
+                // Fallback: search for USD/EUR values in raw text
+                if (!rates.USD && !rates.usd) {
+                    var usdMatch = html.match(/"USD"[^:]*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/);
+                    var eurMatch = html.match(/"EUR"[^:]*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/);
+                    var mlcMatch = html.match(/"MLC"[^:]*:\s*\{[^}]*"value"\s*:\s*([\d.]+)/);
+                    if (usdMatch) rates.USD = { value: parseFloat(usdMatch[1]) };
+                    if (eurMatch) rates.EUR = { value: parseFloat(eurMatch[1]) };
+                    if (mlcMatch) rates.MLC = { value: parseFloat(mlcMatch[1]) };
+                }
+                renderTasas(rates);
+            })
+            .catch(function(e) {
+                document.getElementById('tasas-content').innerHTML = '<div class="tasa-error">Ã¢ÂÂ Ã¯Â¸Â No se pudieron cargar las tasas. ' + e.message + '</div>';
+            });
+    }
+
+    function renderTasas(rates) {
+        var content = document.getElementById('tasas-card-content');
+        var monedas = [
+            { key: 'USD', label: 'DÃÂ³lar', sym: '$' },
+            { key: 'EUR', label: 'Euro', sym: 'Ã¢ÂÂ¬' },
+            { key: 'MLC', label: 'MLC', sym: 'Ã¢ÂÂ¡' },
+        ];
+        var html = '<div class="tasas-grid">';
+        monedas.forEach(function(m) {
+            var r = rates[m.key] || rates[m.key.toLowerCase()] || {};
+            var val = r.value || r.avg || r.promedio || r.informal || 'Ã¢ÂÂ';
+            if (typeof val === 'number') val = val.toFixed(0) + ' CUP';
+            html += '<div class="tasa-item">' +
+                '<div class="tasa-moneda">' + m.sym + ' ' + m.key + '</div>' +
+                '<div class="tasa-valor">' + val + '</div>' +
+                '<div class="tasa-label">' + m.label + '</div>' +
+                '</div>';
+        });
+        html += '</div>';
+        content.innerHTML = html;
+        var upEl = document.getElementById('tasas-update-time'); if(upEl) upEl.textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+        // Update mini card in servicios
+        var getVal = function(key) { var r = rates[key]||rates[key.toLowerCase()]||{}; var v = r.value||r.avg||r.promedio||r.informal||'Ã¢ÂÂ'; return typeof v==='number' ? Math.round(v)+' CUP' : String(v); };
+        var usdEl = document.getElementById('tasas-mini-usd'); if(usdEl) usdEl.textContent = '$ USD ' + getVal('USD');
+        var eurEl = document.getElementById('tasas-mini-eur'); if(eurEl) eurEl.textContent = 'Ã¢ÂÂ¬ EUR ' + getVal('EUR');
+        var mlcEl = document.getElementById('tasas-mini-mlc'); if(mlcEl) mlcEl.textContent = 'Ã¢ÂÂ¡ MLC ' + getVal('MLC');
+        var upMini = document.getElementById('tasas-update-mini'); if(upMini) upMini.textContent = 'Act: ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+    }
+
+    // Ã¢ÂÂÃ¢ÂÂ RIBBONS DESDE FIREBASE Ã¢ÂÂÃ¢ÂÂ
+    function loadRibbonsFromFirebase() {
+        db.ref('interfaz/ribbon1').once('value', function(snap) {
+            if (snap.val()) {
+                var el = document.getElementById('ribbon-1-text');
+                if (el) el.textContent = snap.val();
+            }
+        });
+        db.ref('interfaz/ribbon2').once('value', function(snap) {
+            if (snap.val()) {
+                var el = document.getElementById('ribbon-2-text');
+                if (el) el.textContent = snap.val();
+            }
+        });
+        db.ref('interfaz/ribbon1active').once('value', function(snap) {
+            var el = document.getElementById('ribbon-1');
+            if (el && snap.val() === false) el.style.display = 'none';
+        });
+        db.ref('interfaz/ribbon2active').once('value', function(snap) {
+            var el = document.getElementById('ribbon-2');
+            if (el && snap.val() === false) el.style.display = 'none';
+        });
+        db.ref('interfaz/marquesina').once('value', function(snap) {
+            var wrap = document.getElementById('marquesina-wrap');
+            var t1 = document.getElementById('marquesina-text-1');
+            var t2 = document.getElementById('marquesina-text-2');
+            if (snap.val()) {
+                var d = snap.val();
+                if (d.activa && wrap) wrap.classList.add('visible');
+                if (d.texto && t1) t1.textContent = d.texto;
+                if (d.texto && t2) t2.textContent = d.texto;
+            }
+        });
+        db.ref('interfaz/tasas').once('value', function(snap) {
+            if (snap.val() === true) {
+                loadTasas();
+            }
+        });
+        db.ref('interfaz/ticker').once('value', function(snap) {
+            var wrap = document.getElementById('ticker-wrap');
+            var text = document.getElementById('ticker-text');
+            if (snap.val() && snap.val().activo && wrap) {
+                wrap.classList.add('visible');
+                if (snap.val().texto && text) text.innerHTML = snap.val().texto;
+            }
+        });
+    }
+
+    
+    // Ã¢ÂÂÃ¢ÂÂ TICKER/MARQUESINA Ã¢ÂÂÃ¢ÂÂ
+    db.ref('interfaz/ticker').once('value', function(snap) {
+        var ticker = document.getElementById('ticker-content');
+        var wrap = document.getElementById('ticker-wrap');
+        if (snap.val()) {
+            if (ticker) ticker.innerHTML = snap.val();
+        }
+        if (snap.val() === false) {
+            if (wrap) wrap.classList.add('hidden');
+        }
+    });
+
+    </script>
+
+    <nav id="bottom-nav">
+        <ul>
+            <li class="active" onclick="navGo('inicio',this)">
+                <span class="nav-icon">Ã°ÂÂÂ </span>
+                <span class="nav-label">Inicio</span>
+            </li>
+            <li onclick="navGo('categorias',this)">
+                <span class="nav-icon">Ã¢ÂÂ°</span>
+                <span class="nav-label">CategorÃÂ­as</span>
+            </li>
+            <li class="nav-acceso" onclick="navGo('acceso360',this)">
+                <span class="nav-icon">Ã¢ÂÂ¦</span>
+                <span class="nav-label">Acceso 360</span>
+            </li>
+        </ul>
+    </nav>
+
+<!-- Ã¢ÂÂÃ¢ÂÂ MODAL VIP ACCESO 360 Ã¢ÂÂÃ¢ÂÂ -->
+<div id="modal-vip-overlay">
+    <div id="modal-vip-box">
+        <button class="modal-close-btn" onclick="closeVipModal()">Ã¢ÂÂ</button>
+        <div class="modal-vip-badge">Ã¢ÂÂ¦ ACCESO 360</div>
+        <h2 class="modal-vip-title">Exclusividad<br>que se siente</h2>
+        <p class="modal-vip-sub">Accede a beneficios <strong style="color:#ffd700;">SOLO</strong> para miembros suscritos.</p>
+        <ul class="modal-vip-perks">
+            <li>Productos exclusivos no disponibles al pÃÂºblico</li>
+            <li>Drops limitados con acceso anticipado</li>
+            <li>Virtual Try-On, IA para validar antes de comprar</li>
+            <li>Reserva antes del lanzamiento</li>
+            <li>EnvÃÂ­o prioritario</li>
+        </ul>
+        <div class="modal-step active" id="modal-step-1">
+            <button class="modal-btn-si" onclick="showModalStep(2)">SÃÂ­, quiero acceso Ã¢ÂÂ¦</button>
+            <button class="modal-btn-codigo" onclick="window.location.href='acceso360.html'">Ya tengo mi cÃÂ³digo</button>
+        </div>
+        <div class="modal-step" id="modal-step-2">
+            <label class="modal-email-label">Tu correo electrÃÂ³nico para recibir tu acceso:</label>
+            <input type="email" id="modal-email-input" class="modal-email-input" placeholder="tucorreo@email.com">
+            <div class="modal-email-error" id="modal-email-error">Introduce un correo vÃÂ¡lido</div>
+            <button class="modal-btn-si" id="modal-submit-btn" onclick="submitVipEmail()">Solicitar acceso Ã¢ÂÂ¦</button>
+            <button class="modal-back-btn" onclick="showModalStep(1)">Ã¢ÂÂ Volver</button>
+        </div>
+        <div class="modal-step" id="modal-step-3">
+            <div class="modal-espera-icon">Ã¢ÂÂ¦</div>
+            <div class="modal-espera-title">ÃÂ¡EstÃÂ¡s en la lista!</div>
+            <div class="modal-espera-desc">Revisaremos tu solicitud y recibirÃÂ¡s tu cÃÂ³digo de acceso en el correo indicado. Pronto serÃÂ¡s parte de ACCESO 360.</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Ã¢ÂÂÃ¢ÂÂ ACCESO 360 BIENVENIDA Ã¢ÂÂÃ¢ÂÂ -->
+<canvas id="confetti-canvas"></canvas>
+<div id="acceso360-welcome">
+    <div class="welcome-badge">Ã¢ÂÂ¦ ACCESO 360</div>
+    <div class="welcome-title">Bienvenido/a<br>al ACCESO 360</div>
+    <div class="welcome-sub">Tu acceso exclusivo estÃÂ¡ activo</div>
+</div>
+
+
+<!-- Ã¢ÂÂÃ¢ÂÂ PANEL MENSAJES Ã¢ÂÂÃ¢ÂÂ -->
+<div id="mensajes-panel">
+    <div class="mensajes-header">
+        <h3>Ã°ÂÂÂ¢ Mensajes de la tienda</h3>
+        <button class="mensajes-close" onclick="toggleMensajesPanel()">Ã¢ÂÂ</button>
+    </div>
+    <div class="mensajes-list" id="mensajes-list">
+        <div class="mensajes-empty">Cargando mensajesÃ¢ÂÂ¦</div>
+    </div>
+</div>
+<div id="mensajes-overlay" style="display:none;position:fixed;inset:0;z-index:9989;background:rgba(0,0,0,0.5);" onclick="toggleMensajesPanel()"></div>
+
+</body>
+</html>
