@@ -273,6 +273,7 @@
         #bottom-nav ul li.active .nav-label { color: var(--brand-blue); }
         #bottom-nav ul li.active .nav-icon { filter: brightness(1.5); }
         .nav-acceso .nav-label { color: #b8860b !important; }
+        @media (max-width: 1024px) { #bottom-nav .nav-acceso { display: none; } }
         @media (max-width: 1024px) { #bottom-nav { display: block; } }
         body.has-bottom-nav { padding-bottom: 58px; }
         #span-360 {
@@ -625,15 +626,7 @@
             #bottom-nav { display: flex !important; }
             #bottom-nav ul { display: flex !important; flex-direction: row !important; width: 100%; }
             #bottom-nav ul li { flex: 1; }
-            #span-360 { background: #f5c518 !important; color: #1a0a00 !important; padding: 4px 10px !important; border-radius: 6px !important; box-shadow: 0 0 16px #ffd700 !important; cursor: default !important; pointer-events: none !important; }
-        }
-            .card-photo-dots { display: none !important; }
-            #badge-360-header { display: inline-flex !important; }
-            .lifestyle-ribbon { flex-direction: row !important; }
-            #bottom-nav { display: flex !important; }
-            #bottom-nav ul { display: flex !important; flex-direction: row !important; width: 100%; }
-            #bottom-nav ul li { flex: 1; }
-            #span-360 { cursor: default !important; pointer-events: none !important; box-shadow: 0 0 20px rgba(255,215,0,1), 0 0 8px rgba(255,180,0,0.9) !important; }
+            #span-360 { background: transparent !important; color: var(--brand-blue) !important; padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; cursor: default !important; pointer-events: none !important; font-weight: 900; }
         }
     
         /* ── MODAL VIP ACCESO 360 ── */
@@ -920,7 +913,7 @@
             <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
             <div class="grid">
 
-                <div class="card" data-product="blumer" style="align-self: start;">
+                <div class="card" data-product="blumer" data-genero="mujer" style="align-self: start;">
                     <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
                         <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
                         <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
@@ -1009,7 +1002,7 @@
             <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
             <div class="grid">
 
-                <div class="card" data-product="blumer" style="align-self: start;">
+                <div class="card" data-product="blumer" data-genero="mujer" style="align-self: start;">
                     <div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position: relative;">
                         <img src="blumer.jpg" class="card-img" alt="Blumer sin costuras">
                         <div class="hover-tooltip">Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.</div>
@@ -1666,6 +1659,7 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
                 cards.forEach(card => {
                     if (card.classList.contains('card')) {
                         card.style.display = visible ? '' : 'none';
+                        console.log('[config]', pid, visible ? 'visible' : 'OCULTO', card.closest('.grid') ? 'en grid' : '');
                     }
                 });
             });

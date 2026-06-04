@@ -941,7 +941,7 @@ function saveInterfaz() {
     bottomnav: document.getElementById('if-bottomnav').checked,
     ribbons: document.getElementById('if-ribbons').checked,
   };
-  db.ref('interfaz').set(interfazData);
+  db.ref('interfaz').update(interfazData);
 }
 
 // ── ACCESO 360 ────────────────────────────────────────────────────────────────
