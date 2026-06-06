@@ -23,6 +23,16 @@
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; }
         .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
+        #tienda-cerrada {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: #0d1117; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; padding: 40px 24px;
+        }
+        #tienda-cerrada.show { display: flex; }
+        #tienda-cerrada .tc-icon { font-size: 4rem; margin-bottom: 16px; }
+        #tienda-cerrada .tc-title { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
+        #tienda-cerrada .tc-msg { font-size: 1rem; color: #aaa; max-width: 320px; line-height: 1.6; }
+        #tienda-cerrada .tc-brand { margin-top: 32px; font-size: 1.1rem; font-weight: 900; color: var(--brand-blue); }
         .main-content { flex: 1; display: flex; flex-direction: column; }
 
         header { padding: 0; display: flex; flex-direction: column; width: 100%; }
@@ -828,6 +838,13 @@
     <button id="bs-ver-foto">📷 Ver foto</button>
 </div>
 
+<div id="tienda-cerrada">
+    <div class="tc-icon">🔒</div>
+    <div class="tc-title">Tienda cerrada</div>
+    <div class="tc-msg" id="tc-msg-text">Estamos fuera por el momento. Vuelve pronto.</div>
+    <div class="tc-brand">CityBUY<span style="color:#f5c518;">360</span></div>
+</div>
+
 <div class="page-wrapper">
     <div class="main-content">
         
@@ -1405,6 +1422,14 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
     db.ref('interfaz').once('value', function(snap) {
         var interfaz = snap.val();
         if (!interfaz) return;
+        // Tienda cerrada
+        if (interfaz.tiendaActiva === false) {
+            var overlay = document.getElementById('tienda-cerrada');
+            var msgEl = document.getElementById('tc-msg-text');
+            if (msgEl && interfaz.tiendaMensaje) msgEl.textContent = interfaz.tiendaMensaje;
+            if (overlay) overlay.classList.add('show');
+            return;
+        }
         var catBar = document.getElementById('cat-bar');
         var headerSlider = document.querySelector('.header-slider');
         var badge360 = document.getElementById('badge-360-header');
@@ -1501,7 +1526,15 @@ Escríbenos por privado y hablemos de tu proyecto.</div>
         if (dest === 'inicio') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else if (dest === 'categorias') {
-            var catBar = document.getElementById('cat-bar');
+            // Tienda cerrada
+        if (interfaz.tiendaActiva === false) {
+            var overlay = document.getElementById('tienda-cerrada');
+            var msgEl = document.getElementById('tc-msg-text');
+            if (msgEl && interfaz.tiendaMensaje) msgEl.textContent = interfaz.tiendaMensaje;
+            if (overlay) overlay.classList.add('show');
+            return;
+        }
+        var catBar = document.getElementById('cat-bar');
             if (catBar) catBar.scrollIntoView({ behavior: 'smooth' });
         } else if (dest === 'acceso360') {
             openVipModal();

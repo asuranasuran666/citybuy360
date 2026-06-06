@@ -371,6 +371,22 @@
 
   <!-- ── TAB: INTERFAZ ── -->
   <div id="tab-interfaz" class="tab-content">
+    <!-- Tienda activa / cerrada -->
+    <div style="background:var(--surface);border:2px solid #ff4444;border-radius:12px;overflow:hidden;margin-bottom:12px;">
+      <div class="interfaz-row" style="background:rgba(255,68,68,0.08);">
+        <div style="flex:1">
+          <div class="interfaz-name" style="color:#ff4444;font-size:1rem;">🔒 Tienda activa</div>
+          <div class="interfaz-desc">Desactivar cierra la tienda para los clientes y muestra un mensaje de cierre temporal</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="if-tienda" onchange="saveTienda()" checked><span class="toggle-slider" style="--active-color:#22c55e;"></span></label>
+      </div>
+      <div id="tienda-msg-row" style="display:none;padding:12px 16px;border-top:1px solid #ff4444;">
+        <div class="interfaz-desc" style="margin-bottom:6px;">Mensaje para los clientes:</div>
+        <input type="text" id="tienda-msg-input" placeholder="Ej: Estamos de vacaciones, volvemos el lunes 😊" style="width:100%;padding:8px;border-radius:6px;border:1px solid #444;background:#1e1e1e;color:#fff;font-size:0.85rem;">
+        <button onclick="saveTiendaMensaje()" style="margin-top:8px;background:#ff4444;color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-weight:700;">Guardar mensaje</button>
+      </div>
+    </div>
+
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;" id="interfaz-container">
       <div class="interfaz-row">
         <div style="flex:1"><div class="interfaz-name">Barra de categorías</div><div class="interfaz-desc">Todos, Mujer, Hombre, Unisex — visible bajo el header</div></div>
@@ -900,6 +916,12 @@ function loadInterfaz() {
       const el = document.getElementById(elId);
       if (el) el.checked = interfazData[key] !== false;
     });
+    // Tienda activa
+    var tiendaActiva = interfazData.tiendaActiva !== false;
+    var elTienda = document.getElementById('if-tienda');
+    if (elTienda) elTienda.checked = tiendaActiva;
+    document.getElementById('tienda-msg-row').style.display = tiendaActiva ? 'none' : 'block';
+    if (interfazData.tiendaMensaje) document.getElementById('tienda-msg-input').value = interfazData.tiendaMensaje;
   });
 }
 
@@ -916,6 +938,20 @@ function saveInterfaz() {
     const chip = document.getElementById('save-chip');
     if (chip) { chip.classList.add('show'); setTimeout(() => chip.classList.remove('show'), 2500); }
   });
+}
+
+function saveTienda() {
+  var activa = document.getElementById('if-tienda').checked;
+  db.ref('interfaz/tiendaActiva').set(activa);
+  document.getElementById('tienda-msg-row').style.display = activa ? 'none' : 'block';
+}
+
+function saveTiendaMensaje() {
+  var msg = document.getElementById('tienda-msg-input').value.trim();
+  db.ref('interfaz/tiendaMensaje').set(msg || 'La tienda está temporalmente cerrada. Vuelve pronto 🙏');
+  var btn = event.target;
+  btn.textContent = '✓ Guardado';
+  setTimeout(() => btn.textContent = 'Guardar mensaje', 2000);
 }
 
 // ── ACCESO 360 ────────────────────────────────────────────────────────────────
