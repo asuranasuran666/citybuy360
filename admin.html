@@ -1942,13 +1942,25 @@ function renderCatalogoAdmin() {
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
-        '<button onclick="toggleDestacadoCatalogo('' + p.id + '')" title="Destacado" style="background:none;border:1px solid ' + (p.destacado ? '#f5c518' : 'var(--border)') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.destacado ? '#f5c518' : 'var(--text-muted)') + ';font-size:0.85rem;">⭐</button>' +
-        '<button onclick="toggleActivoCatalogo('' + p.id + '')" title="' + (p.activo ? 'Desactivar' : 'Activar') + '" style="background:none;border:1px solid ' + (p.activo ? '#22c55e' : '#ff4444') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.activo ? '#22c55e' : '#ff4444') + ';font-size:0.75rem;font-weight:700;">' + (p.activo ? 'ON' : 'OFF') + '</button>' +
-        '<button onclick="abrirModalEditar('' + p.id + '')" style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;color:#000;font-size:0.75rem;font-weight:700;">Editar</button>' +
+        '<button data-pid="' + p.id + '" data-action="destacado" title="Destacado" style="background:none;border:1px solid ' + (p.destacado ? '#f5c518' : 'var(--border)') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.destacado ? '#f5c518' : 'var(--text-muted)') + ';font-size:0.85rem;">⭐</button>' +
+        '<button data-pid="' + p.id + '" data-action="activo" style="background:none;border:1px solid ' + (p.activo ? '#22c55e' : '#ff4444') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.activo ? '#22c55e' : '#ff4444') + ';font-size:0.75rem;font-weight:700;">' + (p.activo ? 'ON' : 'OFF') + '</button>' +
+        '<button data-pid="' + p.id + '" data-action="editar" style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;color:#000;font-size:0.75rem;font-weight:700;">Editar</button>' +
       '</div>' +
     '</div>';
   }).join('');
 }
+
+// Event delegation for catalog buttons - no inline onclick needed
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var pid = btn.getAttribute('data-pid');
+  var action = btn.getAttribute('data-action');
+  if (!pid || !action) return;
+  if (action === 'destacado') toggleDestacadoCatalogo(pid);
+  if (action === 'activo') toggleActivoCatalogo(pid);
+  if (action === 'editar') abrirModalEditar(pid);
+});
 
 function toggleDestacadoCatalogo(pid) {
   if (!catalogoAdminData[pid]) return;
