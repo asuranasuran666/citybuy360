@@ -236,16 +236,110 @@
     <button class="tab-btn" onclick="showTab('interfaz',this)">🖥 Interfaz</button>
     <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
     <button class="tab-btn" onclick="showTab('mensajes',this)">📢 Mensajes</button>
+    <button class="tab-btn" onclick="showTab('vendedores',this)">🧑‍💼 Vendedores</button>
   </div>
 
   <!-- ── TAB: CONTROL ── -->
   <div id="tab-control" class="tab-content active">
+    <!-- Migración al catálogo dinámico -->
+    <div id="migracion-banner" style="background:linear-gradient(135deg,#0d2137,#0a1628);border:1px solid #00a8e8;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <div style="font-weight:700;color:#00a8e8;font-size:0.95rem;">🚀 Catálogo dinámico</div>
+        <div style="font-size:0.78rem;color:#8b949e;margin-top:3px;">Migra los productos al Firebase para gestionar todo desde el admin sin tocar el HTML.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="migrarCatalogo()" id="btn-migrar" style="background:#00a8e8;border:none;color:#000;font-weight:900;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">⬆️ Migrar ahora</button>
+        <button onclick="verificarCatalogo()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-weight:700;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">🔍 Verificar</button>
+      </div>
+      <div id="migracion-status" style="width:100%;font-size:0.8rem;color:#22c55e;display:none;"></div>
+    </div>
+
+    <!-- Gestión del catálogo dinámico -->
+    <div id="catalogo-admin-panel" style="display:none;margin-bottom:16px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:700;color:var(--text);">📦 Gestión de productos</span>
+          <div style="display:flex;gap:8px;">
+            <select id="filtro-seccion-catalogo" onchange="renderCatalogoAdmin()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:0.8rem;">
+              <option value="">Todas las secciones</option>
+              <option value="destacado-flag">⭐ Destacados</option>
+              <option value="ropa-interior">👙 Ropa Interior</option>
+              <option value="ropa-moda">👕 Ropa y Moda</option>
+              <option value="accesorios">👜 Accesorios</option>
+              <option value="servicios">⚡ Servicios</option>
+              <option value="acceso360">✦ Acceso 360</option>
+            </select>
+          </div>
+        </div>
+        <div id="catalogo-admin-list" style="max-height:500px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
     <div id="sections-container">
       <div class="empty-state">Cargando configuración…</div>
     </div>
     <div style="margin-top:20px; display:flex; align-items:center; gap:12px;">
       <button class="save-btn" onclick="saveConfig()">Guardar cambios</button>
       <span class="save-chip" id="save-chip">✓ Guardado</span>
+    </div>
+  </div>
+
+  <!-- Modal editar producto -->
+  <div id="modal-editar-producto" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div style="font-weight:900;font-size:1.1rem;color:var(--text);">✏️ Editar producto</div>
+        <button onclick="cerrarModalEditar()" style="background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;">×</button>
+      </div>
+      <input type="hidden" id="edit-pid">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Nombre</label>
+          <input type="text" id="edit-nombre" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Precio (ej: 2,900 MN)</label>
+          <input type="text" id="edit-precio" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Sección</label>
+          <select id="edit-seccion" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+            <option value="ropa-interior">👙 Ropa Interior</option>
+            <option value="ropa-moda">👕 Ropa y Moda</option>
+            <option value="accesorios">👜 Accesorios</option>
+            <option value="servicios">⚡ Servicios</option>
+            <option value="acceso360">✦ Acceso 360</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Género / Categoría</label>
+          <select id="edit-genero" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+            <option value="mujer">Mujer</option>
+            <option value="hombre">Hombre</option>
+            <option value="mujer hombre">Mujer y Hombre</option>
+            <option value="unisex">Unisex</option>
+            <option value="ninos">Niños</option>
+            <option value="electrodomesticos">Electrodomésticos</option>
+            <option value="electronica">Electrónica</option>
+            <option value="servicios">Servicios</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Detalles (tallas, colores...)</label>
+          <input type="text" id="edit-detalles" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Descripción (tooltip al pasar el ratón)</label>
+          <textarea id="edit-descripcion" rows="3" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="font-size:0.8rem;color:var(--text-muted);">⭐ Destacado</label>
+          <label class="toggle"><input type="checkbox" id="edit-destacado"><span class="toggle-slider"></span></label>
+          <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">✓ Activo</label>
+          <label class="toggle"><input type="checkbox" id="edit-activo" checked><span class="toggle-slider"></span></label>
+        </div>
+        <button onclick="guardarEdicionProducto()" style="background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;margin-top:4px;">💾 Guardar cambios</button>
+      </div>
     </div>
   </div>
 
@@ -538,6 +632,82 @@
         <button onclick="loadMensajesAdmin()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;">↺ Refrescar</button>
       </div>
       <div id="mensajes-admin-list"><div class="empty-state">Cargando…</div></div>
+    </div>
+
+  </div>
+
+
+  <!-- ── TAB: VENDEDORES ── -->
+  <div id="tab-vendedores" class="tab-content">
+
+    <!-- Gestión de vendedores y códigos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+      <!-- Crear vendedor -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:12px;">➕ Nuevo vendedor</div>
+        <input type="text" id="v-nombre" placeholder="Nombre del vendedor" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+        <input type="text" id="v-codigo" placeholder="Código de acceso (ej: VEND01)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+        <button onclick="crearVendedor()" style="width:100%;background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">Crear vendedor</button>
+        <div id="v-status" style="font-size:0.8rem;margin-top:6px;text-align:center;"></div>
+      </div>
+
+      <!-- Inventario -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:12px;">📦 Inventario por producto</div>
+        <div id="inventario-list" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+          <div class="empty-state">Cargando…</div>
+        </div>
+        <button onclick="guardarInventario()" style="width:100%;background:#22c55e;border:none;color:#000;font-weight:900;border-radius:8px;padding:8px;cursor:pointer;margin-top:10px;">💾 Guardar inventario</button>
+      </div>
+    </div>
+
+    <!-- Resumen ventas -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span style="font-weight:700;color:var(--text);">📋 Ventas reportadas</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="v-filtro-vendedor" onchange="renderVentasVendedores()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:0.8rem;">
+            <option value="">Todos los vendedores</option>
+          </select>
+          <select id="v-filtro-periodo" onchange="renderVentasVendedores()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:0.8rem;">
+            <option value="hoy">Hoy</option>
+            <option value="semana">Esta semana</option>
+            <option value="mes" selected>Este mes</option>
+            <option value="todo">Todo</option>
+          </select>
+          <button onclick="exportarVentasExcel()" style="background:#1d6f42;border:none;color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:0.8rem;font-weight:700;">📥 Excel</button>
+          <button onclick="loadVentasVendedores()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;">↺</button>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div id="v-totales" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);">
+        <div style="background:var(--surface);padding:12px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:900;color:var(--primary);" id="v-total-ventas">—</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">Ventas</div>
+        </div>
+        <div style="background:var(--surface);padding:12px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:900;color:#22c55e;" id="v-total-mn">—</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">Total MN</div>
+        </div>
+        <div style="background:var(--surface);padding:12px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:900;color:#60a5fa;" id="v-total-usd">—</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">Total USD</div>
+        </div>
+        <div style="background:var(--surface);padding:12px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:900;color:#a78bfa;" id="v-total-eur">—</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">Total EUR</div>
+        </div>
+      </div>
+
+      <div id="ventas-vendedores-list" style="max-height:400px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- Lista de vendedores activos -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--text);">👥 Vendedores activos</div>
+      <div id="vendedores-list"><div class="empty-state">Cargando…</div></div>
     </div>
 
   </div>
@@ -1109,6 +1279,7 @@ function logout() {
 function showTab(id, btn) {
   if (id === 'mensajes') loadMensajesAdmin();
   if (id === 'interfaz') loadRibbonsAdmin();
+  if (id === 'vendedores') { loadVendedores(); loadVentasVendedores(); loadInventarioAdmin(); }
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
@@ -1141,6 +1312,10 @@ async function initAdmin() {
   });
   loadInterfaz();
   loadAcceso360Admin();
+  loadCatalogoAdmin();
+  // Vendedores data preload
+  db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
+  db.ref('ventasVendedores').once('value', snap => { ventasVendedoresData = snap.val() || {}; });
 }
 
 // ── CONTROL ───────────────────────────────────────────────────────────────────
@@ -1727,6 +1902,412 @@ function loadCustomGeneros() {
   });
 }
 
+
+
+
+// ── GESTIÓN CATÁLOGO ADMIN ────────────────────────────────────────────────────
+var catalogoAdminData = {};
+
+function renderCatalogoAdmin() {
+  var list = document.getElementById('catalogo-admin-list');
+  if (!list) return;
+  var filtro = document.getElementById('filtro-seccion-catalogo') ? document.getElementById('filtro-seccion-catalogo').value : '';
+  var productos = Object.values(catalogoAdminData);
+  
+  if (filtro === 'destacado-flag') {
+    productos = productos.filter(function(p) { return p.destacado; });
+  } else if (filtro) {
+    productos = productos.filter(function(p) { return p.seccion === filtro; });
+  }
+  
+  productos.sort(function(a,b) { return (a.orden||0) - (b.orden||0); });
+  
+  if (!productos.length) {
+    list.innerHTML = '<div class="empty-state">No hay productos en esta sección</div>';
+    return;
+  }
+
+  var secNombres = { 'ropa-interior':'👙 Ropa Interior', 'ropa-moda':'👕 Ropa y Moda', 'accesorios':'👜 Accesorios', 'servicios':'⚡ Servicios', 'acceso360':'✦ Acceso 360' };
+
+  list.innerHTML = productos.map(function(p) {
+    var img = (p.imagenes || p.id + '.jpg').split(',')[0];
+    return '<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;" id="cat-row-' + p.id + '">' +
+      '<img src="' + img + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-weight:700;font-size:0.88rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nombre + '</div>' +
+        '<div style="font-size:0.72rem;color:var(--text-muted);">' +
+          (secNombres[p.seccion] || p.seccion) + 
+          (p.precio ? ' · ' + p.precio : '') +
+          (p.genero ? ' · ' + p.genero : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
+        '<button onclick="toggleDestacadoCatalogo('' + p.id + '')" title="Destacado" style="background:none;border:1px solid ' + (p.destacado ? '#f5c518' : 'var(--border)') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.destacado ? '#f5c518' : 'var(--text-muted)') + ';font-size:0.85rem;">⭐</button>' +
+        '<button onclick="toggleActivoCatalogo('' + p.id + '')" title="' + (p.activo ? 'Desactivar' : 'Activar') + '" style="background:none;border:1px solid ' + (p.activo ? '#22c55e' : '#ff4444') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.activo ? '#22c55e' : '#ff4444') + ';font-size:0.75rem;font-weight:700;">' + (p.activo ? 'ON' : 'OFF') + '</button>' +
+        '<button onclick="abrirModalEditar('' + p.id + '')" style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;color:#000;font-size:0.75rem;font-weight:700;">Editar</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleDestacadoCatalogo(pid) {
+  if (!catalogoAdminData[pid]) return;
+  catalogoAdminData[pid].destacado = !catalogoAdminData[pid].destacado;
+  db.ref('catalogo/' + pid + '/destacado').set(catalogoAdminData[pid].destacado).then(function() {
+    renderCatalogoAdmin();
+  });
+}
+
+function toggleActivoCatalogo(pid) {
+  if (!catalogoAdminData[pid]) return;
+  catalogoAdminData[pid].activo = !catalogoAdminData[pid].activo;
+  db.ref('catalogo/' + pid + '/activo').set(catalogoAdminData[pid].activo).then(function() {
+    renderCatalogoAdmin();
+  });
+}
+
+function abrirModalEditar(pid) {
+  var p = catalogoAdminData[pid];
+  if (!p) return;
+  document.getElementById('edit-pid').value = pid;
+  document.getElementById('edit-nombre').value = p.nombre || '';
+  document.getElementById('edit-precio').value = p.precio || '';
+  document.getElementById('edit-seccion').value = p.seccion || 'ropa-moda';
+  document.getElementById('edit-genero').value = p.genero || 'unisex';
+  document.getElementById('edit-detalles').value = p.detalles || '';
+  document.getElementById('edit-descripcion').value = p.descripcion || '';
+  document.getElementById('edit-destacado').checked = !!p.destacado;
+  document.getElementById('edit-activo').checked = p.activo !== false;
+  document.getElementById('modal-editar-producto').style.display = 'flex';
+}
+
+function cerrarModalEditar() {
+  document.getElementById('modal-editar-producto').style.display = 'none';
+}
+
+function guardarEdicionProducto() {
+  var pid = document.getElementById('edit-pid').value;
+  if (!pid || !catalogoAdminData[pid]) return;
+  
+  var updates = {
+    nombre: document.getElementById('edit-nombre').value.trim(),
+    precio: document.getElementById('edit-precio').value.trim(),
+    seccion: document.getElementById('edit-seccion').value,
+    genero: document.getElementById('edit-genero').value,
+    detalles: document.getElementById('edit-detalles').value.trim(),
+    descripcion: document.getElementById('edit-descripcion').value.trim(),
+    destacado: document.getElementById('edit-destacado').checked,
+    activo: document.getElementById('edit-activo').checked,
+  };
+
+  Object.assign(catalogoAdminData[pid], updates);
+  
+  db.ref('catalogo/' + pid).update(updates).then(function() {
+    cerrarModalEditar();
+    renderCatalogoAdmin();
+    // Show confirm
+    var chip = document.getElementById('save-chip');
+    if (chip) { chip.classList.add('show'); setTimeout(function(){ chip.classList.remove('show'); }, 2500); }
+  });
+}
+
+// Override loadCatalogoAdmin to also show the panel
+function loadCatalogoAdmin() {
+  db.ref('catalogo').once('value', function(snap) {
+    var catalogo = snap.val();
+    if (!catalogo || Object.keys(catalogo).length === 0) {
+      document.getElementById('catalogo-admin-panel').style.display = 'none';
+      return;
+    }
+    catalogoAdminData = catalogo;
+    // Update SECTIONS with Firebase products
+    var porSeccion = {};
+    Object.values(catalogo).forEach(function(p) {
+      if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
+      porSeccion[p.seccion].push(p.id);
+      PRODUCT_NAMES[p.id] = p.nombre;
+    });
+    SECTIONS.forEach(function(s) {
+      if (porSeccion[s.id]) s.products = porSeccion[s.id];
+    });
+    document.getElementById('catalogo-admin-panel').style.display = 'block';
+    renderCatalogoAdmin();
+    renderControl();
+  });
+}
+
+// ── CATÁLOGO DINÁMICO — MIGRACIÓN ────────────────────────────────────────────
+var CATALOGO_DATA = {"blumer": {"id": "blumer", "seccion": "ropa-interior", "genero": "mujer", "activo": true, "destacado": true, "orden": 0, "nombre": "Blumer sin costuras", "precio": "550 MN", "tagCategoria": "ROPA INTERIOR", "detalles": "Tallas: S, M, L, XL", "descripcion": "Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.", "imagenes": "blumer.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)"}, "sujetador": {"id": "sujetador", "seccion": "ropa-interior", "genero": "", "activo": true, "destacado": false, "orden": 1, "nombre": "Ajustador sin costuras", "precio": "1,500 MN", "tagCategoria": "ROPA INTERIOR", "detalles": "Tallas: S, M, L", "descripcion": "Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de \"segunda piel\" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.", "imagenes": "sujetador.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Ajustador%20sin%20costuras%20%F0%9F%A9%B1%20(1%2C500%20MN)"}, "paris": {"id": "paris", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 2, "nombre": "Pulover estampado PARIS", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Look casual y elegante. Diseño sofisticado con estampado central con la palabra \"PARIS\" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.", "imagenes": "paris.jpg,hombresparis.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)"}, "ngu": {"id": "ngu", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 3, "nombre": "Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.", "imagenes": "ngu.jpg,hombresngu.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)"}, "gdm": {"id": "gdm", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 4, "nombre": "Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Lo más vendido. Minimalista y elegante, con el sello \"GREAT DREAM MAKER\" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.", "imagenes": "gdm.jpg,hombresgdm.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)"}, "aac": {"id": "aac", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 5, "nombre": "Pulover Amor, Alegría y Cerveza Fría", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Estilo casual. El alma de la FIESTA", "descripcion": "Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.", "imagenes": "aac.jpg,hombreaac.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20%F0%9F%91%95%20(2%2C900%20MN)"}, "usa": {"id": "usa", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 6, "nombre": "Pulover estampado USA", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Estilo Americano Classic", "descripcion": "Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.", "imagenes": "usa.jpg,hombre01usa.jpg,hombre02usa.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20USA%20%F0%9F%91%95%20(2%2C900%20MN)"}, "freedom": {"id": "freedom", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": true, "orden": 7, "nombre": "Pulover estampado FREEDOM", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.", "imagenes": "freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)"}, "mblancas": {"id": "mblancas", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 8, "nombre": "Medias Blancas", "precio": "250 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Talla: Única | Transpirable", "descripcion": "", "imagenes": "mblancas.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Blancas%20%F0%9F%A7%A6%20(250%20MN)"}, "mnegras": {"id": "mnegras", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 9, "nombre": "Medias Negras", "precio": "250 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Talla: Única | Transpirable", "descripcion": "", "imagenes": "mnegras.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Negras%20%F0%9F%A7%A6%20(250%20MN)"}, "bolsomovil": {"id": "bolsomovil", "seccion": "accesorios", "genero": "mujer", "activo": true, "destacado": true, "orden": 10, "nombre": "Bolso Bandolera para Móvil", "precio": "2,000 MN", "tagCategoria": "ACCESORIOS", "detalles": "Material: Cuero sintético y Nylon.", "descripcion": "Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.", "imagenes": "bolsomovil.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)"}, "gorrobebe": {"id": "gorrobebe", "seccion": "accesorios", "genero": "ninos", "activo": true, "destacado": false, "orden": 11, "nombre": "Gorro para bebé", "precio": "1,200 MN", "tagCategoria": "ACCESORIOS", "detalles": "Material: Algodón elastano.", "descripcion": "Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.", "imagenes": "gorrobebe.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)"}, "gorra": {"id": "gorra", "seccion": "accesorios", "genero": "unisex", "activo": true, "destacado": true, "orden": 12, "nombre": "Gorra", "precio": "2,800 MN", "tagCategoria": "ACCESORIOS", "detalles": "Material: Calidad", "descripcion": "Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.", "imagenes": "gorra.jpg,gorras-colores.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)"}, "saldo": {"id": "saldo", "seccion": "servicios", "genero": "servicios", "activo": true, "destacado": false, "orden": 13, "nombre": "COMPRAR SALDO (RECARGAS)", "precio": "1,000 MN", "tagCategoria": "SERVICIOS", "detalles": "Recargas 360 SALDO", "descripcion": "¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.", "imagenes": "saldo.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)"}, "citybuy360familia": {"id": "citybuy360familia", "seccion": "servicios", "genero": "servicios", "activo": true, "destacado": false, "orden": 14, "nombre": "Únete a la familia CityBUY360", "precio": "PROMOCIÓN", "tagCategoria": "SERVICIOS", "detalles": "Publica tus productos en nuestro catálogo digital.", "descripcion": "¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.", "imagenes": "bolsas-azules.jpg", "imgCount": 1, "waLink": "https://wa.me/+34611897656?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D%20(0%20CUP)"}, "ventilador": {"id": "ventilador", "seccion": "acceso360", "genero": "electrodomesticos", "activo": true, "destacado": false, "orden": 15, "nombre": "Ventilador", "precio": "", "imagenes": "ventilador.jpg", "imgCount": 1, "waLink": ""}};
+
+function migrarCatalogo() {
+  var btn = document.getElementById('btn-migrar');
+  var status = document.getElementById('migracion-status');
+  if (!confirm('¿Migrar ' + Object.keys(CATALOGO_DATA).length + ' productos a Firebase? Los datos existentes en Firebase/catalogo se sobrescribirán.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Migrando…';
+  status.style.display = 'block';
+  status.textContent = 'Subiendo productos a Firebase…';
+
+  db.ref('catalogo').set(CATALOGO_DATA).then(function() {
+    status.textContent = '✓ ' + Object.keys(CATALOGO_DATA).length + ' productos migrados correctamente. El catálogo ahora es dinámico.';
+    btn.textContent = '✓ Migrado';
+    btn.style.background = '#22c55e';
+    // Reload control to reflect new structure
+    setTimeout(function() { renderControlDinamico(); }, 1000);
+  }).catch(function(e) {
+    status.textContent = '✗ Error: ' + e.message;
+    status.style.color = '#f85149';
+    btn.disabled = false;
+    btn.textContent = '⬆️ Migrar ahora';
+  });
+}
+
+function verificarCatalogo() {
+  var status = document.getElementById('migracion-status');
+  status.style.display = 'block';
+  status.textContent = 'Verificando…';
+  db.ref('catalogo').once('value', function(snap) {
+    var data = snap.val();
+    if (!data) {
+      status.textContent = '⚠️ Firebase/catalogo está vacío — pulsa "Migrar ahora"';
+      status.style.color = '#f5c518';
+    } else {
+      var n = Object.keys(data).length;
+      status.textContent = '✓ Firebase tiene ' + n + ' productos. Catálogo dinámico activo.';
+      status.style.color = '#22c55e';
+    }
+  });
+}
+
+function renderControlDinamico() {
+  // After migration, reload products from Firebase for Control tab
+  db.ref('catalogo').once('value', function(snap) {
+    var catalogo = snap.val();
+    if (!catalogo) return;
+    // Update SECTIONS with real product list from Firebase
+    var porSeccion = {};
+    Object.values(catalogo).forEach(function(p) {
+      if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
+      porSeccion[p.seccion].push(p.id);
+    });
+    SECTIONS.forEach(function(s) {
+      if (porSeccion[s.id]) s.products = porSeccion[s.id];
+    });
+    renderControl();
+  });
+}
+
+// Load dynamic catalog structure on admin init
+function loadCatalogoAdmin() {
+  db.ref('catalogo').once('value', function(snap) {
+    var catalogo = snap.val();
+    if (!catalogo || Object.keys(catalogo).length === 0) return;
+    // Update SECTIONS with Firebase products
+    var porSeccion = {};
+    Object.values(catalogo).forEach(function(p) {
+      if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
+      porSeccion[p.seccion].push(p.id);
+      PRODUCT_NAMES[p.id] = p.nombre;
+    });
+    SECTIONS.forEach(function(s) {
+      if (porSeccion[s.id]) s.products = porSeccion[s.id];
+    });
+    renderControl();
+  });
+}
+
+// ── VENDEDORES ───────────────────────────────────────────────────────────────
+let ventasVendedoresData = {};
+let vendedoresData = {};
+let inventarioData = {};
+let productosParaVendedor = [];
+
+function loadVendedores() {
+  db.ref('vendedores').once('value', snap => {
+    vendedoresData = snap.val() || {};
+    renderVendedoresList();
+    var sel = document.getElementById('v-filtro-vendedor');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Todos los vendedores</option>';
+    Object.entries(vendedoresData).forEach(([codigo, v]) => {
+      sel.innerHTML += '<option value="' + codigo + '">' + (v.nombre||codigo) + '</option>';
+    });
+  });
+}
+
+function loadVentasVendedores() {
+  db.ref('ventasVendedores').once('value', snap => {
+    ventasVendedoresData = snap.val() || {};
+    renderVentasVendedores();
+  });
+}
+
+function loadInventarioAdmin() {
+  var productos = [];
+  SECTIONS.forEach(s => { if (s.id !== 'destacado') s.products.forEach(p => productos.push(p)); });
+  productosParaVendedor = productos;
+  db.ref('inventario').once('value', snap => {
+    inventarioData = snap.val() || {};
+    var list = document.getElementById('inventario-list');
+    if (!list) return;
+    list.innerHTML = productos.map(pid => {
+      var stock = inventarioData[pid] !== undefined ? inventarioData[pid] : '';
+      var nombre = PRODUCT_NAMES[pid] || pid;
+      return '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<span style="flex:1;font-size:0.8rem;color:var(--text-muted);">' + nombre + '</span>' +
+        '<input type="number" id="inv-' + pid + '" value="' + stock + '" min="0" placeholder="—" ' +
+        'style="width:60px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.8rem;text-align:center;">' +
+        '</div>';
+    }).join('');
+  });
+}
+
+function guardarInventario() {
+  var update = {};
+  productosParaVendedor.forEach(pid => {
+    var el = document.getElementById('inv-' + pid);
+    if (el && el.value !== '') update[pid] = parseInt(el.value) || 0;
+  });
+  db.ref('inventario').update(update).then(() => {
+    var btn = event.target;
+    btn.textContent = '✓ Guardado';
+    setTimeout(() => btn.textContent = '💾 Guardar inventario', 2000);
+  });
+}
+
+function crearVendedor() {
+  var nombre = document.getElementById('v-nombre').value.trim();
+  var codigo = document.getElementById('v-codigo').value.trim().toUpperCase();
+  var status = document.getElementById('v-status');
+  if (!nombre || !codigo) { status.textContent = 'Rellena nombre y código'; status.style.color='#ff4444'; return; }
+  db.ref('vendedores/' + codigo).set({ nombre, codigo, activo: true, creado: new Date().toISOString() }).then(() => {
+    status.textContent = '✓ Vendedor ' + nombre + ' creado';
+    status.style.color = '#22c55e';
+    document.getElementById('v-nombre').value = '';
+    document.getElementById('v-codigo').value = '';
+    loadVendedores();
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+
+function renderVendedoresList() {
+  var list = document.getElementById('vendedores-list');
+  if (!list) return;
+  var entries = Object.entries(vendedoresData);
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">No hay vendedores aún</div>'; return; }
+  list.innerHTML = entries.map(([codigo, v]) => {
+    var ventas = Object.values(ventasVendedoresData).filter(vt => vt.vendedorCodigo === codigo);
+    return '<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;">' +
+      '<div style="width:36px;height:36px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;">' + (v.nombre||'?')[0].toUpperCase() + '</div>' +
+      '<div style="flex:1;"><div style="font-weight:700;color:var(--text);">' + (v.nombre||codigo) + '</div>' +
+      '<div style="font-size:0.75rem;color:var(--text-muted);">Código: ' + codigo + ' · ' + ventas.length + ' ventas reportadas</div></div>' +
+      '<button onclick="eliminarVendedor('' + codigo + '')" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:0.85rem;">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+function eliminarVendedor(codigo) {
+  if (!confirm('Eliminar vendedor ' + codigo + '?')) return;
+  db.ref('vendedores/' + codigo).remove().then(loadVendedores);
+}
+
+function renderVentasVendedores() {
+  var list = document.getElementById('ventas-vendedores-list');
+  if (!list) return;
+  var filtroV = document.getElementById('v-filtro-vendedor') ? document.getElementById('v-filtro-vendedor').value : '';
+  var filtroPeriodo = document.getElementById('v-filtro-periodo') ? document.getElementById('v-filtro-periodo').value : 'mes';
+  var ahora = new Date();
+  var entries = Object.entries(ventasVendedoresData).filter(function([id, v]) {
+    if (filtroV && v.vendedorCodigo !== filtroV) return false;
+    if (!v.fecha) return true;
+    var fecha = new Date(v.fecha);
+    if (filtroPeriodo === 'hoy') return fecha.toDateString() === ahora.toDateString();
+    if (filtroPeriodo === 'semana') return (ahora - fecha) / 86400000 <= 7;
+    if (filtroPeriodo === 'mes') return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+    return true;
+  }).sort(function(a,b){ return new Date(b[1].fecha) - new Date(a[1].fecha); });
+
+  var totalMN = 0, totalUSD = 0, totalEUR = 0;
+  entries.forEach(function([,v]) {
+    var p = parseFloat(v.precio) || 0;
+    if (v.moneda === 'USD') totalUSD += p;
+    else if (v.moneda === 'EUR') totalEUR += p;
+    else totalMN += p;
+  });
+  document.getElementById('v-total-ventas').textContent = entries.length;
+  document.getElementById('v-total-mn').textContent = totalMN > 0 ? totalMN.toLocaleString() + ' MN' : '0';
+  document.getElementById('v-total-usd').textContent = totalUSD > 0 ? totalUSD.toFixed(2) + ' USD' : '0';
+  document.getElementById('v-total-eur').textContent = totalEUR > 0 ? totalEUR.toFixed(2) + ' EUR' : '0';
+
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">No hay ventas en este periodo</div>'; return; }
+
+  var diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  list.innerHTML = entries.map(function([id, v]) {
+    var fecha = v.fecha ? new Date(v.fecha) : null;
+    var fechaStr = fecha ? fecha.toLocaleDateString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+    var diaStr = fecha ? diasSemana[fecha.getDay()] : '';
+    var nombre = PRODUCT_NAMES[v.producto] || v.producto || '—';
+    return '<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:4px;">' +
+      '<div><span style="font-weight:700;color:var(--text);">' + nombre + '</span>' +
+      (v.cantidad > 1 ? '<span style="background:var(--bg);border-radius:4px;padding:1px 6px;font-size:0.75rem;color:var(--text-muted);margin-left:6px;">x' + v.cantidad + '</span>' : '') +
+      '<br><span style="font-size:0.75rem;color:var(--text-muted);">' +
+      (vendedoresData[v.vendedorCodigo] ? vendedoresData[v.vendedorCodigo].nombre : v.vendedorCodigo||'—') +
+      ' · ' + fechaStr + (diaStr ? ' (' + diaStr + ')' : '') +
+      (v.cliente ? ' · ' + v.cliente : '') +
+      (v.metodoPago ? ' · ' + v.metodoPago : '') +
+      (v.notas ? ' · ' + v.notas : '') +
+      '</span></div>' +
+      '<div style="text-align:right;"><div style="font-weight:900;color:var(--primary);">' +
+      (v.precio ? parseFloat(v.precio).toLocaleString() + ' ' + (v.moneda||'MN') : '—') +
+      '</div><button onclick="eliminarVenta('' + id + '')" style="background:none;border:none;color:#666;cursor:pointer;font-size:0.75rem;">✕</button></div>' +
+      '</div>';
+  }).join('');
+}
+
+function eliminarVenta(id) {
+  if (!confirm('Eliminar esta venta?')) return;
+  db.ref('ventasVendedores/' + id).remove().then(loadVentasVendedores);
+}
+
+function exportarVentasExcel() {
+  var filtroV = document.getElementById('v-filtro-vendedor') ? document.getElementById('v-filtro-vendedor').value : '';
+  var filtroPeriodo = document.getElementById('v-filtro-periodo') ? document.getElementById('v-filtro-periodo').value : 'mes';
+  var ahora = new Date();
+  var diasSemana = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var entries = Object.entries(ventasVendedoresData).filter(function([id, v]) {
+    if (filtroV && v.vendedorCodigo !== filtroV) return false;
+    if (!v.fecha) return true;
+    var fecha = new Date(v.fecha);
+    if (filtroPeriodo === 'hoy') return fecha.toDateString() === ahora.toDateString();
+    if (filtroPeriodo === 'semana') return (ahora - fecha) / 86400000 <= 7;
+    if (filtroPeriodo === 'mes') return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+    return true;
+  }).sort(function(a,b){ return new Date(b[1].fecha) - new Date(a[1].fecha); });
+
+  var headers = ['Fecha','Dia semana','Hora','Vendedor','Producto','Cantidad','Precio','Moneda','Cliente','Metodo pago','Notas'];
+  var rows = entries.map(function([,v]) {
+    var fecha = v.fecha ? new Date(v.fecha) : null;
+    return [
+      fecha ? fecha.toLocaleDateString('es-ES') : '',
+      fecha ? diasSemana[fecha.getDay()] : '',
+      fecha ? fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '',
+      vendedoresData[v.vendedorCodigo] ? vendedoresData[v.vendedorCodigo].nombre : v.vendedorCodigo||'',
+      PRODUCT_NAMES[v.producto] || v.producto || '',
+      v.cantidad || 1,
+      v.precio || '',
+      v.moneda || 'MN',
+      v.cliente || '',
+      v.metodoPago || '',
+      v.notas || '',
+    ];
+  });
+
+  var csv = [headers].concat(rows).map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'ventas_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
 
 // ── MENSAJES ADMIN ──
 function loadMensajesAdmin() {
