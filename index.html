@@ -21,8 +21,8 @@
             --price-green: #2ecc71;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; }
-        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; }
+        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; overflow: hidden; }
         #tienda-cerrada {
             display: none; position: fixed; inset: 0; z-index: 9999;
             background: #0d1117; flex-direction: column;
@@ -135,7 +135,7 @@
             aside { display: none; }
             .slide { padding: 0 50px 0 50px; text-align: left; justify-content: flex-start; }
             #badge-360-header { display: none !important; }
-            #span-360 { box-shadow: none !important; background: transparent !important; border: none !important; padding: 0 2px !important; border-radius: 0 !important; color: #f5c518 !important; }
+            #span-360 { box-shadow: 0 0 10px rgba(255,210,0,0.7) !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; border: none !important; padding: 2px 7px !important; border-radius: 4px !important; color: #0a0a0a !important; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
             .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
@@ -222,9 +222,11 @@
         /* ── BARRA DE CATEGORÍAS ── */
         #cat-bar {
             display: flex; overflow-x: auto; gap: 8px;
-            padding: 10px 20px; background: var(--bg-dark);
+            padding: 10px 12px; background: var(--bg-dark);
             border-bottom: 1px solid #222;
             scrollbar-width: none; position: sticky; top: 0; z-index: 50;
+            width: 100%; box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
         }
         #cat-bar::-webkit-scrollbar { display: none; }
         .cat-btn {
@@ -294,14 +296,16 @@
             background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
             background-size: 200% 200%;
             animation: goldshine 3s ease infinite;
-            color: #1a0a00;
-            padding: 3px 10px !important;
-            border-radius: 6px !important;
+            color: #0a0a0a;
+            padding: 2px 8px !important;
+            border-radius: 4px !important;
             font-weight: 900 !important;
             cursor: pointer;
-            box-shadow: 0 0 18px rgba(255,210,0,0.95), 0 0 8px rgba(255,180,0,0.7) !important;
+            box-shadow: 0 0 14px rgba(255,210,0,0.8) !important;
             display: inline-block !important;
             letter-spacing: 0.5px;
+            border: none !important;
+            outline: none !important;
         }
         .badge-360 {
             display: inline-flex;
@@ -640,7 +644,7 @@
             #bottom-nav { display: flex; }
             #bottom-nav ul { display: flex; flex-direction: row; width: 100%; }
             #bottom-nav ul li { flex: 1; }
-            #span-360 { background: transparent !important; color: var(--brand-blue) !important; padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; cursor: default !important; pointer-events: none !important; font-weight: 900; }
+            #span-360 { cursor: pointer !important; }
         }
     
         /* ── MODAL VIP ACCESO 360 ── */
@@ -1292,13 +1296,9 @@
         var waLink = p.waLink || ('https://wa.me/5353255813?text=' + waText);
         var esVIP = p.seccion === 'acceso360';
 
-        var dotsHtml = imgs.length > 1 ? '<div class="card-photo-dots">' + imgs.map(function(_,i){ return '<span class="dot' + (i===0?' active':'') + '" data-index="' + i + '"></span>'; }).join('') + '</div>' : '';
-
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy">' +
-                (imgs.length > 1 ? '<button class="card-nav-btn prev" onclick="prevImg(this)">&#8249;</button><button class="card-nav-btn next" onclick="nextImg(this)">&#8250;</button>' : '') +
-                dotsHtml +
                 (p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
             '</div>' +
             '<div class="card-content">' +
@@ -1355,6 +1355,8 @@
 
         // Init ratings for all cards
         initAllRatings();
+        // Init card sliders (cards are now in DOM)
+        initCardSliders();
         // Apply gender filter
         if (typeof applyFilter === 'function') applyFilter(currentFilter || 'todos');
     }
@@ -1372,6 +1374,53 @@
             db.ref('config/products').once('value', function(cfgSnap) {
                 renderCatalogo(productos, cfgSnap.val() || {});
             });
+        });
+    }
+
+    function initStarClick(sc, pid) {
+        var starsEl = sc.querySelector('.stars');
+        var infoEl  = sc.querySelector('.stars-info');
+        if (!starsEl) return;
+        var starEls = starsEl.querySelectorAll('.star');
+        var ref     = db.ref('ratings/' + pid);
+        var voted   = localStorage.getItem('voted_' + pid);
+        if (voted) starsEl.classList.add('voted');
+
+        // Tiempo real
+        ref.on('value', function(snap) {
+            var data = snap.val() || { total: 0, count: 0 };
+            var avg  = data.count > 0 ? data.total / data.count : 0;
+            renderStars(starsEl, avg);
+            if (infoEl) updateInfo(infoEl, avg, data.count);
+        });
+
+        // Hover
+        starEls.forEach(function(star, idx) {
+            star.addEventListener('mouseover', function() {
+                if (starsEl.classList.contains('voted')) return;
+                starEls.forEach(function(s, i) { s.classList.toggle('filled', i <= idx); });
+            });
+            star.addEventListener('mouseout', function() {
+                if (starsEl.classList.contains('voted')) return;
+                ref.once('value', function(snap) {
+                    var data = snap.val() || { total: 0, count: 0 };
+                    renderStars(starsEl, data.count > 0 ? data.total / data.count : 0);
+                });
+            });
+        });
+
+        // Votar
+        starsEl.addEventListener('click', function(e) {
+            if (starsEl.classList.contains('voted')) return;
+            var star = e.target.closest('.star');
+            if (!star) return;
+            var val = parseInt(star.getAttribute('data-val'));
+            ref.transaction(function(current) {
+                var d = current || { total: 0, count: 0 };
+                return { total: d.total + val, count: d.count + 1 };
+            });
+            localStorage.setItem('voted_' + pid, '1');
+            starsEl.classList.add('voted');
         });
     }
 
@@ -1412,57 +1461,6 @@
             infoEl.textContent = avg.toFixed(1) + ' (' + count + ' voto' + (count > 1 ? 's' : '') + ')';
         }
     }
-
-    document.querySelectorAll('.stars-container').forEach(function(container) {
-        var productId = container.getAttribute('data-product');
-        var starsEl   = container.querySelector('.stars');
-        var infoEl    = container.querySelector('.stars-info');
-        var starEls   = starsEl.querySelectorAll('.star');
-        var ref       = db.ref('ratings/' + productId);
-        var voted     = localStorage.getItem('voted_' + productId);
-
-        if (voted) starsEl.classList.add('voted');
-
-        // Escuchar cambios en tiempo real
-        ref.on('value', function(snap) {
-            var data  = snap.val() || { total: 0, count: 0 };
-            var avg   = data.count > 0 ? data.total / data.count : 0;
-            renderStars(starsEl, avg);
-            updateInfo(infoEl, avg, data.count);
-        });
-
-        // Hover
-        starEls.forEach(function(star, idx) {
-            star.addEventListener('mouseover', function() {
-                if (starsEl.classList.contains('voted')) return;
-                starEls.forEach(function(s, i) {
-                    s.classList.toggle('filled', i <= idx);
-                });
-            });
-            star.addEventListener('mouseout', function() {
-                if (starsEl.classList.contains('voted')) return;
-                ref.once('value', function(snap) {
-                    var data = snap.val() || { total: 0, count: 0 };
-                    var avg  = data.count > 0 ? data.total / data.count : 0;
-                    renderStars(starsEl, avg);
-                });
-            });
-        });
-
-        // Votar
-        starsEl.addEventListener('click', function(e) {
-            if (starsEl.classList.contains('voted')) return;
-            var star = e.target.closest('.star');
-            if (!star) return;
-            var val = parseInt(star.getAttribute('data-val'));
-            ref.transaction(function(current) {
-                var d = current || { total: 0, count: 0 };
-                return { total: d.total + val, count: d.count + 1 };
-            });
-            localStorage.setItem('voted_' + productId, '1');
-            starsEl.classList.add('voted');
-        });
-    });
 
     // ===== LIGHTBOX =====
     const lightbox   = document.getElementById('lightbox');
