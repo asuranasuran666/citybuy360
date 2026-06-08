@@ -1680,7 +1680,8 @@
             errEl.style.display = 'block';
         });
     }
-    document.getElementById('modal-vip-overlay').addEventListener('click', function(e){
+    var vipOverlay = document.getElementById('modal-vip-overlay');
+    if (vipOverlay) vipOverlay.addEventListener('click', function(e){
         if (e.target === this) closeVipModal();
     });
 
