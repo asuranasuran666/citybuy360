@@ -1950,16 +1950,18 @@ function renderCatalogoAdmin() {
   }).join('');
 }
 
-// Event delegation for catalog buttons - no inline onclick needed
+// Event delegation for all data-action buttons
 document.addEventListener('click', function(e) {
   var btn = e.target.closest('[data-action]');
   if (!btn) return;
-  var pid = btn.getAttribute('data-pid');
   var action = btn.getAttribute('data-action');
-  if (!pid || !action) return;
-  if (action === 'destacado') toggleDestacadoCatalogo(pid);
-  if (action === 'activo') toggleActivoCatalogo(pid);
-  if (action === 'editar') abrirModalEditar(pid);
+  if (!action) return;
+  var pid = btn.getAttribute('data-pid');
+  if (action === 'destacado' && pid) toggleDestacadoCatalogo(pid);
+  if (action === 'activo' && pid) toggleActivoCatalogo(pid);
+  if (action === 'editar' && pid) abrirModalEditar(pid);
+  if (action === 'eliminar-vendedor') eliminarVendedor(btn.getAttribute('data-codigo'));
+  if (action === 'eliminar-venta') eliminarVenta(btn.getAttribute('data-id'));
 });
 
 function toggleDestacadoCatalogo(pid) {
@@ -2213,7 +2215,7 @@ function renderVendedoresList() {
       '<div style="width:36px;height:36px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;">' + (v.nombre||'?')[0].toUpperCase() + '</div>' +
       '<div style="flex:1;"><div style="font-weight:700;color:var(--text);">' + (v.nombre||codigo) + '</div>' +
       '<div style="font-size:0.75rem;color:var(--text-muted);">Código: ' + codigo + ' · ' + ventas.length + ' ventas reportadas</div></div>' +
-      '<button onclick="eliminarVendedor('' + codigo + '')" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:0.85rem;">✕</button>' +
+      '<button data-action="eliminar-vendedor" data-codigo="' + codigo + '" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:0.85rem;">✕</button>' +
       '</div>';
   }).join('');
 }
@@ -2271,7 +2273,7 @@ function renderVentasVendedores() {
       '</span></div>' +
       '<div style="text-align:right;"><div style="font-weight:900;color:var(--primary);">' +
       (v.precio ? parseFloat(v.precio).toLocaleString() + ' ' + (v.moneda||'MN') : '—') +
-      '</div><button onclick="eliminarVenta('' + id + '')" style="background:none;border:none;color:#666;cursor:pointer;font-size:0.75rem;">✕</button></div>' +
+      '</div><button data-action="eliminar-venta" data-id="' + id + '" style="background:none;border:none;color:#666;cursor:pointer;font-size:0.75rem;">✕</button></div>' +
       '</div>';
   }).join('');
 }
