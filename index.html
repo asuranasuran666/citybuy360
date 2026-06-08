@@ -1314,7 +1314,7 @@
                 '</div>' +
                 (p.detalles ? '<div class="details-block">' + p.detalles + '</div>' : '') +
                 (p.precio ? '<div class="price">' + p.precio + '</div>' : '') +
-                '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale('" + p.id + "')">' + (esVIP ? '✦ Lo quiero' : 'Lo quiero') + '</a>' +
+                '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this.dataset.product)">' + (esVIP ? '✦ Lo quiero' : 'Lo quiero') + '</a>' +
             '</div>' +
         '</div>';
     }
