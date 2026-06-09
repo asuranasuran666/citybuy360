@@ -1453,52 +1453,38 @@ function onExpiryChange(input) {
   cfg.sections[id].expires = input.value;
 }
 function editProduct(pid) {
-  // Ir al tab Nuevo producto
   const tabBtn = document.querySelector('.tab-btn:last-child');
   showTab('nuevo', tabBtn);
-  // Marcar como modo edición
   document.getElementById('publish-btn').textContent = '💾 Guardar cambios';
   document.getElementById('publish-btn').dataset.editPid = pid;
-  // Intentar cargar datos desde el index via fetch
-  fetch('index.html').then(r=>r.text()).then(text => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, 'text/html');
-    const card = doc.querySelector(`[data-product="${pid}"].card`);
-    if (!card) { alert('Producto no encontrado en el index'); return; }
-    const nameEl = card.querySelector('.product-name');
-    const priceEl = card.querySelector('.price');
-    const detailsEl = card.querySelector('.details-block');
-    const tooltipEl = card.querySelector('.hover-tooltip');
-    const imgContainer = card.querySelector('.card-img-container');
-    if (nameEl) document.getElementById('prod-name').value = nameEl.textContent.trim();
-    if (priceEl) document.getElementById('prod-price').value = priceEl.textContent.replace(' MN','').replace(',','').trim();
-    if (detailsEl) {
-      const text = detailsEl.innerHTML.replace(/<br\s*\/?>/gi, '\n');
-      const lines = text.split('\n');
-      lines.forEach(line => {
-        if (line.startsWith('Tallas:')) document.getElementById('prod-tallas').value = line.replace('Tallas:','').trim();
-        else if (line.startsWith('Colores:')) document.getElementById('prod-colores').value = line.replace('Colores:','').trim();
-        else document.getElementById('prod-desc').value = line.trim();
+
+  var cargar = function(p) {
+    if (!p) { alert('Producto no encontrado en Firebase'); return; }
+    document.getElementById('prod-name').value = p.nombre || '';
+    document.getElementById('prod-price').value = p.precio || '';
+    document.getElementById('prod-tallas').value = p.tallas || '';
+    document.getElementById('prod-colores').value = p.colores || '';
+    document.getElementById('prod-desc').value = p.detalles || '';
+    document.getElementById('prod-tooltip').value = p.descripcion || '';
+    document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
+    setSelectedGenero(p.genero || '');
+    if (p.imagenes) {
+      uploadedPhotos = p.imagenes.split(',').filter(Boolean).map(function(name) {
+        return { name: name.trim(), base64: null, dataUrl: name.trim(), ext: name.split('.').pop() };
       });
-    }
-    if (tooltipEl) document.getElementById('prod-tooltip').value = tooltipEl.textContent.trim();
-    // Buscar sección del producto
-    const SECTIONS_LOCAL = SECTIONS;
-    const sec = SECTIONS_LOCAL.find(s => s.products.includes(pid));
-    if (sec) document.getElementById('prod-seccion').value = sec.id;
-    // Load data-genero
-    const generoAttr = card.getAttribute('data-genero') || '';
-    setSelectedGenero(generoAttr);
-    // Mostrar foto actual
-    if (imgContainer) {
-      const imgs = (imgContainer.dataset.images||'').split(',');
-      uploadedPhotos = imgs.filter(Boolean).map((name,i) => ({
-        name, base64: null, dataUrl: name, ext: name.split('.').pop()
-      }));
       renderPreviews();
     }
-    alert(`Editando: ${nameEl?nameEl.textContent.trim():pid}\n\nModifica los campos y pulsa "Guardar cambios". Las fotos actuales se mantienen si no subes nuevas.`);
-  }).catch(e => alert('Error cargando producto: ' + e.message));
+  };
+
+  if (catalogoAdminData[pid]) {
+    cargar(catalogoAdminData[pid]);
+  } else {
+    db.ref('catalogo/' + pid).once('value', function(snap) {
+      var p = snap.val();
+      if (p) catalogoAdminData[pid] = p;
+      cargar(p);
+    });
+  }
 }
 
 function toggleDestacado(pid, btn) {
@@ -2028,6 +2014,7 @@ document.addEventListener('click', function(e) {
   if (action === 'destacado' && pid) toggleDestacadoCatalogo(pid);
   if (action === 'activo' && pid) toggleActivoCatalogo(pid);
   if (action === 'editar' && pid) abrirModalEditar(pid);
+  if (action === 'editar-vendedor') editarVendedor(btn.getAttribute('data-codigo'), btn.getAttribute('data-nombre'));
   if (action === 'eliminar-vendedor') eliminarVendedor(btn.getAttribute('data-codigo'));
   if (action === 'eliminar-venta') eliminarVenta(btn.getAttribute('data-id'));
   if (action === 'eliminar-producto' && pid) eliminarProducto(pid);
@@ -2310,10 +2297,24 @@ function renderVendedoresList() {
     return '<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;">' +
       '<div style="width:36px;height:36px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;">' + (v.nombre||'?')[0].toUpperCase() + '</div>' +
       '<div style="flex:1;"><div style="font-weight:700;color:var(--text);">' + (v.nombre||codigo) + '</div>' +
-      '<div style="font-size:0.75rem;color:var(--text-muted);">Código: ' + codigo + ' · ' + ventas.length + ' ventas reportadas</div></div>' +
-      '<button data-action="eliminar-vendedor" data-codigo="' + codigo + '" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:0.85rem;">✕</button>' +
+      '<div style="font-size:0.75rem;color:var(--text-muted);">Código: ' + codigo + ' · ' + ventas.length + ' ventas</div></div>' +
+      '<button data-action="editar-vendedor" data-codigo="' + codigo + '" data-nombre="' + (v.nombre||'') + '" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:0.85rem;" title="Editar">✏️</button>' +
+      '<button data-action="eliminar-vendedor" data-codigo="' + codigo + '" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:0.85rem;" title="Eliminar">✕</button>' +
       '</div>';
   }).join('');
+}
+
+function editarVendedor(codigoActual, nombreActual) {
+  var nuevoNombre = prompt('Nombre del vendedor:', nombreActual);
+  if (nuevoNombre === null) return;
+  var nuevoCodigo = prompt('Código de acceso:', codigoActual);
+  if (!nuevoCodigo) return;
+  nuevoCodigo = nuevoCodigo.trim().toUpperCase();
+  var datos = { nombre: nuevoNombre.trim(), codigo: nuevoCodigo, activo: true, creado: vendedoresData[codigoActual]?.creado || new Date().toISOString() };
+  if (nuevoCodigo !== codigoActual) {
+    db.ref('vendedores/' + codigoActual).remove();
+  }
+  db.ref('vendedores/' + nuevoCodigo).set(datos).then(loadVendedores);
 }
 
 function eliminarVendedor(codigo) {

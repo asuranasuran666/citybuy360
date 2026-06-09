@@ -335,6 +335,8 @@
             text-transform: uppercase; border-left: 6px solid var(--brand-orange-dark);
             font-size: 1.1rem; text-align: center; color: #111;
         }
+        .section-title[style*="display: none"] + .grid,
+        .section-title[style*="display:none"] + .grid { margin-top: 16px; }
 
         .products-container { padding: 4px 20px 40px; width: 100%; box-sizing: border-box; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1369,6 +1371,10 @@
     }
 
     function loadCatalogo() {
+        // Limpiar grids para evitar datos estáticos mientras carga Firebase
+        ['grid-destacado','grid-ropa-interior','grid-ropa-moda','grid-accesorios','grid-servicios','grid-acceso360'].forEach(function(id){
+            var g = document.getElementById(id); if(g) g.innerHTML = '';
+        });
         db.ref('catalogo').on('value', function(snap) {
             var productos = snap.val();
             if (!productos || Object.keys(productos).length === 0) {
