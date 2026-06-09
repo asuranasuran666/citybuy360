@@ -425,7 +425,7 @@
         <span class="genero-chip" data-val="hombre" onclick="toggleGeneroChip(this)">👕 Hombre</span>
         <span class="genero-chip" data-val="unisex" onclick="toggleGeneroChip(this)">🔄 Unisex</span>
         <span class="genero-chip" data-val="ninos" onclick="toggleGeneroChip(this)">👶 Niños</span>
-        <span class="genero-chip" data-val="electrodomesticos" onclick="toggleGeneroChip(this)">🔌 Electro</span>
+        <span class="genero-chip" data-val="electronica" onclick="toggleGeneroChip(this)">🔌 Electrónica</span>
         <span class="genero-chip" data-val="aseo" onclick="toggleGeneroChip(this)">🧴 Aseo</span>
         <span class="genero-chip" data-val="servicios" onclick="toggleGeneroChip(this)">⚡ Servicios</span>
       </div>
@@ -1396,6 +1396,11 @@ function renderControl() {
         <span class="section-meta" onclick="event.stopPropagation()">
           <span class="expiry-label">Expira:</span>
           <input type="date" class="expiry-input" data-sec="${sec.id}" value="${secCfg.expires||''}" onchange="onExpiryChange(this)">
+          <label class="toggle" title="Mostrar título">
+            <input type="checkbox" data-sec-title="${sec.id}" ${secCfg.showTitle!==false?'checked':''} onchange="onTitleToggle(this)">
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:0.7rem;color:var(--text-muted);">Título</span>
           <label class="toggle">
             <input type="checkbox" data-sec="${sec.id}" ${secCfg.active!==false?'checked':''} onchange="onSectionToggle(this)">
             <span class="toggle-slider"></span>
@@ -1431,6 +1436,11 @@ function renderControl() {
 function toggleBlock(header) {
   header.parentElement.classList.toggle('open');
 }
+function onTitleToggle(input) {
+  const id = input.getAttribute('data-sec-title');
+  db.ref('config/sections/' + id + '/showTitle').set(input.checked);
+}
+
 function onSectionToggle(input) {
   const id = input.dataset.sec;
   if (!cfg.sections[id]) cfg.sections[id] = { active: true, expires: '' };
@@ -1492,22 +1502,13 @@ function editProduct(pid) {
 }
 
 function toggleDestacado(pid, btn) {
-  // Acumula cambios visualmente — se aplican al hacer clic en "Guardar cambios de Destacados"
-  if (!pendingDestacados) pendingDestacados = {};
   const alreadyIn = btn.classList.contains('active');
-
-  if (alreadyIn) {
-    pendingDestacados[pid] = 'remove';
-    btn.classList.remove('active');
-    btn.title = 'Añadir a Destacados';
-    btn.textContent = '☆';
-  } else {
-    pendingDestacados[pid] = 'add';
-    btn.classList.add('active');
-    btn.title = 'Quitar de Destacados';
-    btn.textContent = '⭐';
-  }
-  updateDestacadosSaveBtn();
+  const nuevoValor = !alreadyIn;
+  btn.classList.toggle('active', nuevoValor);
+  btn.title = nuevoValor ? 'Quitar de Destacados' : 'Añadir a Destacados';
+  btn.textContent = nuevoValor ? '⭐' : '☆';
+  db.ref('catalogo/' + pid + '/destacado').set(nuevoValor);
+  if (catalogoAdminData[pid]) catalogoAdminData[pid].destacado = nuevoValor;
 }
 
 function updateDestacadosSaveBtn() {
@@ -1603,6 +1604,8 @@ function onProductToggle(input) {
   cfg.products[pid].active = input.checked;
   const chip = document.getElementById('pstatus-' + pid);
   if (chip) { chip.textContent = input.checked?'Activo':'Inactivo'; chip.className='prod-status '+(input.checked?'on':'off'); }
+  db.ref('catalogo/' + pid + '/activo').set(input.checked);
+  if (catalogoAdminData[pid]) catalogoAdminData[pid].activo = input.checked;
 }
 function saveConfig() {
   db.ref('config').update(cfg).then(() => {

@@ -923,7 +923,7 @@
     <button class="cat-btn" onclick="filterCat('hombre',this)">👕 Hombre</button>
     <button class="cat-btn" onclick="filterCat('unisex',this)">🔄 Unisex</button>
     <button class="cat-btn" onclick="filterCat('ninos',this)">👶 Niños</button>
-    <button class="cat-btn" onclick="filterCat('electrodomesticos',this)">🔌 Electrodomésticos</button>
+    <button class="cat-btn" onclick="filterCat('electronica',this)">🔌 Electrónica</button>
     <button class="cat-btn" onclick="filterCat('aseo',this)">🧴 Aseo</button>
     <button class="cat-btn" onclick="filterCat('servicios',this)">⚡ Servicios</button>
 </div>
@@ -934,27 +934,6 @@
             <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
             <div class="grid" id="grid-destacado">
                 <!-- Cargando desde Firebase... -->
-            
-                <div class="card" data-product="maquina-de-afeitar" data-genero="unisex aseo">
-    <div class="card-img-container" data-images="producto.jpg" data-count="1" style="position: relative;">
-        <img src="producto.jpg" class="card-img" alt="Maquina de afeitar">
-        <div class="hover-tooltip">Formato Ahorro Inteligente: Pack familiar de 10 unidades con la mejor relación calidad-precio para tu higiene diaria.</div>
-    </div>
-    <div class="card-content">
-        <div class="tag-category">ACCESORIOS</div>
-        <div class="product-name">Maquina de afeitar</div>
-        <div class="stars-container" data-product="maquina-de-afeitar">
-            <div class="stars"><span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span></div>
-            <span class="stars-info">Sin votos</span>
-        </div>
-        <div class="details-block">Deslizamiento Suave.
-Banda lubricante enriquecida con Aloe Vera y Vitamina E.
-Pack de 10 maquinillas.
-Tu básicos del día a día, mejorados, que reduce drásticamente la irritación.</div>
-        <div class="price">140 MN</div>
-        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Maquina%20de%20afeitar%20(140%20MN)" class="btn-lo-quiero">Lo quiero</a>
-    </div>
-</div>
             </div>
 
             <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
@@ -972,27 +951,6 @@ Tu básicos del día a día, mejorados, que reduce drásticamente la irritación
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid" id="grid-accesorios">
                 <!-- Cargando desde Firebase... -->
-            
-                <div class="card" data-product="maquina-de-afeitar" data-genero="unisex aseo">
-    <div class="card-img-container" data-images="producto.jpg" data-count="1" style="position: relative;">
-        <img src="producto.jpg" class="card-img" alt="Maquina de afeitar">
-        <div class="hover-tooltip">Formato Ahorro Inteligente: Pack familiar de 10 unidades con la mejor relación calidad-precio para tu higiene diaria.</div>
-    </div>
-    <div class="card-content">
-        <div class="tag-category">ACCESORIOS</div>
-        <div class="product-name">Maquina de afeitar</div>
-        <div class="stars-container" data-product="maquina-de-afeitar">
-            <div class="stars"><span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span></div>
-            <span class="stars-info">Sin votos</span>
-        </div>
-        <div class="details-block">Deslizamiento Suave.
-Banda lubricante enriquecida con Aloe Vera y Vitamina E.
-Pack de 10 maquinillas.
-Tu básicos del día a día, mejorados, que reduce drásticamente la irritación.</div>
-        <div class="price">140 MN</div>
-        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Maquina%20de%20afeitar%20(140%20MN)" class="btn-lo-quiero">Lo quiero</a>
-    </div>
-</div>
             </div>
 
             <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
@@ -1388,13 +1346,16 @@ Tu básicos del día a día, mejorados, que reduce drásticamente la irritación
             if (sec.id === 'destacado') return;
             var secCfg = configSecciones[sec.id] || {};
             var secWrapper = document.getElementById('sec-' + sec.id);
+            var secTitle = document.getElementById('sec-title-' + sec.id);
             var grid = document.getElementById(sec.contenedor);
             if (!grid) return;
             if (secCfg.active === false) {
                 if (secWrapper) secWrapper.style.display = 'none';
+                if (secTitle) secTitle.style.display = 'none';
                 return;
             }
             if (secWrapper) secWrapper.style.display = '';
+            if (secTitle) secTitle.style.display = secCfg.showTitle === false ? 'none' : '';
             var prods = (porSeccion[sec.id] || []).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
             grid.innerHTML = prods.map(buildCard).join('');
         });
