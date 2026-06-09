@@ -346,6 +346,26 @@
     <div class="chart-box">
       <canvas id="visits-chart" height="80"></canvas>
     </div>
+
+    <!-- Ventas y ranking -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+      <div class="chart-box" style="margin-bottom:0;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:12px;">🏆 Productos más vendidos</div>
+        <div id="ranking-productos" style="font-size:0.85rem;color:var(--text-muted);">Cargando...</div>
+      </div>
+      <div class="chart-box" style="margin-bottom:0;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:12px;">👤 Vendedores top</div>
+        <div id="ranking-vendedores" style="font-size:0.85rem;color:var(--text-muted);">Cargando...</div>
+      </div>
+    </div>
+    <div class="chart-box" style="margin-top:12px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">💰 Ventas del mes</div>
+      <div class="stats-row" style="margin-bottom:0;">
+        <div class="stat-card"><div class="stat-number" id="stat-ventas-mes">—</div><div class="stat-label">Ventas</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-mn-mes" style="color:#22c55e;">—</div><div class="stat-label">Total MN</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-usd-mes" style="color:#3b82f6;">—</div><div class="stat-label">Total USD</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- ── TAB: NUEVO PRODUCTO ── -->
@@ -1294,6 +1314,10 @@ async function initAdmin() {
     salesData = snap.val() || {};
     renderSales();
   });
+  db.ref('ventasVendedores').once('value', snap => {
+    ventasVendedoresData = snap.val() || {};
+    renderEstadisticasVentas();
+  });
   db.ref('prices').once('value', snap => {
     pricesData = snap.val() || {};
     renderPrices();
@@ -1303,7 +1327,58 @@ async function initAdmin() {
   loadCatalogoAdmin();
   // Vendedores data preload
   db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
-  db.ref('ventasVendedores').once('value', snap => { ventasVendedoresData = snap.val() || {}; });
+}
+
+function renderEstadisticasVentas() {
+  var ahora = new Date();
+  var ventas = Object.values(ventasVendedoresData).filter(function(v) {
+    if (!v.fecha) return false;
+    var f = new Date(v.fecha);
+    return f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
+  });
+
+  // Totales mes
+  var totalMN = 0, totalUSD = 0;
+  ventas.forEach(function(v) {
+    var p = parseFloat(v.precio) || 0;
+    if ((v.moneda||'MN') === 'MN') totalMN += p;
+    else if (v.moneda === 'USD') totalUSD += p;
+  });
+  var elMes = document.getElementById('stat-ventas-mes');
+  var elMN = document.getElementById('stat-mn-mes');
+  var elUSD = document.getElementById('stat-usd-mes');
+  if (elMes) elMes.textContent = ventas.length;
+  if (elMN) elMN.textContent = totalMN.toLocaleString() + ' MN';
+  if (elUSD) elUSD.textContent = totalUSD.toFixed(2) + ' USD';
+
+  // Ranking productos
+  var porProducto = {};
+  Object.values(ventasVendedoresData).forEach(function(v) {
+    var pid = v.producto || 'desconocido';
+    porProducto[pid] = (porProducto[pid] || 0) + (parseInt(v.cantidad) || 1);
+  });
+  var rankProd = Object.entries(porProducto).sort(function(a,b){ return b[1]-a[1]; }).slice(0,5);
+  var elProd = document.getElementById('ranking-productos');
+  if (elProd) elProd.innerHTML = rankProd.length ? rankProd.map(function(e,i) {
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);">' +
+      '<span>' + (i+1) + '. ' + (PRODUCT_NAMES[e[0]] || e[0]) + '</span>' +
+      '<span style="color:var(--primary);font-weight:700;">' + e[1] + ' uds</span></div>';
+  }).join('') : '<div style="color:var(--text-muted);">Sin ventas aún</div>';
+
+  // Ranking vendedores
+  var porVendedor = {};
+  Object.values(ventasVendedoresData).forEach(function(v) {
+    var cod = v.vendedorCodigo || 'desconocido';
+    porVendedor[cod] = (porVendedor[cod] || 0) + (parseInt(v.cantidad) || 1);
+  });
+  var rankVend = Object.entries(porVendedor).sort(function(a,b){ return b[1]-a[1]; }).slice(0,5);
+  var elVend = document.getElementById('ranking-vendedores');
+  if (elVend) elVend.innerHTML = rankVend.length ? rankVend.map(function(e,i) {
+    var nombre = vendedoresData[e[0]] ? vendedoresData[e[0]].nombre : e[0];
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);">' +
+      '<span>' + (i+1) + '. ' + nombre + '</span>' +
+      '<span style="color:var(--primary);font-weight:700;">' + e[1] + ' uds</span></div>';
+  }).join('') : '<div style="color:var(--text-muted);">Sin ventas aún</div>';
 }
 
 // ── CONTROL ───────────────────────────────────────────────────────────────────
@@ -1360,6 +1435,7 @@ function onSectionToggle(input) {
   const id = input.dataset.sec;
   if (!cfg.sections[id]) cfg.sections[id] = { active: true, expires: '' };
   cfg.sections[id].active = input.checked;
+  db.ref('config/sections/' + id + '/active').set(input.checked);
 }
 function onExpiryChange(input) {
   const id = input.dataset.sec;
@@ -2333,7 +2409,7 @@ function exportarVentasExcel() {
     ];
   });
 
-  var csv = [headers].concat(rows).map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+  var csv = 'sep=,\n' + [headers].concat(rows).map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
   var blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'ventas_' + new Date().toISOString().split('T')[0] + '.csv';
