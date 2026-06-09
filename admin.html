@@ -228,7 +228,7 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('control',this)">🎛 Control</button>
+    <button class="tab-btn active" onclick="showTab('control',this)">🎛 Productos y Secciones</button>
     <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
     <button class="tab-btn" onclick="showTab('ventas',this)">💰 Ventas</button>
     <button class="tab-btn" onclick="showTab('nuevo',this)">➕ Nuevo producto</button>
@@ -241,18 +241,6 @@
 
   <!-- ── TAB: CONTROL ── -->
   <div id="tab-control" class="tab-content active">
-    <!-- Migración al catálogo dinámico -->
-    <div id="migracion-banner" style="background:linear-gradient(135deg,#0d2137,#0a1628);border:1px solid #00a8e8;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <div style="flex:1;">
-        <div style="font-weight:700;color:#00a8e8;font-size:0.95rem;">🚀 Catálogo dinámico</div>
-        <div style="font-size:0.78rem;color:#8b949e;margin-top:3px;">Migra los productos al Firebase para gestionar todo desde el admin sin tocar el HTML.</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="migrarCatalogo()" id="btn-migrar" style="background:#00a8e8;border:none;color:#000;font-weight:900;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">⬆️ Migrar ahora</button>
-        <button onclick="verificarCatalogo()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-weight:700;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">🔍 Verificar</button>
-      </div>
-      <div id="migracion-status" style="width:100%;font-size:0.8rem;color:#22c55e;display:none;"></div>
-    </div>
 
     <!-- Gestión del catálogo dinámico -->
     <div id="catalogo-admin-panel" style="display:none;margin-bottom:16px;">
@@ -279,7 +267,7 @@
       <div class="empty-state">Cargando configuración…</div>
     </div>
     <div style="margin-top:20px; display:flex; align-items:center; gap:12px;">
-      <button class="save-btn" onclick="saveConfig()">Guardar cambios</button>
+      
       <span class="save-chip" id="save-chip">✓ Guardado</span>
     </div>
   </div>
@@ -303,7 +291,7 @@
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Sección</label>
-          <select id="edit-seccion" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+          <select id="edit-seccion" onchange="guardarCampoProducto('seccion',this.value)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
             <option value="ropa-interior">👙 Ropa Interior</option>
             <option value="ropa-moda">👕 Ropa y Moda</option>
             <option value="accesorios">👜 Accesorios</option>
@@ -313,7 +301,7 @@
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Género / Categoría</label>
-          <select id="edit-genero" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+          <select id="edit-genero" onchange="guardarCampoProducto('genero',this.value)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
             <option value="mujer">Mujer</option>
             <option value="hombre">Hombre</option>
             <option value="mujer hombre">Mujer y Hombre</option>
@@ -334,9 +322,9 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <label style="font-size:0.8rem;color:var(--text-muted);">⭐ Destacado</label>
-          <label class="toggle"><input type="checkbox" id="edit-destacado"><span class="toggle-slider"></span></label>
+          <label class="toggle"><input type="checkbox" id="edit-destacado" onchange="guardarCampoProducto('destacado',this.checked)"><span class="toggle-slider"></span></label>
           <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">✓ Activo</label>
-          <label class="toggle"><input type="checkbox" id="edit-activo" checked><span class="toggle-slider"></span></label>
+          <label class="toggle"><input type="checkbox" id="edit-activo" checked onchange="guardarCampoProducto('activo',this.checked)"><span class="toggle-slider"></span></label>
         </div>
         <button onclick="guardarEdicionProducto()" style="background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;margin-top:4px;">💾 Guardar cambios</button>
       </div>
@@ -1945,6 +1933,7 @@ function renderCatalogoAdmin() {
         '<button data-pid="' + p.id + '" data-action="destacado" title="Destacado" style="background:none;border:1px solid ' + (p.destacado ? '#f5c518' : 'var(--border)') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.destacado ? '#f5c518' : 'var(--text-muted)') + ';font-size:0.85rem;">⭐</button>' +
         '<button data-pid="' + p.id + '" data-action="activo" style="background:none;border:1px solid ' + (p.activo ? '#22c55e' : '#ff4444') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.activo ? '#22c55e' : '#ff4444') + ';font-size:0.75rem;font-weight:700;">' + (p.activo ? 'ON' : 'OFF') + '</button>' +
         '<button data-pid="' + p.id + '" data-action="editar" style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;color:#000;font-size:0.75rem;font-weight:700;">Editar</button>' +
+        '<button data-pid="' + p.id + '" data-action="eliminar-producto" style="background:none;border:1px solid #ff4444;border-radius:6px;padding:4px 8px;cursor:pointer;color:#ff4444;font-size:0.75rem;font-weight:700;">🗑</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -1962,7 +1951,17 @@ document.addEventListener('click', function(e) {
   if (action === 'editar' && pid) abrirModalEditar(pid);
   if (action === 'eliminar-vendedor') eliminarVendedor(btn.getAttribute('data-codigo'));
   if (action === 'eliminar-venta') eliminarVenta(btn.getAttribute('data-id'));
+  if (action === 'eliminar-producto' && pid) eliminarProducto(pid);
 });
+
+function eliminarProducto(pid) {
+  var nombre = catalogoAdminData[pid] ? catalogoAdminData[pid].nombre : pid;
+  if (!confirm('¿Eliminar "' + nombre + '"? Esta acción no se puede deshacer.')) return;
+  db.ref('catalogo/' + pid).remove().then(function() {
+    delete catalogoAdminData[pid];
+    renderCatalogoAdmin();
+  });
+}
 
 function toggleDestacadoCatalogo(pid) {
   if (!catalogoAdminData[pid]) return;
@@ -1981,18 +1980,37 @@ function toggleActivoCatalogo(pid) {
 }
 
 function abrirModalEditar(pid) {
-  var p = catalogoAdminData[pid];
-  if (!p) return;
-  document.getElementById('edit-pid').value = pid;
-  document.getElementById('edit-nombre').value = p.nombre || '';
-  document.getElementById('edit-precio').value = p.precio || '';
-  document.getElementById('edit-seccion').value = p.seccion || 'ropa-moda';
-  document.getElementById('edit-genero').value = p.genero || 'unisex';
-  document.getElementById('edit-detalles').value = p.detalles || '';
-  document.getElementById('edit-descripcion').value = p.descripcion || '';
-  document.getElementById('edit-destacado').checked = !!p.destacado;
-  document.getElementById('edit-activo').checked = p.activo !== false;
-  document.getElementById('modal-editar-producto').style.display = 'flex';
+  function poblarModal(p) {
+    document.getElementById('edit-pid').value = pid;
+    document.getElementById('edit-nombre').value = p.nombre || '';
+    document.getElementById('edit-precio').value = p.precio || '';
+    document.getElementById('edit-seccion').value = p.seccion || 'ropa-moda';
+    document.getElementById('edit-genero').value = p.genero || 'unisex';
+    document.getElementById('edit-detalles').value = p.detalles || '';
+    document.getElementById('edit-descripcion').value = p.descripcion || '';
+    document.getElementById('edit-destacado').checked = !!p.destacado;
+    document.getElementById('edit-activo').checked = p.activo !== false;
+    document.getElementById('modal-editar-producto').style.display = 'flex';
+  }
+  if (catalogoAdminData[pid]) {
+    poblarModal(catalogoAdminData[pid]);
+  } else {
+    db.ref('catalogo/' + pid).once('value', function(snap) {
+      var p = snap.val();
+      if (!p) { alert('Producto no encontrado en Firebase'); return; }
+      catalogoAdminData[pid] = p;
+      poblarModal(p);
+    });
+  }
+}
+
+function guardarCampoProducto(campo, valor) {
+  var pid = document.getElementById('edit-pid').value;
+  if (!pid) return;
+  var update = {};
+  update[campo] = valor;
+  db.ref('catalogo/' + pid).update(update);
+  if (catalogoAdminData[pid]) catalogoAdminData[pid][campo] = valor;
 }
 
 function cerrarModalEditar() {
