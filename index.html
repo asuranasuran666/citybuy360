@@ -22,7 +22,7 @@
         }
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; }
-        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; overflow: hidden; }
+        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
         #tienda-cerrada {
             display: none; position: fixed; inset: 0; z-index: 9999;
             background: #0d1117; flex-direction: column;
@@ -33,7 +33,7 @@
         #tienda-cerrada .tc-title { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
         #tienda-cerrada .tc-msg { font-size: 1rem; color: #aaa; max-width: 320px; line-height: 1.6; }
         #tienda-cerrada .tc-brand { margin-top: 32px; font-size: 1.1rem; font-weight: 900; color: var(--brand-blue); }
-        .main-content { flex: 1; display: flex; flex-direction: column; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; width: 100%; }
 
         header { padding: 0; display: flex; flex-direction: column; width: 100%; }
 
@@ -50,7 +50,6 @@
         .header-brand h1 {
             color: var(--brand-blue);
             margin: 0;
-            text-transform: uppercase;
             font-size: 1.3rem;
             font-weight: 800;
             white-space: nowrap;
@@ -135,7 +134,7 @@
             aside { display: none; }
             .slide { padding: 0 50px 0 50px; text-align: left; justify-content: flex-start; }
             #badge-360-header { display: none !important; }
-            #span-360 { box-shadow: 0 0 10px rgba(255,210,0,0.7) !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; border: none !important; padding: 2px 7px !important; border-radius: 4px !important; color: #0a0a0a !important; }
+            #span-360 { background: none !important; color: #f5c518 !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
             .slide-label { font-size: 0.6rem; letter-spacing: 1px; }
             .slide-title { font-size: 0.95rem; }
             .slide-cta { right: 46px; font-size: 0.7rem; padding: 5px 10px; }
@@ -225,7 +224,7 @@
             padding: 10px 12px; background: var(--bg-dark);
             border-bottom: 1px solid #222;
             scrollbar-width: none; position: sticky; top: 0; z-index: 50;
-            width: 100%; box-sizing: border-box;
+            max-width: 100vw; box-sizing: border-box;
             -webkit-overflow-scrolling: touch;
         }
         #cat-bar::-webkit-scrollbar { display: none; }
@@ -293,19 +292,16 @@
         @media (max-width: 1024px) { #bottom-nav { display: block; } }
         body.has-bottom-nav { padding-bottom: 58px; }
         #span-360 {
-            background: linear-gradient(135deg, #f5c518, #ffe566, #f5c518);
-            background-size: 200% 200%;
-            animation: goldshine 3s ease infinite;
-            color: #0a0a0a;
-            padding: 2px 8px !important;
-            border-radius: 4px !important;
+            background: none !important;
+            color: #f5c518 !important;
             font-weight: 900 !important;
             cursor: pointer;
-            box-shadow: 0 0 14px rgba(255,210,0,0.8) !important;
-            display: inline-block !important;
-            letter-spacing: 0.5px;
             border: none !important;
             outline: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            display: inline !important;
         }
         .badge-360 {
             display: inline-flex;
@@ -644,7 +640,7 @@
             #bottom-nav { display: flex; }
             #bottom-nav ul { display: flex; flex-direction: row; width: 100%; }
             #bottom-nav ul li { flex: 1; }
-            #span-360 { cursor: pointer !important; }
+            #span-360 { background: none !important; color: #f5c518 !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; cursor: pointer !important; }
         }
     
         /* ── MODAL VIP ACCESO 360 ── */
@@ -859,7 +855,7 @@
         <span class="brand-sep">|</span>
         <p>Excelente CALIDAD | Precios ASEQUIBLES</p>
         <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">🔔<span id="bell-badge" class="bell-badge"></span></button>
-        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')"><span style="font-size:0.75rem;vertical-align:middle;line-height:1;">✦</span><span style="vertical-align:middle;line-height:1;"> ACCESO 360</span></span>
+        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')"><span style="vertical-align:middle;line-height:1;">ACCESO360</span></span>
     </div>
     <div class="header-slider">
 
@@ -970,12 +966,12 @@
             <!-- ── SECCIÓN ACCESO 360 (desactivada por defecto) ── -->
             <div id="sec-acceso360" style="display:none; margin-top: 20px;">
                 <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
-                    ✦ ACCESO 360
+                    ACCESO360
                 </div>
                 <div style="position: relative; min-height: 300px;">
                     <!-- Overlay de bloqueo -->
                     <div class="acceso360-lock" id="acceso360-lock">
-                        <div class="acceso360-badge">ACCESO 360</div>
+                        <div class="acceso360-badge">ACCESO360</div>
                         <div class="acceso360-title">Sección Exclusiva</div>
                         <div class="acceso360-desc">Accede a productos exclusivos, drops limitados y beneficios premium con tu código personal.</div>
                         <ul class="acceso360-perks">
@@ -1892,8 +1888,8 @@
                 <span class="nav-label">Categorías</span>
             </li>
             <li class="nav-acceso" onclick="navGo('acceso360',this)">
-                <span class="nav-icon">✦</span>
-                <span class="nav-label">Acceso 360</span>
+                <span class="nav-icon">360</span>
+                <span class="nav-label">Acceso360</span>
             </li>
         </ul>
     </nav>
@@ -1902,7 +1898,7 @@
 <div id="modal-vip-overlay">
     <div id="modal-vip-box">
         <button class="modal-close-btn" onclick="closeVipModal()">✕</button>
-        <div class="modal-vip-badge">✦ ACCESO 360</div>
+        <div class="modal-vip-badge">ACCESO360</div>
         <h2 class="modal-vip-title">Exclusividad<br>que se siente</h2>
         <p class="modal-vip-sub">Accede a beneficios <strong style="color:#ffd700;">SOLO</strong> para miembros suscritos.</p>
         <ul class="modal-vip-perks">
