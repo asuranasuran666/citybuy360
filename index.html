@@ -179,10 +179,10 @@
         /* ── ACCESO 360 ── */
         #sec-acceso360 { position: relative; }
         .acceso360-lock {
-            position: absolute; inset: 0; z-index: 20;
-            background: linear-gradient(135deg, rgba(0,0,0,0.92), rgba(20,10,0,0.95));
+            position: fixed; inset: 0; z-index: 8000;
+            background: rgba(0,0,0,0.92);
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; gap: 16px; border-radius: 8px;
+            justify-content: center; gap: 16px;
             padding: 30px; text-align: center;
         }
         .acceso360-badge {
@@ -390,7 +390,7 @@
             text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 15px;
         }
 
-        aside { display: none !important; }
+        aside { display: none !important; width: 0 !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; }
         .sidebar-logo { 
             width: 130px; 
             height: auto;
@@ -938,6 +938,8 @@
                 <!-- Cargando desde Firebase... -->
             </div>
 
+            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
+
             <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
             <div class="grid" id="grid-ropa-interior">
                 <!-- Cargando desde Firebase... -->
@@ -953,27 +955,7 @@
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid" id="grid-accesorios">
                 <!-- Cargando desde Firebase... -->
-            
-                <div class="card" data-product="maquina-de-afeitar" data-genero="aseo">
-    <div class="card-img-container" data-images="producto.jpg" data-count="1" style="position: relative;">
-        <img src="producto.jpg" class="card-img" alt="Maquina de afeitar">
-        <div class="hover-tooltip">Maquina de afeitar. Deslizamiento Suave, Banda lubricante enriquecida con Aloe Vera y Vitamina E que reduce drásticamente la irritación. Formato Ahorro Inteligente, Pack familiar de 10 unidades con la mejor relación calidad-precio para tu higiene diaria.</div>
-    </div>
-    <div class="card-content">
-        <div class="tag-category">ACCESORIOS</div>
-        <div class="product-name">Maquina de afeitar</div>
-        <div class="stars-container" data-product="maquina-de-afeitar">
-            <div class="stars"><span class="star" data-val="1">★</span><span class="star" data-val="2">★</span><span class="star" data-val="3">★</span><span class="star" data-val="4">★</span><span class="star" data-val="5">★</span></div>
-            <span class="stars-info">Sin votos</span>
-        </div>
-        <div class="details-block">Colores: Negro y amarillo</div>
-        <div class="price">140 MN</div>
-        <a href="https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Maquina%20de%20afeitar%20(140%20MN)" class="btn-lo-quiero">Lo quiero</a>
-    </div>
-</div>
             </div>
-
-            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid" id="grid-servicios">
@@ -988,7 +970,7 @@
                 <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
                     ACCESO360
                 </div>
-                <div style="position: relative; min-height: 300px;">
+                <div style="position: relative; width: 100%">
                     <!-- Overlay de bloqueo -->
                     <div class="acceso360-lock" id="acceso360-lock">
                         <div class="acceso360-badge">ACCESO360</div>
@@ -1886,26 +1868,20 @@
             if (snap.val() === true) {
                     }
         });
-        db.ref('interfaz/ticker').once('value', function(snap) {
-            var wrap = document.getElementById('ticker-wrap');
-            var text = document.getElementById('ticker-text');
-            if (snap.val() && snap.val().activo && wrap) {
-                wrap.classList.add('visible');
-                if (snap.val().texto && text) text.innerHTML = snap.val().texto;
-            }
-        });
     }
 
     
     // ── TICKER/MARQUESINA ──
     db.ref('interfaz/ticker').once('value', function(snap) {
-        var ticker = document.getElementById('ticker-content');
+        var val = snap.val();
         var wrap = document.getElementById('ticker-wrap');
-        if (snap.val()) {
-            if (ticker) ticker.innerHTML = snap.val();
-        }
-        if (snap.val() === false) {
-            if (wrap) wrap.classList.add('hidden');
+        var ticker = document.getElementById('ticker-content');
+        if (val && val !== false && wrap) {
+            wrap.classList.remove('hidden');
+            wrap.classList.add('visible');
+            if (ticker && typeof val === 'string') ticker.innerHTML = val + ' ★ ' + val;
+        } else if (wrap) {
+            wrap.classList.add('hidden');
         }
     });
 
