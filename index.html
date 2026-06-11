@@ -760,50 +760,14 @@
         
         /* ── TICKER / MARQUESINA ── */
         #ticker-wrap {
-            background: linear-gradient(90deg, var(--brand-blue), #0099bb);
-            color: #000; font-size: 0.8rem; font-weight: 700;
-            padding: 7px 0; overflow: hidden; white-space: nowrap;
-            display: none;
-        }
-        #ticker-wrap.visible { display: block; }
-        .ticker-content {
-            display: inline-block;
-            animation: ticker-scroll 20s linear infinite;
-            padding-left: 100%;
-        }
-        @keyframes ticker-scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-        .ticker-sep { margin: 0 30px; opacity: 0.5; }
-
-        
-        /* ── MARQUESINA ── */
-        .marquesina-wrap {
-            background: #111; border-top: 1px solid #222; border-bottom: 1px solid #222;
-            overflow: hidden; padding: 8px 0; display: none;
-        }
-        .marquesina-wrap.visible { display: block; }
-        .marquesina-track {
-            display: flex; gap: 60px; white-space: nowrap;
-            animation: marquesina-move 25s linear infinite;
-        }
-        .marquesina-track:hover { animation-play-state: paused; }
-        @keyframes marquesina-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .marquesina-text { color: #00d4ff; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; }
-        .marquesina-sep { color: #333; }
-
-        
-        /* ── MARQUESINA ── */
-        .ticker-wrap {
             background: linear-gradient(90deg, #1a1a2e, #16213e);
             border-top: 1px solid #00d4ff33;
             border-bottom: 1px solid #00d4ff33;
             overflow: hidden; padding: 8px 0;
-            display: block;
+            display: none;
         }
-        .ticker-wrap.hidden { display: none; }
-        .ticker-content {
+        #ticker-wrap.visible { display: block; }
+        #ticker-wrap .ticker-content {
             display: inline-block;
             white-space: nowrap;
             animation: ticker-scroll 30s linear infinite;
@@ -811,10 +775,11 @@
             font-size: 0.82rem;
             font-weight: 600;
             letter-spacing: 0.5px;
+            padding-left: 100vw;
         }
-        .ticker-content:hover { animation-play-state: paused; }
-        .ticker-sep { color: #f5c518; margin: 0 20px; }
-        @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+        #ticker-wrap .ticker-content:hover { animation-play-state: paused; }
+        #ticker-wrap .ticker-sep { color: #f5c518; margin: 0 20px; }
+        @keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
 
         </style>
 </head>
@@ -938,6 +903,8 @@
                 <!-- Cargando desde Firebase... -->
             </div>
 
+            <div id="ticker-wrap"><span class="ticker-content" id="ticker-content"></span></div>
+
             <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
 
             <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
@@ -970,37 +937,10 @@
                 <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
                     ACCESO360
                 </div>
-                <div style="position: relative; width: 100%">
-                    <!-- Overlay de bloqueo -->
-                    <div class="acceso360-lock" id="acceso360-lock">
-                        <div class="acceso360-badge">ACCESO360</div>
-                        <div class="acceso360-title">Sección Exclusiva</div>
-                        <div class="acceso360-desc">Accede a productos exclusivos, drops limitados y beneficios premium con tu código personal.</div>
-                        <ul class="acceso360-perks">
-                            <li>Productos exclusivos no disponibles al público</li>
-                            <li>Drops limitados con acceso anticipado</li>
-                            <li>Videos IA de cómo te queda la ropa</li>
-                            <li>Reserva de productos antes del lanzamiento</li>
-                            <li>Envío prioritario</li>
-                        </ul>
-                        <div class="acceso360-input-wrap">
-                            <input type="text" class="acceso360-input" id="acceso360-code" placeholder="TU CÓDIGO" maxlength="12">
-                            <button class="acceso360-btn" onclick="checkAcceso360()">Acceder</button>
-                        </div>
-                        <div class="acceso360-error" id="acceso360-error"></div>
-                    </div>
-                    <!-- Contenido desbloqueado -->
-                    <div id="acceso360-content" style="display:none;">
-                        <div class="grid" id="grid-acceso360">
-                            <!-- Productos VIP cargando desde Firebase... -->
-                        </div>
-                    </div>
-                </div>
+                <div id="grid-acceso360" class="grid"></div>
             </div>
 
-    <aside>
-        
-    </aside>
+
 </div>
 
 <script>

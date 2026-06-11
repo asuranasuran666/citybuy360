@@ -42,8 +42,8 @@
 
   /* ── TABS ── */
   .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; }
-  .tab-btn { background: none; border: none; color: var(--text-muted); padding: 14px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
-  .tab-btn.active { color: var(--brand-light); border-bottom-color: var(--brand-light); }
+  .tab-btn { background: none; border: none; color: #90caf9; padding: 14px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: #64b5f6; border-bottom-color: #64b5f6; }
   .tab-content { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
   .tab-content.active { display: block; }
   @media (max-width: 700px) {
@@ -958,8 +958,8 @@ async function publishProduct() {
   const secId   = document.getElementById('prod-seccion').value;
   const destacado = document.getElementById('prod-destacado').checked;
 
-  if (!name || !price || !secId || uploadedPhotos.length === 0) {
-    log('❌ Completa: nombre, precio, sección y al menos una foto', 'log-err'); return;
+  if (!name || !price || !secId) {
+    log('❌ Completa: nombre, precio y sección', 'log-err'); return;
   }
 
   const btn = document.getElementById('publish-btn');
@@ -1773,8 +1773,8 @@ async function doPublish() {
   const genero  = getSelectedGenero();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
 
-  if (!name || !price || !secId || uploadedPhotos.length === 0) {
-    log('❌ Completa: nombre, precio, sección y al menos una foto', 'log-err'); return;
+  if (!name || !price || !secId) {
+    log('❌ Completa: nombre, precio y sección', 'log-err'); return;
   }
 
   const btn = document.getElementById('publish-btn');
@@ -1784,7 +1784,7 @@ async function doPublish() {
 
   try {
     // 1. Subir fotos al repo si tienen base64
-    const fotosNuevas = uploadedPhotos.filter(p => p.base64);
+    const fotosNuevas = uploadedPhotos.filter(p => p.base64 && p.base64.length > 0);
     if (fotosNuevas.length > 0 && token) {
       log('📤 Subiendo fotos…');
       for (const photo of fotosNuevas) {
@@ -2059,29 +2059,7 @@ function guardarEdicionProducto() {
 }
 
 // Override loadCatalogoAdmin to also show the panel
-function loadCatalogoAdmin() {
-  db.ref('catalogo').once('value', function(snap) {
-    var catalogo = snap.val();
-    if (!catalogo || Object.keys(catalogo).length === 0) {
-      document.getElementById('catalogo-admin-panel').style.display = 'none';
-      return;
-    }
-    catalogoAdminData = catalogo;
-    // Update SECTIONS with Firebase products
-    var porSeccion = {};
-    Object.values(catalogo).forEach(function(p) {
-      if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
-      porSeccion[p.seccion].push(p.id);
-      PRODUCT_NAMES[p.id] = p.nombre;
-    });
-    SECTIONS.forEach(function(s) {
-      if (porSeccion[s.id]) s.products = porSeccion[s.id];
-    });
-    document.getElementById('catalogo-admin-panel').style.display = 'block';
-    renderCatalogoAdmin();
-    renderControl();
-  });
-}
+function loadCatalogoAdmin_old_removed() {}
 
 // ── CATÁLOGO DINÁMICO — MIGRACIÓN ────────────────────────────────────────────
 var CATALOGO_DATA = {"blumer": {"id": "blumer", "seccion": "ropa-interior", "genero": "mujer", "activo": true, "destacado": true, "orden": 0, "nombre": "Blumer sin costuras", "precio": "550 MN", "tagCategoria": "ROPA INTERIOR", "detalles": "Tallas: S, M, L, XL", "descripcion": "Diseño sin costuras, con bordes cortados con láser, lo que los hace prácticamente invisibles debajo de la ropa ajustada y reduce el roce. Cuentan con un diseño de cintura media/baja y un corte de cobertura mínima en la parte posterior dando un estilo moderno. Su textura, una mezcla de nailon y elastano (spandex), un tejido elástico, suave al tacto y de secado rápido que se adapta al cuerpo como una segunda piel.", "imagenes": "blumer.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Blumer%20sin%20costuras%20%F0%9F%A9%B2%20(550%20MN)"}, "sujetador": {"id": "sujetador", "seccion": "ropa-interior", "genero": "", "activo": true, "destacado": false, "orden": 1, "nombre": "Ajustador sin costuras", "precio": "1,500 MN", "tagCategoria": "ROPA INTERIOR", "detalles": "Tallas: S, M, L", "descripcion": "Sin costuras y con aros/copas moldeadas. Diseño liso y minimalista, pensado para ser cómodo y ofrecer un efecto invisible o de \"segunda piel\" debajo de la ropa ajustada. Tienen tirantes finos y ajustables. Tejido suave y elástico mezcla de nailon y elastano. Copas ligeramente preformadas para realzar el busto.", "imagenes": "sujetador.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Ajustador%20sin%20costuras%20%F0%9F%A9%B1%20(1%2C500%20MN)"}, "paris": {"id": "paris", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 2, "nombre": "Pulover estampado PARIS", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Look casual y elegante. Diseño sofisticado con estampado central con la palabra \"PARIS\" sobre una banda tricolor (azul, blanco y rojo), logrando un contraste minimalista, moderno y refinado. Manga corta con corte clásico y entallado que garantiza comodidad durante todo el día sin perder el estilo.", "imagenes": "paris.jpg,hombresparis.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20PARIS%20%F0%9F%91%95%20(2%2C900%20MN)"}, "ngu": {"id": "ngu", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 3, "nombre": "Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Recomendado por deportistas, fresco y transpirable. Diseño inspirador con mensaje motivacional. Línea diagonal en tono granate que rompe la monotonía y aporta un estilo urbano y moderno. Corte entallado que se adapta a tu cuerpo.", "imagenes": "ngu.jpg,hombresngu.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20%F0%9F%91%95%20(2%2C900%20MN)"}, "gdm": {"id": "gdm", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 4, "nombre": "Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Lo más vendido. Minimalista y elegante, con el sello \"GREAT DREAM MAKER\" y un llamativo bloque de color en el pecho. Calidad y confort. Variedad de colores disponibles para combinar con todo. Corte moderno y entallado, ideal para destacar en cualquier ocasión.", "imagenes": "gdm.jpg,hombresgdm.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20GREAT%20DREAM%20MAKER%20%F0%9F%91%95%20(2%2C900%20MN)"}, "aac": {"id": "aac", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 5, "nombre": "Pulover Amor, Alegría y Cerveza Fría", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Estilo casual. El alma de la FIESTA", "descripcion": "Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.", "imagenes": "aac.jpg,hombreaac.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20%F0%9F%91%95%20(2%2C900%20MN)"}, "usa": {"id": "usa", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 6, "nombre": "Pulover estampado USA", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Estilo Americano Classic", "descripcion": "Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.", "imagenes": "usa.jpg,hombre01usa.jpg,hombre02usa.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20USA%20%F0%9F%91%95%20(2%2C900%20MN)"}, "freedom": {"id": "freedom", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": true, "orden": 7, "nombre": "Pulover estampado FREEDOM", "precio": "2,900 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Tallas: S, M, L, XL", "descripcion": "Un básico indispensable de color blanco que combina con cualquier look casual o deportivo. De manga corta con un estilo muy deportivo y casual. Los bordes de las mangas incluyen una doble franja horizontal de color negro que contrasta con el blanco de la camiseta. Transpirable y fresco. Comodidad garantizada.", "imagenes": "freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Pulover%20estampado%20FREEDOM%20%F0%9F%91%95%20(2%2C900%20MN)"}, "mblancas": {"id": "mblancas", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 8, "nombre": "Medias Blancas", "precio": "250 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Talla: Única | Transpirable", "descripcion": "", "imagenes": "mblancas.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Blancas%20%F0%9F%A7%A6%20(250%20MN)"}, "mnegras": {"id": "mnegras", "seccion": "ropa-moda", "genero": "mujer hombre", "activo": true, "destacado": false, "orden": 9, "nombre": "Medias Negras", "precio": "250 MN", "tagCategoria": "ROPA Y MODA", "detalles": "Talla: Única | Transpirable", "descripcion": "", "imagenes": "mnegras.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Medias%20Negras%20%F0%9F%A7%A6%20(250%20MN)"}, "bolsomovil": {"id": "bolsomovil", "seccion": "accesorios", "genero": "mujer", "activo": true, "destacado": true, "orden": 10, "nombre": "Bolso Bandolera para Móvil", "precio": "2,000 MN", "tagCategoria": "ACCESORIOS", "detalles": "Material: Cuero sintético y Nylon.", "descripcion": "Con correas ajustables. Resistente, elegante e impermeable. Para móvil y accesorios esenciales. Diseño frontal personalizado, en la parte central destaca la letra M en un tono dorado brillante, decorada con un pequeño detalle floral.", "imagenes": "bolsomovil.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Bolso%20Bandolera%20para%20M%C3%B3vil%20%F0%9F%91%9C%20(2%2C000%20MN)"}, "gorrobebe": {"id": "gorrobebe", "seccion": "accesorios", "genero": "ninos", "activo": true, "destacado": false, "orden": 11, "nombre": "Gorro para bebé", "precio": "1,200 MN", "tagCategoria": "ACCESORIOS", "detalles": "Material: Algodón elastano.", "descripcion": "Diseño suave y elástico para no dañar la delicada piel del bebé. Estilo de turbante fruncido adornado con un gran lazo que cubre la cabeza cómodamente, adaptándose a la forma sin generar presión excesiva.", "imagenes": "gorrobebe.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorro%20para%20beb%C3%A9%20%F0%9F%91%B6%20(1%2C200%20MN)"}, "gorra": {"id": "gorra", "seccion": "accesorios", "genero": "unisex", "activo": true, "destacado": true, "orden": 12, "nombre": "Gorra", "precio": "2,800 MN", "tagCategoria": "ACCESORIOS", "detalles": "Material: Calidad", "descripcion": "Diseño icónico con monograma frontal bordado en negro de alto contraste. Un clásico que nunca pasa de moda. Sistema de cierre de velcro en la parte posterior para máxima comodidad. Un accesorio esencial y minimalista que eleva cualquier look casual o deportivo.", "imagenes": "gorra.jpg,gorras-colores.jpg", "imgCount": 2, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Gorra%20%F0%9F%A7%A2%20(2%2C800%20MN)"}, "saldo": {"id": "saldo", "seccion": "servicios", "genero": "servicios", "activo": true, "destacado": false, "orden": 13, "nombre": "COMPRAR SALDO (RECARGAS)", "precio": "1,000 MN", "tagCategoria": "SERVICIOS", "detalles": "Recargas 360 SALDO", "descripcion": "¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.", "imagenes": "saldo.jpg", "imgCount": 1, "waLink": "https://wa.me/5353255813?text=Hola%2C%20quiero%20comprar%3A%20Recarga%20360%20SALDO%20%E2%9A%A1%20(1%2C000%20MN)"}, "citybuy360familia": {"id": "citybuy360familia", "seccion": "servicios", "genero": "servicios", "activo": true, "destacado": false, "orden": 14, "nombre": "Únete a la familia CityBUY360", "precio": "PROMOCIÓN", "tagCategoria": "SERVICIOS", "detalles": "Publica tus productos en nuestro catálogo digital.", "descripcion": "¿Eres emprendedor? Impulsa tu negocio con CityBUY360 — publica tus productos y descubre todo lo que podemos lograr en equipo.", "imagenes": "bolsas-azules.jpg", "imgCount": 1, "waLink": "https://wa.me/+34611897656?text=Hola%2C%20quiero%20unirme%20a%20CityBUY360%20como%20emprendedor%20%F0%9F%A4%9D%20(0%20CUP)"}, "ventilador": {"id": "ventilador", "seccion": "acceso360", "genero": "electrodomesticos", "activo": true, "destacado": false, "orden": 15, "nombre": "Ventilador", "precio": "", "imagenes": "ventilador.jpg", "imgCount": 1, "waLink": ""}};
@@ -2147,19 +2125,17 @@ function renderControlDinamico() {
 // Load dynamic catalog structure on admin init
 function loadCatalogoAdmin() {
   db.ref('catalogo').once('value', function(snap) {
-    var catalogo = snap.val();
-    if (!catalogo || Object.keys(catalogo).length === 0) return;
-    // Update SECTIONS with Firebase products
-    var porSeccion = {};
-    Object.values(catalogo).forEach(function(p) {
-      if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
-      porSeccion[p.seccion].push(p.id);
-      PRODUCT_NAMES[p.id] = p.nombre;
-    });
-    SECTIONS.forEach(function(s) {
-      if (porSeccion[s.id]) s.products = porSeccion[s.id];
+    var catalogo = snap.val() || {};
+    catalogoAdminData = {};
+    Object.entries(catalogo).forEach(function([id, p]) {
+      p.id = id;
+      catalogoAdminData[id] = p;
+      PRODUCT_NAMES[id] = p.nombre;
     });
     renderControl();
+    renderCatalogoAdmin();
+    populateProdSeccionSelect();
+    populateInventario();
   });
 }
 
@@ -2277,7 +2253,7 @@ function editarVendedor(codigoActual, nombreActual) {
   var nuevoCodigo = prompt('Código de acceso:', codigoActual);
   if (!nuevoCodigo) return;
   nuevoCodigo = nuevoCodigo.trim().toUpperCase();
-  var datos = { nombre: nuevoNombre.trim(), codigo: nuevoCodigo, activo: true, creado: vendedoresData[codigoActual]?.creado || new Date().toISOString() };
+  var datos = { nombre: nuevoNombre.trim(), codigo: nuevoCodigo, activo: true, creado: (vendedoresData[codigoActual] && vendedoresData[codigoActual].creado) || new Date().toISOString() };
   if (nuevoCodigo !== codigoActual) {
     db.ref('vendedores/' + codigoActual).remove();
   }
