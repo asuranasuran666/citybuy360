@@ -21,6 +21,7 @@
             --price-green: #2ecc71;
         }
 
+        html, body { max-width: 100%; overflow-x: hidden; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; }
         .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
         #tienda-cerrada {
@@ -896,7 +897,7 @@
 </div>
 
 
-        <div class="products-container">
+        <div class="products-container" id="products-container">
 
             <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
             <div class="grid" id="grid-destacado">
@@ -1264,7 +1265,7 @@
         var destacados = [];
 
         Object.values(productos).forEach(function(p) {
-            if (!p.activo) return;
+            if (p.activo === false) return;
             // Check config override
             var cfg = configProductos && configProductos[p.id];
             if (cfg && cfg.active === false) return;
@@ -1283,9 +1284,13 @@
             }
         }
 
-        // Render each section
+        // Render each section - including dynamic ones not in SECCIONES
+        var seccionesVistas = new Set(['destacado']);
+        var productsContainer = document.getElementById('products-container');
+
         SECCIONES.forEach(function(sec) {
             if (sec.id === 'destacado') return;
+            seccionesVistas.add(sec.id);
             var secCfg = configSecciones[sec.id] || {};
             var secWrapper = document.getElementById('sec-' + sec.id);
             var secTitle = document.getElementById('sec-title-' + sec.id);
@@ -1302,6 +1307,36 @@
             grid.innerHTML = prods.map(buildCard).join('');
         });
 
+        // Secciones dinámicas (no hardcodeadas)
+        Object.keys(porSeccion).forEach(function(secId) {
+            if (seccionesVistas.has(secId)) return;
+            var secCfg = configSecciones[secId] || {};
+            if (secCfg.active === false) return;
+            var wrapperId = 'sec-dyn-' + secId;
+            var gridId = 'grid-dyn-' + secId;
+            var existing = document.getElementById(wrapperId);
+            if (!existing && productsContainer) {
+                var wrapper = document.createElement('div');
+                wrapper.id = wrapperId;
+                var title = document.createElement('div');
+                title.className = 'section-title';
+                title.id = 'sec-title-' + secId;
+                title.textContent = (secCfg.nombre || secId).toUpperCase();
+                if (secCfg.showTitle === false) title.style.display = 'none';
+                var grid = document.createElement('div');
+                grid.className = 'grid';
+                grid.id = gridId;
+                wrapper.appendChild(title);
+                wrapper.appendChild(grid);
+                productsContainer.appendChild(wrapper);
+            }
+            var grid2 = document.getElementById(gridId);
+            if (grid2) {
+                var prods2 = (porSeccion[secId] || []).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+                grid2.innerHTML = prods2.map(buildCard).join('');
+            }
+        });
+
         // Init ratings for all cards
         initAllRatings();
         // Init card sliders (cards are now in DOM)
@@ -1311,21 +1346,21 @@
     }
 
     function loadCatalogo() {
-        // Limpiar grids para evitar datos estáticos mientras carga Firebase
         ['grid-destacado','grid-ropa-interior','grid-ropa-moda','grid-accesorios','grid-servicios','grid-acceso360'].forEach(function(id){
             var g = document.getElementById(id); if(g) g.innerHTML = '';
         });
         db.ref('catalogo').on('value', function(snap) {
             var productos = snap.val();
             if (!productos || Object.keys(productos).length === 0) {
-                console.log('[catalogo] Usando HTML estático (Firebase vacío)');
+                console.log('[catalogo] Firebase vacío');
                 return;
             }
-            console.log('[catalogo] Cargando ' + Object.keys(productos).length + ' productos desde Firebase');
             db.ref('config').once('value', function(cfgSnap) {
                 var cfg = cfgSnap.val() || {};
                 renderCatalogo(productos, cfg.products || {}, cfg.sections || {});
             });
+        }, function(error) {
+            console.error('[catalogo] Error Firebase:', error.message);
         });
     }
 

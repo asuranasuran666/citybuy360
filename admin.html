@@ -417,8 +417,8 @@
         <option value="">Cargando secciones…</option>
       </select>
       <div style="display:flex;gap:8px;margin-top:6px;">
-        <input type="text" id="nueva-seccion-input" placeholder="Nueva sección (ej: zapatos)" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 10px;font-size:0.85rem;">
-        <button onclick="crearNuevaSeccion()" style="background:var(--primary);border:none;color:#000;font-weight:700;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;">+ Crear</button>
+        <input type="text" id="nueva-seccion-input" placeholder="Nueva sección (ej: zapatos)" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;">
+        <button onclick="crearNuevaSeccion()" style="background:var(--primary);border:none;color:#000;font-weight:700;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-size:0.85rem;">+ Crear</button>
       </div>
     </div>
 
@@ -1974,6 +1974,7 @@ function eliminarProducto(pid) {
   if (!confirm('¿Eliminar "' + nombre + '"? Esta acción no se puede deshacer.')) return;
   db.ref('catalogo/' + pid).remove().then(function() {
     delete catalogoAdminData[pid];
+    renderControl();
     renderCatalogoAdmin();
   });
 }
@@ -2034,8 +2035,7 @@ function cerrarModalEditar() {
 
 function guardarEdicionProducto() {
   var pid = document.getElementById('edit-pid').value;
-  if (!pid || !catalogoAdminData[pid]) return;
-  
+  if (!pid) return;
   var updates = {
     nombre: document.getElementById('edit-nombre').value.trim(),
     precio: document.getElementById('edit-precio').value.trim(),
@@ -2046,15 +2046,11 @@ function guardarEdicionProducto() {
     destacado: document.getElementById('edit-destacado').checked,
     activo: document.getElementById('edit-activo').checked,
   };
-
-  Object.assign(catalogoAdminData[pid], updates);
-  
+  if (catalogoAdminData[pid]) Object.assign(catalogoAdminData[pid], updates);
   db.ref('catalogo/' + pid).update(updates).then(function() {
     cerrarModalEditar();
     renderCatalogoAdmin();
-    // Show confirm
-    var chip = document.getElementById('save-chip');
-    if (chip) { chip.classList.add('show'); setTimeout(function(){ chip.classList.remove('show'); }, 2500); }
+    renderControl();
   });
 }
 
@@ -2194,6 +2190,46 @@ function guardarInventario() {
   });
   db.ref('inventario').update(update).then(() => {
     if (btn) { btn.textContent = '✓ Guardado'; setTimeout(() => btn.textContent = '💾 Guardar inventario', 2000); }
+  });
+}
+
+function populateProdSeccionSelect() {
+  var sel = document.getElementById('prod-seccion');
+  if (!sel) return;
+  var secciones = [
+    {id:'destacado', nombre:'⭐ Lo más destacado'},
+    {id:'ropa-interior', nombre:'👙 Ropa Interior'},
+    {id:'ropa-moda', nombre:'👕 Ropa y Moda'},
+    {id:'accesorios', nombre:'👜 Accesorios'},
+    {id:'servicios', nombre:'⚡ Servicios'},
+    {id:'acceso360', nombre:'✦ Acceso 360'}
+  ];
+  // Añadir secciones dinámicas de Firebase
+  db.ref('config/secciones').once('value', function(snap) {
+    var extra = snap.val() || {};
+    Object.entries(extra).forEach(function([id, s]) {
+      if (!secciones.find(function(x){ return x.id === id; })) {
+        secciones.push({id: id, nombre: s.nombre || id});
+      }
+    });
+    sel.innerHTML = secciones.map(function(s) {
+      return '<option value="' + s.id + '">' + s.nombre + '</option>';
+    }).join('');
+  });
+}
+
+function populateInventario() {
+  var prods = Object.values(catalogoAdminData);
+  var container = document.getElementById('inventario-list');
+  if (!container) return;
+  db.ref('inventario').once('value', function(snap) {
+    var inv = snap.val() || {};
+    container.innerHTML = prods.map(function(p) {
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<span style="flex:1;font-size:0.85rem;color:var(--text);">' + (p.nombre||p.id) + '</span>' +
+        '<input type="number" id="inv-' + p.id + '" value="' + (inv[p.id]||0) + '" min="0" style="width:70px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;text-align:center;">' +
+        '</div>';
+    }).join('');
   });
 }
 
