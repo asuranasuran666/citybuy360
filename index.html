@@ -1242,14 +1242,14 @@
         // Badge de stock
         var stock = inventarioData[p.id];
         var stockBadge = '';
-        if (stock !== undefined && stock !== null) {
-            if (stock === 0) {
-                stockBadge = '<div class="stock-badge agotado">Agotado</div>';
-            } else if (stock <= 3) {
+        if (stock !== undefined && stock !== null && stock !== 0) {
+            if (stock <= 3) {
                 stockBadge = '<div class="stock-badge ultimas">¡Últimas ' + stock + ' unidades!</div>';
             } else if (p.ventas && p.ventas > 10) {
                 stockBadge = '<div class="stock-badge pedido">🔥 Muy pedido</div>';
             }
+        } else if (stock === 0 && inventarioData[p.id] !== undefined) {
+            stockBadge = '<div class="stock-badge agotado">Agotado</div>';
         }
 
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
@@ -1271,7 +1271,7 @@
                 '</div>' +
                 (p.detalles ? '<div class="details-block">' + p.detalles + '</div>' : '') +
                 (p.precio ? '<div class="price">' + p.precio + '</div>' : '') +
-                (stock === 0
+                (stock === 0 && inventarioData[p.id] !== undefined
                     ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
                     : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this.dataset.product)">' + (esVIP ? '✦ Lo quiero' : 'Lo quiero') + '</a>') +
             '</div>' +
@@ -1293,9 +1293,6 @@
 
         Object.values(productos).forEach(function(p) {
             if (p.activo === false) return;
-            // Check config override
-            var cfg = configProductos && configProductos[p.id];
-            if (cfg && cfg.active === false) return;
             if (p.destacado) destacados.push(p);
             if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
             porSeccion[p.seccion].push(p);
