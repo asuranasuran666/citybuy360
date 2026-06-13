@@ -28,6 +28,7 @@
   .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 16px; }
   .login-box h2 { font-size: 1.1rem; color: var(--text-muted); text-align: center; }
   .login-box input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 8px; font-size: 1rem; width: 100%; outline: none; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="date"]), select, textarea { color: var(--text) !important; background: var(--bg); }
   .login-box input:focus { border-color: var(--brand-light); }
   .login-box button { background: var(--brand); color: white; border: none; padding: 13px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
   .login-box button:hover { background: var(--brand-light); }
@@ -660,7 +661,7 @@
         <div style="font-weight:700;color:var(--text);margin-bottom:12px;">➕ Nuevo vendedor</div>
         <input type="text" id="v-nombre" placeholder="Nombre del vendedor" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
         <input type="text" id="v-codigo" placeholder="Código de acceso (ej: VEND01)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
-        <button onclick="crearVendedor()" style="width:100%;background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">Crear vendedor</button>
+        <button onclick="crearVendedor()" style="width:100%;background:var(--primary);border:none;color:#fff;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">Crear vendedor</button>
         <div id="v-status" style="font-size:0.8rem;margin-top:6px;text-align:center;"></div>
       </div>
 
@@ -791,6 +792,16 @@ async function loadStructureFromIndex() {
     citybuy360familia:'Únete a la familia CityBUY360', tasas:'Tasas de cambio', ventilador:'Ventilador',
   };
   console.log('Estructura cargada:', SECTIONS.length, 'secciones,', Object.keys(PRODUCT_NAMES).length, 'productos');
+  // Cargar orden guardado
+  db.ref('config/seccionesOrden').once('value', function(snap) {
+    var orden = snap.val();
+    if (!orden) return;
+    SECTIONS.sort(function(a, b) {
+      var ia = orden[a.id] !== undefined ? orden[a.id] : 99;
+      var ib = orden[b.id] !== undefined ? orden[b.id] : 99;
+      return ia - ib;
+    });
+  });
 }
 
 
@@ -1409,6 +1420,9 @@ function renderControl() {
             <input type="checkbox" data-sec="${sec.id}" ${secCfg.active!==false?'checked':''} onchange="onSectionToggle(this)">
             <span class="toggle-slider"></span>
           </label>
+          <button onclick="moverSeccion('${sec.id}',-1)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;padding:2px 4px;" title="Subir">▲</button>
+          <button onclick="moverSeccion('${sec.id}',1)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;padding:2px 4px;" title="Bajar">▼</button>
+          <button onclick="eliminarSeccion('${sec.id}')" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:0.85rem;padding:2px 4px;" title="Eliminar sección">🗑</button>
         </span>
         <span class="section-arrow">▶</span>
       </div>
@@ -1441,6 +1455,30 @@ function renderControl() {
 function toggleBlock(header) {
   header.parentElement.classList.toggle('open');
 }
+function moverSeccion(id, dir) {
+  var idx = SECTIONS.findIndex(function(s){ return s.id === id; });
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= SECTIONS.length) return;
+  var tmp = SECTIONS[idx];
+  SECTIONS[idx] = SECTIONS[newIdx];
+  SECTIONS[newIdx] = tmp;
+  // Guardar orden en Firebase
+  var orden = {};
+  SECTIONS.forEach(function(s, i){ orden[s.id] = i; });
+  db.ref('config/seccionesOrden').set(orden);
+  renderControl();
+}
+
+function eliminarSeccion(id) {
+  var sec = SECTIONS.find(function(s){ return s.id === id; });
+  var nombre = sec ? sec.name : id;
+  if (!confirm('¿Eliminar sección "' + nombre + '"? Los productos de esta sección quedarán sin sección.')) return;
+  SECTIONS = SECTIONS.filter(function(s){ return s.id !== id; });
+  db.ref('config/sections/' + id).remove();
+  db.ref('config/secciones/' + id).remove();
+  renderControl();
+}
+
 function onTitleToggle(input) {
   const id = input.getAttribute('data-sec-title');
   db.ref('config/sections/' + id + '/showTitle').set(input.checked);
@@ -2127,6 +2165,14 @@ function loadCatalogoAdmin() {
       p.id = id;
       catalogoAdminData[id] = p;
       PRODUCT_NAMES[id] = p.nombre;
+    });
+    // Añadir secciones dinámicas que no estén en SECTIONS
+    var secIds = SECTIONS.map(function(s){ return s.id; });
+    Object.values(catalogoAdminData).forEach(function(p) {
+      if (p.seccion && !secIds.includes(p.seccion)) {
+        SECTIONS.push({ id: p.seccion, emoji: '📦', name: p.seccion.toUpperCase(), products: [] });
+        secIds.push(p.seccion);
+      }
     });
     renderControl();
     renderCatalogoAdmin();

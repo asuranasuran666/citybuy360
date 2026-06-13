@@ -21,8 +21,7 @@
             --price-green: #2ecc71;
         }
 
-        html, body { max-width: 100%; overflow-x: hidden; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; max-width: 100vw; }
         .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
         #tienda-cerrada {
             display: none; position: fixed; inset: 0; z-index: 9999;
@@ -385,6 +384,11 @@
         .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 8px; min-height: 2.4em; }
         .details-block { font-size: 0.8rem; color: #666; margin-bottom: 12px; line-height: 1.4; flex-grow: 1; }
         .price { font-size: 1.4rem; color: var(--price-green); font-weight: 800; margin-top: auto; }
+        .stock-badge { position:absolute; top:8px; left:8px; font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:20px; z-index:5; }
+        .stock-badge.agotado { background:#222; color:#888; }
+        .stock-badge.ultimas { background:linear-gradient(135deg,#ff6b35,#ff4444); color:#fff; }
+        .stock-badge.pedido { background:linear-gradient(135deg,#ff9500,#ff6b00); color:#fff; }
+
         .ventas-counter { font-size: 0.75rem; color: #888; margin-top: 3px; }
         .btn-lo-quiero { 
             display: block; text-align: center; background: var(--brand-blue); color: white; 
@@ -638,7 +642,7 @@
             .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
             .card-nav-btn { display: none !important; }
             .card-photo-dots { display: none !important; }
-            #badge-360-header { display: inline-flex !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; color: #1a0a00 !important; box-shadow: 0 0 14px rgba(255,215,0,0.8) !important; }
+            #badge-360-header { display: inline-flex !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; color: #1a0a00 !important; }
             .lifestyle-ribbon { flex-direction: row !important; }
             #bottom-nav { display: flex; }
             #bottom-nav ul { display: flex; flex-direction: row; width: 100%; }
@@ -761,26 +765,26 @@
         
         /* ── TICKER / MARQUESINA ── */
         #ticker-wrap {
-            background: linear-gradient(90deg, #1a1a2e, #16213e);
-            border-top: 1px solid #00d4ff33;
-            border-bottom: 1px solid #00d4ff33;
-            overflow: hidden; padding: 8px 0;
+            background: linear-gradient(90deg, #0a0a1a, #111130, #0a0a1a);
+            border-top: 1px solid rgba(0,212,255,0.2);
+            border-bottom: 1px solid rgba(0,212,255,0.2);
+            overflow: hidden; padding: 10px 0;
             display: none;
         }
         #ticker-wrap.visible { display: block; }
         #ticker-wrap .ticker-content {
             display: inline-block;
             white-space: nowrap;
-            animation: ticker-scroll 30s linear infinite;
+            animation: ticker-scroll 20s linear infinite;
             color: #00d4ff;
-            font-size: 0.82rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            padding-left: 100vw;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
         #ticker-wrap .ticker-content:hover { animation-play-state: paused; }
-        #ticker-wrap .ticker-sep { color: #f5c518; margin: 0 20px; }
-        @keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
+        #ticker-wrap .ticker-sep { color: #f5c518; margin: 0 24px; }
+        @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
 
         </style>
 </head>
@@ -1235,9 +1239,23 @@
         var waLink = p.waLink || ('https://wa.me/5353255813?text=' + waText);
         var esVIP = p.seccion === 'acceso360';
 
+        // Badge de stock
+        var stock = inventarioData[p.id];
+        var stockBadge = '';
+        if (stock !== undefined && stock !== null) {
+            if (stock === 0) {
+                stockBadge = '<div class="stock-badge agotado">Agotado</div>';
+            } else if (stock <= 3) {
+                stockBadge = '<div class="stock-badge ultimas">¡Últimas ' + stock + ' unidades!</div>';
+            } else if (p.ventas && p.ventas > 10) {
+                stockBadge = '<div class="stock-badge pedido">🔥 Muy pedido</div>';
+            }
+        }
+
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy">' +
+                stockBadge +
                 (p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
             '</div>' +
             '<div class="card-content">' +
@@ -1253,14 +1271,23 @@
                 '</div>' +
                 (p.detalles ? '<div class="details-block">' + p.detalles + '</div>' : '') +
                 (p.precio ? '<div class="price">' + p.precio + '</div>' : '') +
-                '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this.dataset.product)">' + (esVIP ? '✦ Lo quiero' : 'Lo quiero') + '</a>' +
+                (stock === 0
+                    ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
+                    : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this.dataset.product)">' + (esVIP ? '✦ Lo quiero' : 'Lo quiero') + '</a>') +
             '</div>' +
         '</div>';
     }
 
     function renderCatalogo(productos, configProductos, configSecciones) {
         configSecciones = configSecciones || {};
-        // Group products by section
+        // Aplicar orden guardado si existe
+        if (configSecciones._orden) {
+            SECCIONES.sort(function(a,b){
+                var ia = configSecciones._orden[a.id] !== undefined ? configSecciones._orden[a.id] : 99;
+                var ib = configSecciones._orden[b.id] !== undefined ? configSecciones._orden[b.id] : 99;
+                return ia - ib;
+            });
+        }
         var porSeccion = {};
         var destacados = [];
 
@@ -1345,6 +1372,8 @@
         if (typeof applyFilter === 'function') applyFilter(currentFilter || 'todos');
     }
 
+    var inventarioData = {};
+
     function loadCatalogo() {
         ['grid-destacado','grid-ropa-interior','grid-ropa-moda','grid-accesorios','grid-servicios','grid-acceso360'].forEach(function(id){
             var g = document.getElementById(id); if(g) g.innerHTML = '';
@@ -1357,7 +1386,10 @@
             }
             db.ref('config').once('value', function(cfgSnap) {
                 var cfg = cfgSnap.val() || {};
-                renderCatalogo(productos, cfg.products || {}, cfg.sections || {});
+                db.ref('inventario').once('value', function(invSnap) {
+                    inventarioData = invSnap.val() || {};
+                    renderCatalogo(productos, cfg.products || {}, cfg.sections || {});
+                });
             });
         }, function(error) {
             console.error('[catalogo] Error Firebase:', error.message);
@@ -1854,7 +1886,7 @@
         if (val && val !== false && wrap) {
             wrap.classList.remove('hidden');
             wrap.classList.add('visible');
-            if (ticker && typeof val === 'string') ticker.innerHTML = val + ' ★ ' + val;
+            if (ticker && typeof val === 'string') ticker.innerHTML = val + ' <span class="ticker-sep">★</span> ';
         } else if (wrap) {
             wrap.classList.add('hidden');
         }

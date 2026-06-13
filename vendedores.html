@@ -217,13 +217,15 @@
   function login() {
     var codigo = document.getElementById('codigo-input').value.trim().toUpperCase();
     if (!codigo) return;
-    db.ref('vendedores/' + codigo).once('value', snap => {
+    var errorEl = document.getElementById('login-error');
+    db.ref('vendedores/' + codigo).once('value', function(snap) {
       var data = snap.val();
       if (!data || data.activo === false) {
-        document.getElementById('login-error').style.display = 'block';
+        errorEl.style.display = 'block';
         return;
       }
-      vendedorActual = { codigo, ...data };
+      errorEl.style.display = 'none';
+      vendedorActual = { codigo: codigo, nombre: data.nombre || codigo, activo: data.activo };
       localStorage.setItem('vendedor_sesion', JSON.stringify(vendedorActual));
       mostrarMain();
     });
