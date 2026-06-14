@@ -33,7 +33,7 @@
         #tienda-cerrada .tc-title { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
         #tienda-cerrada .tc-msg { font-size: 1rem; color: #aaa; max-width: 320px; line-height: 1.6; }
         #tienda-cerrada .tc-brand { margin-top: 32px; font-size: 1.1rem; font-weight: 900; color: var(--brand-blue); }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; width: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
 
         header { padding: 0; display: flex; flex-direction: column; width: 100%; }
 
@@ -221,10 +221,9 @@
         /* ── BARRA DE CATEGORÍAS ── */
         #cat-bar {
             display: flex; overflow-x: auto; gap: 8px;
-            padding: 10px 12px; background: var(--bg-dark);
+            padding: 10px 20px; background: var(--bg-dark);
             border-bottom: 1px solid #222;
             scrollbar-width: none; position: sticky; top: 0; z-index: 50;
-            box-sizing: border-box; width: 100%;
             -webkit-overflow-scrolling: touch;
         }
         #cat-bar::-webkit-scrollbar { display: none; }
@@ -289,7 +288,7 @@
         #bottom-nav ul li.active .nav-icon { filter: brightness(1.5); }
         .nav-acceso .nav-label { color: #b8860b !important; }
         @media (max-width: 1024px) { #bottom-nav .nav-acceso { display: none; } }
-        @media (max-width: 1024px) { #bottom-nav { display: block; } }
+        @media (max-width: 1024px) { #bottom-nav { display: flex; } }
         body.has-bottom-nav { padding-bottom: 58px; }
         #span-360 {
             background: none !important;
@@ -1307,6 +1306,36 @@
             } else {
                 gridDest.innerHTML = '';
             }
+        }
+
+        // Comprobar si todos los títulos están desactivados
+        var todosTitulosOcultos = SECCIONES.filter(function(s){ return s.id !== 'destacado'; }).every(function(s){
+            return (configSecciones[s.id] || {}).showTitle === false;
+        });
+
+        if (todosTitulosOcultos) {
+            // Modo mezclado — todos los productos en un grid aleatorio
+            var todosProductos = Object.values(productos).filter(function(p){ return p.activo !== false; });
+            shuffleArray(todosProductos);
+            // Ocultar todas las secciones menos destacado
+            SECCIONES.forEach(function(sec) {
+                if (sec.id === 'destacado') return;
+                var sw = document.getElementById('sec-' + sec.id);
+                var st = document.getElementById('sec-title-' + sec.id);
+                var g = document.getElementById(sec.contenedor);
+                if (sw) sw.style.display = 'none';
+                if (st) st.style.display = 'none';
+                if (g) g.innerHTML = '';
+            });
+            // Mostrar en grid destacado mezclado
+            var gridMix = document.getElementById('grid-destacado');
+            var secDestW = document.getElementById('sec-destacado') || document.getElementById('sec-title-destacado');
+            if (secDestW) secDestW.style.display = 'none';
+            if (gridMix) gridMix.innerHTML = todosProductos.map(buildCard).join('');
+            initAllRatings();
+            initCardSliders();
+            if (typeof applyFilter === 'function') applyFilter(currentFilter || 'todos');
+            return;
         }
 
         // Render each section - including dynamic ones not in SECCIONES
