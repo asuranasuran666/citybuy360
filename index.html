@@ -769,7 +769,7 @@
             border-top: 1px solid rgba(0,212,255,0.2);
             border-bottom: 1px solid rgba(0,212,255,0.2);
             overflow: hidden; padding: 10px 0;
-            display: none;
+            display: none; width: 100%; box-sizing: border-box;
         }
         #ticker-wrap.visible { display: block; }
         #ticker-wrap .ticker-content {
@@ -784,7 +784,7 @@
         }
         #ticker-wrap .ticker-content:hover { animation-play-state: paused; }
         #ticker-wrap .ticker-sep { color: #f5c518; margin: 0 24px; }
-        @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+        @keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
 
         </style>
 </head>
@@ -1371,11 +1371,19 @@
 
     var inventarioData = {};
 
+    var catalogoTimeout = setTimeout(function() {
+        var container = document.getElementById('products-container');
+        if (container && container.querySelectorAll('.card').length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Cargando productos... Si esto persiste, intenta recargar la página.</div>';
+        }
+    }, 10000);
+
     function loadCatalogo() {
         ['grid-destacado','grid-ropa-interior','grid-ropa-moda','grid-accesorios','grid-servicios','grid-acceso360'].forEach(function(id){
             var g = document.getElementById(id); if(g) g.innerHTML = '';
         });
         db.ref('catalogo').on('value', function(snap) {
+            clearTimeout(catalogoTimeout);
             var productos = snap.val();
             if (!productos || Object.keys(productos).length === 0) {
                 console.log('[catalogo] Firebase vacío');
