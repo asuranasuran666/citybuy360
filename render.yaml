@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: citybuy360
+    env: static
+    staticPublishPath: .
+    headers:
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /admin.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /vendedores.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /acceso360.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
