@@ -21,7 +21,7 @@
             --price-green: #2ecc71;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; max-width: 100vw; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; }
         .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
         #tienda-cerrada {
             display: none; position: fixed; inset: 0; z-index: 9999;
@@ -1254,12 +1254,12 @@
 
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
-                '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy">' +
+                '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'">' +
                 stockBadge +
                 (p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
             '</div>' +
             '<div class="card-content">' +
-                '<div class="tag-category">' + (p.tagCategoria || p.seccion.toUpperCase()) + '</div>' +
+                '<div class="tag-category">' + (p.tagCategoria || (p.seccion || '').replace(/-/g,' ').toUpperCase()) + '</div>' +
                 '<div class="product-name">' + p.nombre + '</div>' +
                 '<div class="stars-container" data-product="' + p.id + '">' +
                     '<div class="stars">' +
@@ -1280,6 +1280,7 @@
 
     function renderCatalogo(productos, configProductos, configSecciones) {
         configSecciones = configSecciones || {};
+        _lastProductos = productos; _lastCfg = configProductos; _lastSecs = configSecciones;
         // Aplicar orden guardado si existe
         if (configSecciones._orden) {
             SECCIONES.sort(function(a,b){
@@ -1327,7 +1328,7 @@
             }
             if (secWrapper) secWrapper.style.display = '';
             if (secTitle) secTitle.style.display = secCfg.showTitle === false ? 'none' : '';
-            var prods = (porSeccion[sec.id] || []).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+            var prods = shuffleArray((porSeccion[sec.id] || []).slice());
             grid.innerHTML = prods.map(buildCard).join('');
         });
 
@@ -1360,6 +1361,19 @@
                 grid2.innerHTML = prods2.map(buildCard).join('');
             }
         });
+
+        // Rotación aleatoria cada 5 minutos
+        function shuffleArray(arr) {
+            for (var i = arr.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+            }
+            return arr;
+        }
+        var _lastProductos = null, _lastCfg = null, _lastSecs = null;
+        setInterval(function() {
+            if (_lastProductos) renderCatalogo(_lastProductos, _lastCfg, _lastSecs);
+        }, 5 * 60 * 1000);
 
         // Init ratings for all cards
         initAllRatings();

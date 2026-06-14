@@ -79,7 +79,12 @@
   .section-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
   .section-arrow { color: var(--text-muted); transition: transform 0.2s; font-size: 0.8rem; }
   .section-block.open .section-arrow { transform: rotate(90deg); }
-  .section-meta { display: flex; align-items: center; gap: 10px; }
+  .section-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .section-name { font-weight: 700; color: var(--text); font-size: 0.9rem; flex: 1; min-width: 0; }
+  @media (max-width: 600px) {
+    .expiry-input, .expiry-label { display: none !important; }
+    .section-meta { gap: 4px; }
+  }
   .dest-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); transition: all 0.2s; }
   .dest-btn:hover { border-color: #f5a623; color: #f5a623; }
   .dest-btn.active { border-color: #f5a623; background: rgba(245,166,35,0.15); color: #f5a623; }
@@ -867,6 +872,14 @@ function renderPreviews() {
 function removePhoto(i) {
   uploadedPhotos.splice(i, 1);
   renderPreviews();
+  // Si estamos editando un producto, actualizar imagenes en Firebase
+  var btn = document.getElementById('publish-btn');
+  var pid = btn && btn.dataset.editPid;
+  if (pid) {
+    var imagenes = uploadedPhotos.map(function(p){ return p.name; }).join(',');
+    db.ref('catalogo/' + pid + '/imagenes').set(imagenes || null);
+    if (catalogoAdminData[pid]) catalogoAdminData[pid].imagenes = imagenes;
+  }
 }
 
 function slugify(str) {
@@ -2162,11 +2175,25 @@ function loadCatalogoAdmin() {
     var catalogo = snap.val() || {};
     catalogoAdminData = {};
     Object.entries(catalogo).forEach(function([id, p]) {
+      // Corregir sección mal escrita
+      if (p.seccion === 'electrnica') {
+        p.seccion = 'electronica';
+        db.ref('catalogo/' + id + '/seccion').set('electronica');
+      }
       p.id = id;
       catalogoAdminData[id] = p;
       PRODUCT_NAMES[id] = p.nombre;
     });
-    // Añadir secciones dinámicas que no estén en SECTIONS
+    // Eliminar sección mal escrita de Firebase
+    db.ref('config/secciones/electrnica').remove();
+    db.ref('config/sections/electrnica').remove();
+    // Asegurar nombre correcto de electrónica
+    db.ref('config/secciones/electronica').once('value', function(s) {
+      if (!s.val() || !s.val().nombre || s.val().nombre !== 'Electrónica') {
+        db.ref('config/secciones/electronica').update({ nombre: 'Electrónica', activo: true });
+      }
+    });
+    // Añadir secciones dinámicas
     var secIds = SECTIONS.map(function(s){ return s.id; });
     Object.values(catalogoAdminData).forEach(function(p) {
       if (p.seccion && !secIds.includes(p.seccion)) {
