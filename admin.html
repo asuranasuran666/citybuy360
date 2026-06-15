@@ -332,7 +332,7 @@
           <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">✓ Activo</label>
           <label class="toggle"><input type="checkbox" id="edit-activo" checked onchange="guardarCampoProducto('activo',this.checked)"><span class="toggle-slider"></span></label>
         </div>
-        <button onclick="guardarEdicionProducto()" style="background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;margin-top:4px;">💾 Guardar cambios</button>
+        <button onclick="guardarEdicionProducto()" style="background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;margin-top:4px;">💾 Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -424,7 +424,7 @@
       </select>
       <div style="display:flex;gap:8px;margin-top:6px;">
         <input type="text" id="nueva-seccion-input" placeholder="Nueva sección (ej: zapatos)" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;">
-        <button onclick="crearNuevaSeccion()" style="background:var(--primary);border:none;color:#000;font-weight:700;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-size:0.85rem;">+ Crear</button>
+        <button onclick="crearNuevaSeccion()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-size:0.85rem;">+ Crear</button>
       </div>
     </div>
 
@@ -483,7 +483,20 @@
 
   <!-- ── TAB: INTERFAZ ── -->
   <div id="tab-interfaz" class="tab-content">
-    <!-- Tienda activa / cerrada -->
+
+    <!-- MODO ESTÁTICO CUBA -->
+    <div style="background:var(--surface);border:2px solid #f5c518;border-radius:12px;overflow:hidden;margin-bottom:12px;">
+      <div class="interfaz-row" style="background:rgba(245,197,24,0.08);">
+        <div style="flex:1">
+          <div class="interfaz-name" style="color:#f5c518;font-size:1rem;">🌍 Modo Estático</div>
+          <div class="interfaz-desc">Genera una versión del index con los productos ya incluidos en el HTML. Úsalo cuando Firebase no cargue en tu país (ej: Cuba sin VPN).</div>
+        </div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid #f5c51833;">
+        <button onclick="generarIndexEstatico()" id="btn-estatico" style="width:100%;background:linear-gradient(135deg,#f5c518,#ffe566);border:none;color:#000;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">⚡ Generar tienda estática</button>
+        <div id="estatico-log" style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);"></div>
+      </div>
+    </div>
     <div style="background:var(--surface);border:2px solid #ff4444;border-radius:12px;overflow:hidden;margin-bottom:12px;">
       <div class="interfaz-row" style="background:rgba(255,68,68,0.08);">
         <div style="flex:1">
@@ -530,7 +543,7 @@
       </div>
       <div style="padding:12px 16px;display:flex;gap:8px;">
         <textarea id="ticker-text" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:0.82rem;resize:vertical;min-height:50px;" placeholder="Texto de la marquesina…"></textarea>
-        <button onclick="saveTickerText()" style="background:var(--primary);border:none;color:#000;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
+        <button onclick="saveTickerText()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
       </div>
     </div>
 
@@ -542,7 +555,7 @@
       </div>
       <div style="padding:12px 16px;display:flex;gap:8px;">
         <textarea id="ribbon1-text" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:0.82rem;resize:vertical;min-height:50px;" placeholder="Texto del ribbon 1…"></textarea>
-        <button onclick="saveRibbon1Text()" style="background:var(--primary);border:none;color:#000;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
+        <button onclick="saveRibbon1Text()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
       </div>
     </div>
 
@@ -554,7 +567,7 @@
       </div>
       <div style="padding:12px 16px;display:flex;gap:8px;">
         <textarea id="ribbon2-text" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:0.82rem;resize:vertical;min-height:50px;" placeholder="Texto del ribbon 2…"></textarea>
-        <button onclick="saveRibbon2Text()" style="background:var(--primary);border:none;color:#000;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
+        <button onclick="saveRibbon2Text()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
       </div>
     </div>
 
@@ -639,7 +652,7 @@
       <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
         <div style="font-size:0.8rem;color:var(--text-muted);">El mensaje aparecerá en la campanita 🔔 del catálogo para todos los visitantes.</div>
         <textarea id="msg-texto" placeholder="Escribe tu mensaje aquí… (ej: ¡Nueva llegada esta semana! 🎉)" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:0.9rem;min-height:90px;resize:vertical;"></textarea>
-        <button onclick="publicarMensaje()" style="background:var(--primary);border:none;color:#000;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">📢 Publicar mensaje</button>
+        <button onclick="publicarMensaje()" style="background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">📢 Publicar mensaje</button>
         <div id="msg-status" style="font-size:0.82rem;text-align:center;"></div>
       </div>
     </div>
@@ -666,7 +679,7 @@
         <div style="font-weight:700;color:var(--text);margin-bottom:12px;">➕ Nuevo vendedor</div>
         <input type="text" id="v-nombre" placeholder="Nombre del vendedor" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
         <input type="text" id="v-codigo" placeholder="Código de acceso (ej: VEND01)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
-        <button onclick="crearVendedor()" style="width:100%;background:var(--primary);border:none;color:#fff;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">Crear vendedor</button>
+        <button onclick="crearVendedor()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">Crear vendedor</button>
         <div id="v-status" style="font-size:0.8rem;margin-top:6px;text-align:center;"></div>
       </div>
 
@@ -676,7 +689,7 @@
         <div id="inventario-list" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
           <div class="empty-state">Cargando…</div>
         </div>
-        <button onclick="guardarInventario()" style="width:100%;background:#22c55e;border:none;color:#000;font-weight:900;border-radius:8px;padding:8px;cursor:pointer;margin-top:10px;">💾 Guardar inventario</button>
+        <button onclick="guardarInventario()" style="width:100%;background:#22c55e;border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:8px;cursor:pointer;margin-top:10px;">💾 Guardar inventario</button>
       </div>
     </div>
 
@@ -1113,6 +1126,80 @@ function savePrices() {
 
 // ── INTERFAZ ──────────────────────────────────────────────────────────────────
 let interfazData = {};
+
+async function generarIndexEstatico() {
+  var btn = document.getElementById('btn-estatico');
+  var logEl = document.getElementById('estatico-log');
+  var token = localStorage.getItem('gh_token');
+  if (!token) { logEl.textContent = '❌ Necesitas el token de GitHub'; return; }
+
+  btn.disabled = true;
+  logEl.textContent = '⏳ Leyendo catálogo desde Firebase...';
+
+  try {
+    // 1. Leer productos de Firebase
+    var snap = await new Promise(function(res) { db.ref('catalogo').once('value', res); });
+    var catalogo = snap.val() || {};
+    var productos = Object.values(catalogo).filter(function(p){ return p.activo !== false; });
+
+    // 2. Leer index.html actual de GitHub
+    logEl.textContent = '⏳ Leyendo index.html de GitHub...';
+    var indexFile = await ghGet('index.html');
+    var indexHTML = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g,''))));
+
+    // 3. Generar HTML de todas las cards
+    function buildStaticCard(p) {
+      var imgs = (p.imagenes || (p.id+'.jpg')).split(',');
+      var waText = encodeURIComponent('Hola, quiero: ' + p.nombre + (p.precio ? ' ('+p.precio+')' : ''));
+      var waLink = 'https://wa.me/5353255813?text=' + waText;
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'">'+
+        '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
+        '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
+        '</div>'+
+        '<div class="card-content">'+
+        '<div class="tag-category">'+(p.seccion||'').replace(/-/g,' ').toUpperCase()+'</div>'+
+        '<div class="product-name">'+p.nombre+'</div>'+
+        (p.precio ? '<div class="price">'+p.precio+'</div>' : '')+
+        '<a href="'+waLink+'" class="btn-lo-quiero">Lo quiero</a>'+
+        '</div></div>';
+    }
+
+    // 4. Agrupar por sección e inyectar en los grids
+    var porSeccion = {};
+    productos.forEach(function(p) {
+      if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
+      porSeccion[p.seccion].push(p);
+    });
+
+    var secciones = ['destacado','ropa-interior','ropa-moda','accesorios','servicios','acceso360'];
+    secciones.forEach(function(secId) {
+      var gridId = secId === 'destacado' ? 'grid-destacado' : 'grid-' + secId;
+      var prods = secId === 'destacado'
+        ? productos.filter(function(p){ return p.destacado; })
+        : (porSeccion[secId] || []);
+      var cardsHTML = prods.map(buildStaticCard).join('\n');
+      // Reemplazar contenido del grid en el HTML
+      var gridRegex = new RegExp('(<div[^>]+id="'+gridId+'"[^>]*>)[\\s\\S]*?(<!-- Cargando desde Firebase|<\\/div>)', 'm');
+      if (indexHTML.match(new RegExp('id="'+gridId+'"'))) {
+        var startIdx = indexHTML.indexOf('id="'+gridId+'"');
+        var openTag = indexHTML.indexOf('>', startIdx) + 1;
+        var closeTag = indexHTML.indexOf('</div>', openTag);
+        indexHTML = indexHTML.substring(0, openTag) + '\n' + cardsHTML + '\n' + indexHTML.substring(closeTag);
+      }
+    });
+
+    // 5. Subir a GitHub
+    logEl.textContent = '⏳ Subiendo a GitHub...';
+    var newContent64 = btoa(unescape(encodeURIComponent(indexHTML)));
+    await ghPut('index.html', newContent64, 'static: generar tienda estática con productos Firebase', indexFile.sha);
+    logEl.innerHTML = '✅ <strong>¡Listo!</strong> Render desplegará en ~2 minutos. Los clientes sin VPN verán los productos.';
+
+  } catch(e) {
+    logEl.textContent = '❌ Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 function loadInterfaz() {
   db.ref('interfaz').once('value', snap => {
@@ -1997,7 +2084,7 @@ function renderCatalogoAdmin() {
       '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
         '<button data-pid="' + p.id + '" data-action="destacado" title="Destacado" style="background:none;border:1px solid ' + (p.destacado ? '#f5c518' : 'var(--border)') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.destacado ? '#f5c518' : 'var(--text-muted)') + ';font-size:0.85rem;">⭐</button>' +
         '<button data-pid="' + p.id + '" data-action="activo" style="background:none;border:1px solid ' + (p.activo ? '#22c55e' : '#ff4444') + ';border-radius:6px;padding:4px 8px;cursor:pointer;color:' + (p.activo ? '#22c55e' : '#ff4444') + ';font-size:0.75rem;font-weight:700;">' + (p.activo ? 'ON' : 'OFF') + '</button>' +
-        '<button data-pid="' + p.id + '" data-action="editar" style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;color:#000;font-size:0.75rem;font-weight:700;">Editar</button>' +
+        '<button data-pid="' + p.id + '" data-action="editar" style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;color:#fff;font-size:0.75rem;font-weight:700;">Editar</button>' +
         '<button data-pid="' + p.id + '" data-action="eliminar-producto" style="background:none;border:1px solid #ff4444;border-radius:6px;padding:4px 8px;cursor:pointer;color:#ff4444;font-size:0.75rem;font-weight:700;">🗑</button>' +
       '</div>' +
     '</div>';
