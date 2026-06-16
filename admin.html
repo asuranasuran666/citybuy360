@@ -238,7 +238,6 @@
     <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
     <button class="tab-btn" onclick="showTab('ventas',this)">💰 Ventas</button>
     <button class="tab-btn" onclick="showTab('nuevo',this)">➕ Nuevo producto</button>
-    <button class="tab-btn" onclick="showTab('precios',this)">💲 Precios</button>
     <button class="tab-btn" onclick="showTab('interfaz',this)">🖥 Interfaz</button>
     <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
     <button class="tab-btn" onclick="showTab('mensajes',this)">📢 Mensajes</button>
@@ -471,15 +470,7 @@
 
 
   <!-- ── TAB: PRECIOS ── -->
-  <div id="tab-precios" class="tab-content">
-    <div id="prices-container" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-      <div class="empty-state">Cargando precios…</div>
-    </div>
-    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
-      <button class="save-btn" onclick="savePrices()">Guardar precios</button>
-      <span class="save-chip" id="prices-chip">✓ Guardado</span>
-    </div>
-  </div>
+
 
   <!-- ── TAB: INTERFAZ ── -->
   <div id="tab-interfaz" class="tab-content">
@@ -995,8 +986,8 @@ async function publishProduct() {
   const secId   = document.getElementById('prod-seccion').value;
   const destacado = document.getElementById('prod-destacado').checked;
 
-  if (!name || !price || !secId) {
-    log('❌ Completa: nombre, precio y sección', 'log-err'); return;
+  if (!name) {
+    log('❌ El nombre del producto es obligatorio', 'log-err'); return;
   }
 
   const btn = document.getElementById('publish-btn');
@@ -1095,35 +1086,6 @@ async function publishProduct() {
 }
 
 // ── PRECIOS ───────────────────────────────────────────────────────────────────
-let pricesData = {};
-
-function renderPrices() {
-  const container = document.getElementById('prices-container');
-  if (!SECTIONS.length) { container.innerHTML = '<div class="empty-state">Carga el index primero</div>'; return; }
-  const allProds = [...new Set(SECTIONS.flatMap(s => s.products))];
-  container.innerHTML = allProds.map(pid => {
-    const price = pricesData[pid] || '';
-    return `<div class="price-row">
-      <span class="price-prod-name">${PRODUCT_NAMES[pid]||pid}</span>
-      <input type="text" class="price-input" id="price-${pid}" value="${price}" placeholder="2,900 MN">
-      <span class="price-unit">MN</span>
-    </div>`;
-  }).join('');
-}
-
-function savePrices() {
-  const allProds = [...new Set(SECTIONS.flatMap(s => s.products))];
-  allProds.forEach(pid => {
-    const input = document.getElementById('price-' + pid);
-    if (input && input.value.trim()) pricesData[pid] = input.value.trim();
-  });
-  db.ref('prices').set(pricesData).then(() => {
-    const chip = document.getElementById('prices-chip');
-    chip.classList.add('show');
-    setTimeout(() => chip.classList.remove('show'), 2500);
-  });
-}
-
 // ── INTERFAZ ──────────────────────────────────────────────────────────────────
 let interfazData = {};
 
@@ -1433,10 +1395,6 @@ async function initAdmin() {
     ventasVendedoresData = snap.val() || {};
     renderEstadisticasVentas();
   });
-  db.ref('prices').once('value', snap => {
-    pricesData = snap.val() || {};
-    renderPrices();
-  });
   loadInterfaz();
   loadAcceso360Admin();
   loadCatalogoAdmin();
@@ -1605,7 +1563,8 @@ function editProduct(pid) {
     if (!p) { alert('Producto no encontrado en Firebase'); return; }
     document.getElementById('prod-name').value = p.nombre || '';
     document.getElementById('prod-price').value = p.precio || '';
-    document.getElementById('prod-tallas').value = p.tallas || '';
+    // Firebase guarda tallas/colores dentro de 'detalles' — intentar ambos campos
+    document.getElementById('prod-tallas').value = p.tallas || p.detalles || '';
     document.getElementById('prod-colores').value = p.colores || '';
     document.getElementById('prod-desc').value = p.detalles || '';
     document.getElementById('prod-tooltip').value = p.descripcion || '';
@@ -1911,8 +1870,8 @@ async function doPublish() {
   const genero  = getSelectedGenero();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
 
-  if (!name || !price || !secId) {
-    log('❌ Completa: nombre, precio y sección', 'log-err'); return;
+  if (!name) {
+    log('❌ El nombre del producto es obligatorio', 'log-err'); return;
   }
 
   const btn = document.getElementById('publish-btn');
@@ -1943,8 +1902,13 @@ async function doPublish() {
       imagenes, activo: true,
       orden: Date.now()
     };
-    await db.ref('catalogo/' + id).set(producto);
-    catalogoAdminData[id] = producto;
+    // Usar update en edición para no borrar campos como waLink, tagCategoria, ratings
+    if (editPid) {
+      await db.ref('catalogo/' + id).update(producto);
+    } else {
+      await db.ref('catalogo/' + id).set(producto);
+    }
+    catalogoAdminData[id] = Object.assign(catalogoAdminData[id] || {}, producto);
     log('✅ ¡Publicado en Firebase!', 'log-ok');
 
     // Limpiar formulario

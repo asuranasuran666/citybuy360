@@ -785,7 +785,7 @@
         }
         #ticker-wrap .ticker-content:hover { animation-play-state: paused; }
         #ticker-wrap .ticker-sep { color: #f5c518; margin: 0 24px; }
-        @keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
+        @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
 
         </style>
 </head>
@@ -906,10 +906,8 @@
 
             <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
             <div class="grid" id="grid-destacado">
-<div class="card" data-product="gdm" data-genero="mujer hombre"><div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position:relative;"><img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pul%C3%B3ver%20GREAT%20DREAM%20MAKER%20(GRAN%20CREADOR%20DE%20SUE%C3%91OS)%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="mnegras" data-genero="mujer hombre"><div class="card-img-container" data-images="mnegras.jpg" data-count="1" style="position:relative;"><img src="mnegras.jpg" class="card-img" alt="Medias Negras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Medias Negras</div><div class="price">250 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Medias%20Negras%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="saldo" data-genero="servicios"><div class="card-img-container" data-images="saldo.jpg" data-count="1" style="position:relative;"><img src="saldo.jpg" class="card-img" alt="COMPRAR SALDO (RECARGAS)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">SERVICIOS</div><div class="product-name">COMPRAR SALDO (RECARGAS)</div><div class="price">1000</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20COMPRAR%20SALDO%20(RECARGAS)%20(1000)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div id="ticker-wrap"><span class="ticker-content" id="ticker-content"></span></div>
 
@@ -917,35 +915,25 @@
 
             <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
             <div class="grid" id="grid-ropa-interior">
-<div class="card" data-product="blumer" data-genero="mujer"><div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position:relative;"><img src="blumer.jpg" class="card-img" alt="Blumer sin costuras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA INTERIOR</div><div class="product-name">Blumer sin costuras</div><div class="price">550 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Blumer%20sin%20costuras%20(550%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="sujetador" data-genero=""><div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position:relative;"><img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA INTERIOR</div><div class="product-name">Ajustador sin costuras</div><div class="price">1,500 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Ajustador%20sin%20costuras%20(1%2C500%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">👕 ROPA Y MODA</div>
             <div class="grid" id="grid-ropa-moda">
-<div class="card" data-product="aac" data-genero="mujer hombre"><div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2" style="position:relative;"><img src="aac.jpg" class="card-img" alt="Pulover Amor, Alegría y Cerveza Fría" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover Amor, Alegría y Cerveza Fría</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="freedom" data-genero="mujer hombre"><div class="card-img-container" data-images="freedom.jpg,hombre01freedom.jpg,hombre02freedom.jpg" data-count="3" style="position:relative;"><img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado FREEDOM</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20FREEDOM%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="gdm" data-genero="mujer hombre"><div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position:relative;"><img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pul%C3%B3ver%20GREAT%20DREAM%20MAKER%20(GRAN%20CREADOR%20DE%20SUE%C3%91OS)%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="mblancas" data-genero="mujer hombre"><div class="card-img-container" data-images="mblancas.jpg" data-count="1" style="position:relative;"><img src="mblancas.jpg" class="card-img" alt="Medias Blancas" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Medias Blancas</div><div class="price">250 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Medias%20Blancas%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="mnegras" data-genero="mujer hombre"><div class="card-img-container" data-images="mnegras.jpg" data-count="1" style="position:relative;"><img src="mnegras.jpg" class="card-img" alt="Medias Negras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Medias Negras</div><div class="price">250 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Medias%20Negras%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="ngu" data-genero="mujer hombre"><div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position:relative;"><img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20(NUNCA%20TE%20RINDAS.%20Positivo)%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="paris" data-genero="mujer hombre"><div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position:relative;"><img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado PARIS</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20PARIS%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="usa" data-genero="mujer hombre"><div class="card-img-container" data-images="usa.jpg,hombre01usa.jpg,hombre02usa.jpg" data-count="3" style="position:relative;"><img src="usa.jpg" class="card-img" alt="Pulover estampado USA" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado USA</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20USA%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
 
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid" id="grid-accesorios">
-<div class="card" data-product="gorra" data-genero="unisex"><div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position:relative;"><img src="gorra.jpg" class="card-img" alt="Gorra" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ACCESORIOS</div><div class="product-name">Gorra</div><div class="price">2,800 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Gorra%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="gorrobebe" data-genero="ninos"><div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position:relative;"><img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ACCESORIOS</div><div class="product-name">Gorro para bebé</div><div class="price">1,200 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Gorro%20para%20beb%C3%A9%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid" id="grid-servicios">
-<div class="card" data-product="citybuy360familia" data-genero="servicios"><div class="card-img-container" data-images="bolsas-azules.jpg" data-count="1" style="position:relative;"><img src="bolsas-azules.jpg" class="card-img" alt="Únete a la familia CityBUY360" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">SERVICIOS</div><div class="product-name">Únete a la familia CityBUY360</div><div class="price">PROMOCIÓN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20%C3%9Anete%20a%20la%20familia%20CityBUY360%20(PROMOCI%C3%93N)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="saldo" data-genero="servicios"><div class="card-img-container" data-images="saldo.jpg" data-count="1" style="position:relative;"><img src="saldo.jpg" class="card-img" alt="COMPRAR SALDO (RECARGAS)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">SERVICIOS</div><div class="product-name">COMPRAR SALDO (RECARGAS)</div><div class="price">1000</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20COMPRAR%20SALDO%20(RECARGAS)%20(1000)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
         </div>
     </div>
 
@@ -955,9 +943,7 @@
                 <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
                     ACCESO360
                 </div>
-                <div id="grid-acceso360" class="grid">
-
-</div>
+                <div id="grid-acceso360" class="grid"></div>
             </div>
 
 
@@ -1353,12 +1339,12 @@
         });
 
         if (todosTitulosOcultos) {
-            // Modo mezclado — todos los productos en un grid aleatorio
+            // Modo mezclado — todos los productos en un único grid continuo
             var todosProductos = Object.values(productos).filter(function(p){ return p.activo !== false; });
             shuffleArray(todosProductos);
-            // Ocultar todas las secciones menos destacado
+
+            // Ocultar TODAS las secciones y títulos (incluido destacado)
             SECCIONES.forEach(function(sec) {
-                if (sec.id === 'destacado') return;
                 var sw = document.getElementById('sec-' + sec.id);
                 var st = document.getElementById('sec-title-' + sec.id);
                 var g = document.getElementById(sec.contenedor);
@@ -1366,20 +1352,43 @@
                 if (st) st.style.display = 'none';
                 if (g) g.innerHTML = '';
             });
-            // Mostrar en grid destacado mezclado
-            var gridMix = document.getElementById('grid-destacado');
-            var secDestW = document.getElementById('sec-destacado') || document.getElementById('sec-title-destacado');
-            if (secDestW) secDestW.style.display = 'none';
+            // Ocultar también el título de destacado
+            var stDest = document.getElementById('sec-title-destacado');
+            if (stDest) stDest.style.display = 'none';
+
+            // Crear o reusar el grid mezclado único
+            var productsContainer = document.getElementById('products-container');
+            var gridMix = document.getElementById('grid-mix');
+            if (!gridMix && productsContainer) {
+                gridMix = document.createElement('div');
+                gridMix.id = 'grid-mix';
+                gridMix.className = 'grid';
+                productsContainer.appendChild(gridMix);
+            }
             if (gridMix) gridMix.innerHTML = todosProductos.map(buildCard).join('');
+
             initAllRatings();
             initCardSliders();
             if (typeof applyFilter === 'function') applyFilter(currentFilter || 'todos');
             return;
         }
 
+        // Si salimos del modo mezclado, ocultar el grid-mix si existe
+        var gridMixOld = document.getElementById('grid-mix');
+        if (gridMixOld) gridMixOld.style.display = 'none';
+
         // Render each section - including dynamic ones not in SECCIONES
         var seccionesVistas = new Set(['destacado']);
         var productsContainer = document.getElementById('products-container');
+
+        // Reordenar los divs de sección en el DOM según el orden de SECCIONES
+        SECCIONES.forEach(function(sec) {
+            if (sec.id === 'destacado') return;
+            var st = document.getElementById('sec-title-' + sec.id);
+            var g = document.getElementById(sec.contenedor);
+            if (st && productsContainer) productsContainer.appendChild(st);
+            if (g && productsContainer) productsContainer.appendChild(g);
+        });
 
         SECCIONES.forEach(function(sec) {
             if (sec.id === 'destacado') return;
@@ -1706,21 +1715,27 @@
         }
     });
 
-    // Tooltip solo en PC
-    document.querySelectorAll('.card-img-container').forEach(function(container) {
+    // Tooltip solo en PC — event delegation para cards dinámicas
+    document.addEventListener('mouseenter', function(e) {
+        if (isMobile()) return;
+        var container = e.target.closest('.card-img-container');
+        if (!container) return;
         var tooltip = container.querySelector('.hover-tooltip');
         if (!tooltip) return;
-        container.addEventListener('mouseenter', function() {
-            if (isMobile()) return;
-            var rect = container.getBoundingClientRect();
-            tooltip.style.display = 'block';
-            tooltip.style.top  = (rect.top + rect.height / 2) + 'px';
-            tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-        });
-        container.addEventListener('mouseleave', function() {
-            tooltip.style.display = 'none';
-        });
-    });
+        var rect = container.getBoundingClientRect();
+        tooltip.style.display = 'block';
+        tooltip.style.top  = (rect.top + rect.height / 2) + 'px';
+        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+    }, true);
+
+    document.addEventListener('mouseleave', function(e) {
+        if (isMobile()) return;
+        var container = e.target.closest('.card-img-container');
+        if (!container) return;
+        var tooltip = container.querySelector('.hover-tooltip');
+        if (!tooltip) return;
+        tooltip.style.display = 'none';
+    }, true);
 
     var slides  = document.querySelectorAll('.slide');
     var dots    = document.querySelectorAll('.dot');
