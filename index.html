@@ -1441,15 +1441,21 @@
 
     var catalogoTimeout = setTimeout(function() {
         var container = document.getElementById('products-container');
-        if (container && container.querySelectorAll('.card').length === 0) {
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Cargando productos... Si esto persiste, intenta recargar la página.</div>';
-        }
+        if (!container) return;
+        // Si ya hay productos estáticos en el HTML, no mostrar mensaje de error
+        if (container.querySelectorAll('.card').length > 0) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">Cargando productos... Si esto persiste, intenta recargar la página.</div>';
     }, 10000);
 
     function loadCatalogo() {
-        ['grid-destacado','grid-ropa-interior','grid-ropa-moda','grid-accesorios','grid-servicios','grid-acceso360'].forEach(function(id){
-            var g = document.getElementById(id); if(g) g.innerHTML = '';
-        });
+        // Solo limpiar grids si NO hay productos estáticos ya inyectados en el HTML
+        // (el modo estático del admin inyecta .card directamente en los grids)
+        var yaHayProductos = document.querySelectorAll('#products-container .card').length > 0;
+        if (!yaHayProductos) {
+            ['grid-destacado','grid-ropa-interior','grid-ropa-moda','grid-accesorios','grid-servicios','grid-acceso360'].forEach(function(id){
+                var g = document.getElementById(id); if(g) g.innerHTML = '';
+            });
+        }
         db.ref('catalogo').on('value', function(snap) {
             clearTimeout(catalogoTimeout);
             var productos = snap.val();
