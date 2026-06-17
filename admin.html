@@ -400,8 +400,15 @@
         <input type="text" id="prod-name" placeholder="Ej: Pulover estampado NYC">
       </div>
       <div class="form-group">
-        <label>Precio (MN)</label>
-        <input type="number" id="prod-price" placeholder="2900">
+        <label>Precio</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="prod-price" placeholder="2900" style="flex:1;">
+          <select id="prod-moneda" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;font-weight:700;">
+            <option value="MN">MN</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -459,6 +466,11 @@
     <div class="form-group">
       <label>Tooltip (descripción larga al hacer hover)</label>
       <textarea id="prod-tooltip" placeholder="Descripción detallada del producto que aparece al pasar el mouse…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Vendedor / Empresa <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+      <input type="text" id="prod-vendedor" placeholder="Ej: Tienda Fashion Cuba">
     </div>
 
     <div style="display:flex;gap:10px;">
@@ -523,6 +535,33 @@
       <div class="interfaz-row">
         <div style="flex:1"><div class="interfaz-name">Lifestyle ribbons (ambos)</div><div class="interfaz-desc">Franjas de texto motivacional entre secciones</div></div>
         <label class="toggle"><input type="checkbox" id="if-ribbons" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Elementos de la card -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:12px;">
+      <div class="interfaz-row" style="border-bottom:1px solid var(--border);">
+        <div style="flex:1"><div class="interfaz-name">🃏 Elementos de la card</div><div class="interfaz-desc">Controla qué se muestra en cada producto del catálogo</div></div>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Etiqueta de sección</div><div class="interfaz-desc">Ej: ROPA INTERIOR en naranja arriba del nombre</div></div>
+        <label class="toggle"><input type="checkbox" id="if-card-seccion" checked onchange="saveCardElements()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Estrellas / Rating</div><div class="interfaz-desc">Valoraciones de los clientes</div></div>
+        <label class="toggle"><input type="checkbox" id="if-card-estrellas" checked onchange="saveCardElements()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Tallas y colores</div><div class="interfaz-desc">Detalles del producto debajo del rating</div></div>
+        <label class="toggle"><input type="checkbox" id="if-card-detalles" checked onchange="saveCardElements()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Descripción corta</div><div class="interfaz-desc">Tooltip en PC y primer texto en el bottom sheet móvil</div></div>
+        <label class="toggle"><input type="checkbox" id="if-card-descripcion" checked onchange="saveCardElements()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="interfaz-row">
+        <div style="flex:1"><div class="interfaz-name">Precio</div><div class="interfaz-desc">Precio visible en la card</div></div>
+        <label class="toggle"><input type="checkbox" id="if-card-precio" checked onchange="saveCardElements()"><span class="toggle-slider"></span></label>
       </div>
     </div>
 
@@ -939,10 +978,11 @@ async function ghPut(path, content64, message, sha) {
   return res.json();
 }
 
-function buildCardHTML(id, photos, name, price, tallas, colores, desc, tooltip, secName, genero) {
+function buildCardHTML(id, photos, name, price, tallas, colores, desc, tooltip, secName, genero, moneda) {
+  moneda = moneda || 'MN';
   const imgList = photos.map(p => p.name).join(',');
   const imgCount = photos.length;
-  const waText = encodeURIComponent(`Hola, quiero comprar: ${name} (${price} MN)`);
+  const waText = encodeURIComponent(`Hola, quiero comprar: ${name} (${price} ${moneda})`);
   const waUrl  = `https://wa.me/5353255813?text=${waText}`;
   const starsHTML = [1,2,3,4,5].map(v =>
     `<span class="star" data-val="${v}">★</span>`).join('');
@@ -966,7 +1006,7 @@ function buildCardHTML(id, photos, name, price, tallas, colores, desc, tooltip, 
             <span class="stars-info">Sin votos</span>
         </div>
         <div class="details-block">${detailsText}</div>
-        <div class="price">${price} MN</div>
+        <div class="price">${price} ${moneda}</div>
         <a href="${waUrl}" class="btn-lo-quiero">Lo quiero</a>
     </div>
 </div>`;
@@ -1177,6 +1217,27 @@ function loadInterfaz() {
     if (elTienda) elTienda.checked = tiendaActiva;
     document.getElementById('tienda-msg-row').style.display = tiendaActiva ? 'none' : 'block';
     if (interfazData.tiendaMensaje) document.getElementById('tienda-msg-input').value = interfazData.tiendaMensaje;
+    // Elementos de card
+    var cardCfg = interfazData.card || {};
+    var cardMap = { seccion:'if-card-seccion', estrellas:'if-card-estrellas', detalles:'if-card-detalles', descripcion:'if-card-descripcion', precio:'if-card-precio' };
+    Object.entries(cardMap).forEach(([key, elId]) => {
+      var el = document.getElementById(elId);
+      if (el) el.checked = cardCfg[key] !== false;
+    });
+  });
+}
+
+function saveCardElements() {
+  var cfg = {
+    seccion:     document.getElementById('if-card-seccion').checked,
+    estrellas:   document.getElementById('if-card-estrellas').checked,
+    detalles:    document.getElementById('if-card-detalles').checked,
+    descripcion: document.getElementById('if-card-descripcion').checked,
+    precio:      document.getElementById('if-card-precio').checked,
+  };
+  db.ref('interfaz/card').update(cfg).then(() => {
+    const chip = document.getElementById('save-chip');
+    if (chip) { chip.classList.add('show'); setTimeout(() => chip.classList.remove('show'), 2500); }
   });
 }
 
@@ -1569,6 +1630,10 @@ function editProduct(pid) {
     document.getElementById('prod-desc').value = p.detalles || '';
     document.getElementById('prod-tooltip').value = p.descripcion || '';
     document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
+    var monedaSel = document.getElementById('prod-moneda');
+    if (monedaSel) monedaSel.value = p.moneda || 'MN';
+    var vendedorEl = document.getElementById('prod-vendedor');
+    if (vendedorEl) vendedorEl.value = p.vendedor || '';
     setSelectedGenero(p.genero || '');
     if (p.imagenes) {
       uploadedPhotos = p.imagenes.split(',').filter(Boolean).map(function(name) {
@@ -1868,6 +1933,8 @@ async function doPublish() {
   const tooltip = document.getElementById('prod-tooltip').value.trim();
   const secId   = document.getElementById('prod-seccion').value;
   const genero  = getSelectedGenero();
+  const moneda   = (document.getElementById('prod-moneda') || {}).value || 'MN';
+  const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
 
   if (!name) {
@@ -1896,7 +1963,7 @@ async function doPublish() {
     log('💾 Guardando en Firebase…');
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
-      id, nombre: name, precio: price, tallas, colores,
+      id, nombre: name, precio: price, moneda, tallas, colores, vendedor,
       detalles: desc, descripcion: tooltip,
       seccion: secId, genero, destacado,
       imagenes, activo: true,
@@ -1912,7 +1979,7 @@ async function doPublish() {
     log('✅ ¡Publicado en Firebase!', 'log-ok');
 
     // Limpiar formulario
-    ['prod-name','prod-price','prod-tallas','prod-colores','prod-desc','prod-tooltip'].forEach(function(fid){
+    ['prod-name','prod-price','prod-tallas','prod-colores','prod-desc','prod-tooltip','prod-vendedor'].forEach(function(fid){
       var el = document.getElementById(fid); if(el) el.value = '';
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
