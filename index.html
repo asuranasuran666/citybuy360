@@ -225,10 +225,11 @@
             border-bottom: 1px solid #222;
             scrollbar-width: none; position: sticky; top: 0; z-index: 50;
             -webkit-overflow-scrolling: touch;
+            width: 100%; box-sizing: border-box;
+            max-width: 100%; contain: layout;
         }
         #cat-bar::-webkit-scrollbar { display: none; }
         .cat-btn { flex-shrink: 0; }
-        #cat-bar::-webkit-scrollbar { display: none; }
         .cat-btn {
             flex-shrink: 0; background: #1e1e1e; color: #aaa;
             border: 1px solid #333; border-radius: 20px;
@@ -380,20 +381,33 @@
 
         .card-img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.35s ease; }
         .card-img-container:hover .card-img { transform: scale(1.08); }
-        .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-        .tag-category { font-size: 0.75rem; color: var(--tag-orange); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-        .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 8px; min-height: 2.4em; }
-        .details-block { font-size: 0.8rem; color: #666; margin-bottom: 12px; line-height: 1.4; flex-grow: 1; }
-        .price { font-size: 1.4rem; color: var(--price-green); font-weight: 800; margin-top: auto; }
-        .stock-badge { position:absolute; top:8px; left:8px; font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:20px; z-index:5; }
-        .stock-badge.agotado { background:#222; color:#888; }
-        .stock-badge.ultimas { background:linear-gradient(135deg,#ff6b35,#ff4444); color:#fff; }
-        .stock-badge.pedido { background:linear-gradient(135deg,#ff9500,#ff6b00); color:#fff; }
-
+        .card-content { padding: 12px 14px 14px; flex-grow: 1; display: flex; flex-direction: column; gap: 0; }
+        .tag-category { font-size: 0.72rem; color: var(--tag-orange); font-weight: 800; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .product-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 6px; }
+        /* Descripción cortada — máx 3 líneas */
+        .details-block {
+            font-size: 0.8rem; color: #555; line-height: 1.45;
+            margin-bottom: 8px;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .price { font-size: 1.35rem; color: var(--price-green); font-weight: 800; margin-bottom: 6px; }
+        /* Badge de stock — debajo del precio, no sobre la imagen */
+        .stock-badge-inline {
+            font-size: 0.72rem; font-weight: 800; padding: 3px 10px;
+            border-radius: 20px; display: inline-block; margin-bottom: 6px; width: fit-content;
+        }
+        .stock-badge-inline.agotado { background:#eee; color:#888; }
+        .stock-badge-inline.ultimas { background:linear-gradient(135deg,#ff6b35,#ff4444); color:#fff; }
+        .stock-badge-inline.pedido { background:linear-gradient(135deg,#ff9500,#ff6b00); color:#fff; }
+        /* Mantener badge sobre imagen para compatibilidad legacy */
+        .stock-badge { position:absolute; top:8px; left:8px; font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:20px; z-index:5; display:none; }
+        .stars-container { margin-bottom: 4px; }
+        .card-vendedor { font-size: 0.72rem; color: #999; margin-top: 2px; font-style: italic; }
         .ventas-counter { font-size: 0.75rem; color: #888; margin-top: 3px; }
         .btn-lo-quiero { 
             display: block; text-align: center; background: var(--brand-blue); color: white; 
-            text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 15px;
+            text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: auto; padding-top: 12px;
         }
 
         aside { display: none !important; width: 0 !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; }
@@ -572,7 +586,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             z-index: 19998;
         }
         #bs-overlay.active { display: block; }
@@ -582,46 +596,75 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: #fff;
             border-radius: 20px 20px 0 0;
-            padding: 20px;
             z-index: 19999;
             transform: translateY(100%);
             transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-            max-height: 75vh;
+            max-height: 90vh;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         #bottom-sheet.active { transform: translateY(0); }
 
         #bs-handle {
-            width: 40px;
-            height: 4px;
-            background: #ddd;
-            border-radius: 2px;
-            margin: 0 auto 16px;
+            width: 40px; height: 4px;
+            background: #ddd; border-radius: 2px;
+            margin: 12px auto 0;
+            flex-shrink: 0;
         }
         #bs-close {
             position: absolute;
-            top: 16px;
-            right: 16px;
-            background: none;
+            top: 12px; right: 16px;
+            background: rgba(0,0,0,0.07);
             border: none;
-            font-size: 1.4rem;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1rem;
             cursor: pointer;
-            color: #888;
-            line-height: 1;
+            color: #555;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2;
+        }
+        #bs-img-wrap {
+            width: 100%;
+            max-height: 55vw;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f5f5f5;
+            display: flex; align-items: center; justify-content: center;
+            margin-top: 8px;
+        }
+        #bs-img-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        #bs-body {
+            padding: 16px 20px 24px;
+            flex: 1;
         }
         #bs-title {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: #111;
+            margin-bottom: 8px;
+        }
+        #bs-price {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #22a745;
             margin-bottom: 10px;
-            padding-right: 30px;
         }
         #bs-content {
-            font-size: 0.85rem;
-            color: #555;
+            font-size: 0.88rem;
+            color: #444;
             line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        #bs-tallas {
+            font-size: 0.82rem;
+            color: #666;
             margin-bottom: 16px;
         }
         #bs-ver-foto {
@@ -629,13 +672,13 @@
             text-align: center;
             background: var(--brand-blue);
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             font-weight: bold;
             border: none;
             width: 100%;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
         /* ===== CARRUSEL ===== */
@@ -806,9 +849,14 @@
 <div id="bottom-sheet">
     <div id="bs-handle"></div>
     <button id="bs-close">✕</button>
-    <div id="bs-title"></div>
-    <div id="bs-content"></div>
-    <button id="bs-ver-foto">📷 Ver foto</button>
+    <div id="bs-img-wrap"><img id="bs-img" src="" alt=""></div>
+    <div id="bs-body">
+        <div id="bs-title"></div>
+        <div id="bs-price"></div>
+        <div id="bs-content"></div>
+        <div id="bs-tallas"></div>
+        <button id="bs-ver-foto">📷 Ver foto</button>
+    </div>
 </div>
 
 <div id="tienda-cerrada">
@@ -906,45 +954,34 @@
 
             <div class="section-title" id="sec-title-destacado" data-section="destacado">⭐ LO MÁS DESTACADO</div>
             <div class="grid" id="grid-destacado">
-<div class="card" data-product="gdm" data-genero="mujer hombre"><div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position:relative;"><img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pul%C3%B3ver%20GREAT%20DREAM%20MAKER%20(GRAN%20CREADOR%20DE%20SUE%C3%91OS)%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="mnegras" data-genero="mujer hombre"><div class="card-img-container" data-images="mnegras.jpg" data-count="1" style="position:relative;"><img src="mnegras.jpg" class="card-img" alt="Medias Negras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Medias Negras</div><div class="price">250 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Medias%20Negras%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div id="ticker-wrap"><span class="ticker-content" id="ticker-content"></span></div>
 
-            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
+            <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
 
             <div class="section-title" id="sec-title-ropa-interior" data-section="ropa-interior">👙 ROPA INTERIOR</div>
             <div class="grid" id="grid-ropa-interior">
-<div class="card" data-product="blumer" data-genero="mujer"><div class="card-img-container" data-images="blumer.jpg" data-count="1" style="position:relative;"><img src="blumer.jpg" class="card-img" alt="Blumer sin costuras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA INTERIOR</div><div class="product-name">Blumer sin costuras</div><div class="price">550</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Blumer%20sin%20costuras%20(550)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="sujetador" data-genero="mujer"><div class="card-img-container" data-images="sujetador.jpg" data-count="1" style="position:relative;"><img src="sujetador.jpg" class="card-img" alt="Ajustador sin costuras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA INTERIOR</div><div class="product-name">Ajustador sin costuras</div><div class="price">1500</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Ajustador%20sin%20costuras%20(1500)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div class="section-title" id="sec-title-ropa-moda" data-section="ropa-moda">👕 ROPA Y MODA</div>
             <div class="grid" id="grid-ropa-moda">
-<div class="card" data-product="aac" data-genero="hombre"><div class="card-img-container" data-images="aac.jpg,hombreaac.jpg" data-count="2" style="position:relative;"><img src="aac.jpg" class="card-img" alt="Pulover Amor, Alegría y Cerveza Fría" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover Amor, Alegría y Cerveza Fría</div><div class="price">3.000</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20Amor%2C%20Alegr%C3%ADa%20y%20Cerveza%20Fr%C3%ADa%20(3.000)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="freedom" data-genero="mujer hombre"><div class="card-img-container" data-images="freedom.jpg,hombre02freedom.jpg" data-count="2" style="position:relative;"><img src="freedom.jpg" class="card-img" alt="Pulover estampado FREEDOM" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado FREEDOM</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20FREEDOM%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="gdm" data-genero="mujer hombre"><div class="card-img-container" data-images="gdm.jpg,hombresgdm.jpg" data-count="2" style="position:relative;"><img src="gdm.jpg" class="card-img" alt="Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulóver GREAT DREAM MAKER (GRAN CREADOR DE SUEÑOS)</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pul%C3%B3ver%20GREAT%20DREAM%20MAKER%20(GRAN%20CREADOR%20DE%20SUE%C3%91OS)%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="mblancas" data-genero="mujer hombre"><div class="card-img-container" data-images="mblancas.jpg" data-count="1" style="position:relative;"><img src="mblancas.jpg" class="card-img" alt="Medias Blancas" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Medias Blancas</div><div class="price">250 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Medias%20Blancas%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="mnegras" data-genero="mujer hombre"><div class="card-img-container" data-images="mnegras.jpg" data-count="1" style="position:relative;"><img src="mnegras.jpg" class="card-img" alt="Medias Negras" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Medias Negras</div><div class="price">250 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Medias%20Negras%20(250%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="ngu" data-genero="mujer hombre"><div class="card-img-container" data-images="ngu.jpg,hombresngu.jpg" data-count="2" style="position:relative;"><img src="ngu.jpg" class="card-img" alt="Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado NEVER GIVE UP (NUNCA TE RINDAS. Positivo)</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20NEVER%20GIVE%20UP%20(NUNCA%20TE%20RINDAS.%20Positivo)%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="paris" data-genero="mujer hombre"><div class="card-img-container" data-images="paris.jpg,hombresparis.jpg" data-count="2" style="position:relative;"><img src="paris.jpg" class="card-img" alt="Pulover estampado PARIS" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado PARIS</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20PARIS%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="pulover-estampado-lo" data-genero="hombre"><div class="card-img-container" data-images="producto.jpg" data-count="1" style="position:relative;"><img src="producto.jpg" class="card-img" alt="Pulover estampado LOBO" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado LOBO</div><div class="price">3150</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20LOBO%20(3150)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="usa" data-genero="mujer hombre"><div class="card-img-container" data-images="usa.jpg,hombre01usa.jpg,hombre02usa.jpg" data-count="3" style="position:relative;"><img src="usa.jpg" class="card-img" alt="Pulover estampado USA" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ROPA MODA</div><div class="product-name">Pulover estampado USA</div><div class="price">2,900 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Pulover%20estampado%20USA%20(2%2C900%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
-            <div class="lifestyle-ribbon" id="ribbon-1"><div class="ribbon-text" id="ribbon-1-text">"Vístete con actitud, vive conectado. La experiencia 360 que define tu ritmo."</div></div>
+            <div class="lifestyle-ribbon" id="ribbon-2"><div class="ribbon-text" id="ribbon-2-text">"¿Por qué elegir CityBUY360? Mejores precios y calidad. Privacidad y entrega garantizadas."</div></div>
 
             <div class="section-title" id="sec-title-accesorios" data-section="accesorios">👜 ACCESORIOS</div>
             <div class="grid" id="grid-accesorios">
-<div class="card" data-product="gorra" data-genero="unisex"><div class="card-img-container" data-images="gorra.jpg,gorras-colores.jpg" data-count="2" style="position:relative;"><img src="gorra.jpg" class="card-img" alt="Gorra" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ACCESORIOS</div><div class="product-name">Gorra</div><div class="price">2,800 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Gorra%20(2%2C800%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-<div class="card" data-product="gorrobebe" data-genero="ninos"><div class="card-img-container" data-images="gorrobebe.jpg" data-count="1" style="position:relative;"><img src="gorrobebe.jpg" class="card-img" alt="Gorro para bebé" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">ACCESORIOS</div><div class="product-name">Gorro para bebé</div><div class="price">1,200 MN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20Gorro%20para%20beb%C3%A9%20(1%2C200%20MN)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
 
             <div class="section-title" id="sec-title-servicios" data-section="servicios">⚡ SERVICIOS</div>
             <div class="grid" id="grid-servicios">
-<div class="card" data-product="citybuy360familia" data-genero="servicios"><div class="card-img-container" data-images="bolsas-azules.jpg" data-count="1" style="position:relative;"><img src="bolsas-azules.jpg" class="card-img" alt="Únete a la familia CityBUY360" loading="lazy" onerror="this.style.display='none'"></div><div class="card-content"><div class="tag-category">SERVICIOS</div><div class="product-name">Únete a la familia CityBUY360</div><div class="price">PROMOCIÓN</div><a href="https://wa.me/5353255813?text=Hola%2C%20quiero%3A%20%C3%9Anete%20a%20la%20familia%20CityBUY360%20(PROMOCI%C3%93N)" class="btn-lo-quiero">Lo quiero</a></div></div>
-</div>
+                <!-- Cargando desde Firebase... -->
+            </div>
         </div>
     </div>
 
@@ -954,9 +991,7 @@
                 <div class="section-title" data-section="acceso360" style="background: linear-gradient(135deg, #1a1100, #2a1f00); color: #ffd700; border-left-color: #ffd700;">
                     ACCESO360
                 </div>
-                <div id="grid-acceso360" class="grid">
-
-</div>
+                <div id="grid-acceso360" class="grid"></div>
             </div>
 
 
@@ -1289,25 +1324,42 @@
             stockBadge = '<div class="stock-badge agotado">Agotado</div>';
         }
 
+        var showSeccion    = cardCfg.seccion     !== false;
+        var showEstrellas  = cardCfg.estrellas   !== false;
+        var showDetalles   = cardCfg.detalles    !== false;
+        var showDescripcion= cardCfg.descripcion !== false;
+        var showPrecio     = cardCfg.precio      !== false;
+
+        // Badge inline (bajo precio, no sobre imagen)
+        var badgeInline = '';
+        if (stock === 0 && inventarioData[p.id] !== undefined) {
+            badgeInline = '<div class="stock-badge-inline agotado">Agotado</div>';
+        } else if (stock !== undefined && stock !== null && stock > 0 && stock <= 3) {
+            badgeInline = '<div class="stock-badge-inline ultimas">¡Últimas ' + stock + ' unidades!</div>';
+        } else if (p.ventas && p.ventas > 10) {
+            badgeInline = '<div class="stock-badge-inline pedido">🔥 Muy pedido</div>';
+        }
+
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'">' +
-                stockBadge +
-                (p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
+                (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
             '</div>' +
             '<div class="card-content">' +
-                '<div class="tag-category">' + (p.tagCategoria || (p.seccion || '').replace(/-/g,' ').toUpperCase()) + '</div>' +
+                (showSeccion ? '<div class="tag-category">' + (p.tagCategoria || (p.seccion || '').replace(/-/g,' ').toUpperCase()) + '</div>' : '') +
                 '<div class="product-name">' + p.nombre + '</div>' +
-                '<div class="stars-container" data-product="' + p.id + '">' +
-                    '<div class="stars">' +
-                        '<span class="star" data-val="1">★</span><span class="star" data-val="2">★</span>' +
-                        '<span class="star" data-val="3">★</span><span class="star" data-val="4">★</span>' +
-                        '<span class="star" data-val="5">★</span>' +
-                    '</div>' +
-                    '<span class="stars-info">Sin votos</span>' +
-                '</div>' +
-                (p.detalles ? '<div class="details-block">' + p.detalles + '</div>' : '') +
-                (p.precio ? '<div class="price">' + p.precio + '</div>' : '') +
+                (showDetalles && p.detalles ? '<div class="details-block">' + p.detalles + '</div>' : '') +
+                (showPrecio && p.precio ? '<div class="price product-price">' + p.precio + ' ' + (p.moneda || 'MN') + '</div>' : '') +
+                badgeInline +
+                (showEstrellas
+                    ? '<div class="stars-container" data-product="' + p.id + '">'
+                        + '<div class="stars">'
+                        + '<span class="star" data-val="1">★</span><span class="star" data-val="2">★</span>'
+                        + '<span class="star" data-val="3">★</span><span class="star" data-val="4">★</span>'
+                        + '<span class="star" data-val="5">★</span>'
+                        + '</div><span class="stars-info">Sin votos</span></div>'
+                    : '') +
+                (p.vendedor ? '<div class="card-vendedor">' + p.vendedor + '</div>' : '') +
                 (stock === 0 && inventarioData[p.id] !== undefined
                     ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
                     : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this.dataset.product)">' + (esVIP ? '✦ Lo quiero' : 'Lo quiero') + '</a>') +
@@ -1347,8 +1399,12 @@
         }
 
         // Comprobar si todos los títulos están desactivados
-        var todosTitulosOcultos = SECCIONES.filter(function(s){ return s.id !== 'destacado'; }).every(function(s){
-            return (configSecciones[s.id] || {}).showTitle === false;
+        // Modo mezclado: verdadero si TODAS las secciones (excepto destacado) tienen showTitle=false
+        // Las secciones que no tienen configuración explícita se consideran con título visible
+        var seccionesSinDestacado = SECCIONES.filter(function(s){ return s.id !== 'destacado'; });
+        var todosTitulosOcultos = seccionesSinDestacado.length > 0 && seccionesSinDestacado.every(function(s){
+            var cfg = configSecciones[s.id] || {};
+            return cfg.showTitle === false;
         });
 
         if (todosTitulosOcultos) {
@@ -1474,6 +1530,7 @@
     }
 
     var inventarioData = {};
+    var cardCfg = {};
 
     var catalogoTimeout = setTimeout(function() {
         var container = document.getElementById('products-container');
@@ -1501,9 +1558,17 @@
             }
             db.ref('config').once('value', function(cfgSnap) {
                 var cfg = cfgSnap.val() || {};
-                db.ref('inventario').once('value', function(invSnap) {
-                    inventarioData = invSnap.val() || {};
-                    renderCatalogo(productos, cfg.products || {}, cfg.sections || {});
+                var sections = cfg.sections || {};
+                var orden = cfg.seccionesOrden || {};
+                if (Object.keys(orden).length > 0) {
+                    sections._orden = orden;
+                }
+                db.ref('interfaz/card').once('value', function(cardSnap) {
+                    cardCfg = cardSnap.val() || {};
+                    db.ref('inventario').once('value', function(invSnap) {
+                        inventarioData = invSnap.val() || {};
+                        renderCatalogo(productos, cfg.products || {}, sections);
+                    });
                 });
             });
         }, function(error) {
@@ -1681,10 +1746,30 @@
         return window.innerWidth <= 1024;
     }
 
-    function openBottomSheet(title, content, imgs) {
-        bsTitle.textContent   = title;
-        bsContent.innerHTML   = content;
-        bsImgs                = imgs;
+    function openBottomSheet(title, content, imgs, price, tallas) {
+        bsTitle.textContent = title;
+        bsContent.innerHTML = content || '';
+        bsImgs = imgs;
+
+        // Imagen principal
+        var bsImg = document.getElementById('bs-img');
+        var bsImgWrap = document.getElementById('bs-img-wrap');
+        if (bsImg && imgs.length > 0) {
+            bsImg.src = imgs[0];
+            bsImgWrap.style.display = '';
+        } else if (bsImgWrap) {
+            bsImgWrap.style.display = 'none';
+        }
+
+        // Precio
+        var bsPriceEl = document.getElementById('bs-price');
+        // price ya incluye la moneda (ej: "2900 USD")
+        if (bsPriceEl) bsPriceEl.textContent = price || '';
+
+        // Tallas/colores
+        var bsTallasEl = document.getElementById('bs-tallas');
+        if (bsTallasEl) bsTallasEl.textContent = tallas || '';
+
         bsOverlay.classList.add('active');
         bottomSheet.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -1705,25 +1790,35 @@
     });
 
     document.addEventListener('click', function(e) {
+        // Click en cualquier parte de la card (móvil) o en la imagen (PC)
+        var card = e.target.closest('.card');
         var container = e.target.closest('.card-img-container');
-        if (!container) return;
-        // No abrir si se hizo click en botón de navegación del slider
+
+        // No abrir si se hizo click en botones
         if (e.target.closest('.card-nav-btn')) return;
-        var raw  = container.getAttribute('data-images') || '';
-        var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        if (e.target.closest('.btn-lo-quiero')) return;
+        if (e.target.closest('.stars')) return;
+        if (e.target.closest('.card-photo-dots')) return;
 
         if (isMobile()) {
-            var tooltip = container.querySelector('.hover-tooltip');
-            var card    = container.closest('.card');
-            var title   = card ? (card.querySelector('.product-name') || {}).textContent || '' : '';
-            var content = tooltip ? tooltip.innerHTML : '';
-
-            if (content) {
-                openBottomSheet(title, content, imgs);
-            } else {
-                if (imgs.length > 0) openLightbox(imgs, 0);
-            }
+            // En móvil: click en cualquier parte de la card
+            if (!card) return;
+            var imgContainer = card.querySelector('.card-img-container');
+            var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
+            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+            var tooltip = imgContainer ? imgContainer.querySelector('.hover-tooltip') : null;
+            var title = (card.querySelector('.product-name') || {}).textContent || '';
+            var desc = tooltip ? tooltip.innerHTML : '';
+            var priceEl = card.querySelector('.product-price');
+            var price = priceEl ? priceEl.textContent.trim() : '';
+            var tallasEl = card.querySelector('.product-tallas');
+            var tallas = tallasEl ? tallasEl.textContent : '';
+            openBottomSheet(title, desc, imgs, price, tallas);
         } else {
+            // En PC: click en imagen abre lightbox
+            if (!container) return;
+            var raw = container.getAttribute('data-images') || '';
+            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
             if (imgs.length > 0) openLightbox(imgs, 0);
         }
     });
@@ -1737,8 +1832,22 @@
         if (!tooltip) return;
         var rect = container.getBoundingClientRect();
         tooltip.style.display = 'block';
-        tooltip.style.top  = (rect.top + rect.height / 2) + 'px';
-        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+        // Calcular posición y ajustar si se sale del viewport
+        var tw = 260; // ancho del tooltip
+        var leftIdeal = rect.left + rect.width / 2;
+        var topIdeal  = rect.top + rect.height / 2;
+        // Ajustar horizontal
+        if (leftIdeal + tw > window.innerWidth - 10) {
+            leftIdeal = rect.left - tw + rect.width;
+        }
+        if (leftIdeal < 10) leftIdeal = 10;
+        // Ajustar vertical
+        var th = 220;
+        if (topIdeal + th > window.innerHeight - 10) {
+            topIdeal = window.innerHeight - th - 10;
+        }
+        tooltip.style.top  = topIdeal + 'px';
+        tooltip.style.left = leftIdeal + 'px';
     }, true);
 
     document.addEventListener('mouseleave', function(e) {
@@ -1976,11 +2085,11 @@
         });
         db.ref('interfaz/ribbon1active').once('value', function(snap) {
             var el = document.getElementById('ribbon-1');
-            if (el && snap.val() === false) el.style.display = 'none';
+            if (el) el.style.display = snap.val() === false ? 'none' : '';
         });
         db.ref('interfaz/ribbon2active').once('value', function(snap) {
             var el = document.getElementById('ribbon-2');
-            if (el && snap.val() === false) el.style.display = 'none';
+            if (el) el.style.display = snap.val() === false ? 'none' : '';
         });
         db.ref('interfaz/marquesina').once('value', function(snap) {
             var wrap = document.getElementById('marquesina-wrap');
