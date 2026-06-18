@@ -22,7 +22,7 @@
         }
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--gray-bg); margin: 0; padding: 0; overflow-x: hidden; }
-        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; overflow-x: hidden; }
+        .page-wrapper { display: flex; align-items: flex-start; min-height: 100vh; width: 100%; }
         #tienda-cerrada {
             display: none; position: fixed; inset: 0; z-index: 9999;
             background: #0d1117; flex-direction: column;
@@ -33,7 +33,7 @@
         #tienda-cerrada .tc-title { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
         #tienda-cerrada .tc-msg { font-size: 1rem; color: #aaa; max-width: 320px; line-height: 1.6; }
         #tienda-cerrada .tc-brand { margin-top: 32px; font-size: 1.1rem; font-weight: 900; color: var(--brand-blue); }
-        .main-content { flex: 1; min-width: 0; max-width: 100%; display: flex; flex-direction: column; overflow-x: hidden; }
+        .main-content { flex: 1; min-width: 0; max-width: 100%; display: flex; flex-direction: column; }
 
         header { padding: 0; display: flex; flex-direction: column; width: 100%; overflow: hidden; }
 
@@ -226,7 +226,7 @@
             scrollbar-width: none; position: sticky; top: 0; z-index: 50;
             -webkit-overflow-scrolling: touch;
             width: 100%; box-sizing: border-box;
-            max-width: 100%; contain: layout;
+            max-width: 100%;
         }
         #cat-bar::-webkit-scrollbar { display: none; }
         .cat-btn { flex-shrink: 0; }
@@ -393,15 +393,20 @@
             overflow: hidden;
         }
         .price { font-size: 1.35rem; color: var(--price-green); font-weight: 800; margin-bottom: 6px; }
-        /* Badge de stock — debajo del precio, no sobre la imagen */
+        /* Badge de stock — esquina inferior derecha de la imagen */
         .stock-badge-inline {
-            font-size: 0.72rem; font-weight: 800; padding: 3px 10px;
-            border-radius: 20px; display: inline-block; margin-bottom: 6px; width: fit-content;
+            position: absolute;
+            bottom: 8px; right: 8px;
+            font-size: 0.68rem; font-weight: 800; padding: 3px 8px;
+            border-radius: 20px; z-index: 5;
+            white-space: nowrap;
         }
-        .stock-badge-inline.agotado { background:#eee; color:#888; }
+        .stock-badge-inline.agotado { background:rgba(0,0,0,0.65); color:#aaa; }
         .stock-badge-inline.ultimas { background:linear-gradient(135deg,#ff6b35,#ff4444); color:#fff; }
         .stock-badge-inline.pedido { background:linear-gradient(135deg,#ff9500,#ff6b00); color:#fff; }
-        /* Mantener badge sobre imagen para compatibilidad legacy */
+        .stock-badge-inline.nuevo { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; }
+        .stock-badge-inline.masvendido { background:linear-gradient(135deg,#f5c518,#e6a800); color:#111; }
+        /* badge legacy oculto */
         .stock-badge { position:absolute; top:8px; left:8px; font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:20px; z-index:5; display:none; }
         .stars-container { margin-bottom: 4px; }
         .card-vendedor { font-size: 0.72rem; color: #999; margin-top: 2px; font-style: italic; }
@@ -685,7 +690,8 @@
         /* ===== CARRUSEL ===== */
         @media (min-width: 1025px) {
             .grid { grid-template-columns: repeat(5, 1fr); gap: 14px; }
-            .card-img-container { height: 180px; padding: 0; }
+            .card-img-container { height: 180px; padding: 0; background: #f8f8f8; }
+            .card-img { object-fit: contain; }
             .card-content { padding: 10px 12px 12px; }
             .product-name { font-size: 0.88rem; }
             .price { font-size: 1.2rem; }
@@ -1340,27 +1346,33 @@
         var showDescripcion= cardCfg.descripcion !== false;
         var showPrecio     = cardCfg.precio      !== false;
 
-        // Badge inline (bajo precio, no sobre imagen)
+        // Badge en esquina inferior derecha de la imagen
         var badgeInline = '';
+        var ahoraMs = Date.now();
+        var sieteDs = 7 * 24 * 60 * 60 * 1000;
         if (stock === 0 && inventarioData[p.id] !== undefined) {
             badgeInline = '<div class="stock-badge-inline agotado">Agotado</div>';
         } else if (stock !== undefined && stock !== null && stock > 0 && stock <= 3) {
-            badgeInline = '<div class="stock-badge-inline ultimas">¡Últimas ' + stock + ' unidades!</div>';
-        } else if (p.ventas && p.ventas > 10) {
+            badgeInline = '<div class="stock-badge-inline ultimas">¡Últimas ' + stock + '!</div>';
+        } else if (p.ventas && p.ventas > 5) {
+            badgeInline = '<div class="stock-badge-inline masvendido">⭐ Más vendido</div>';
+        } else if (p.ventas && p.ventas > 3) {
             badgeInline = '<div class="stock-badge-inline pedido">🔥 Muy pedido</div>';
+        } else if (p.orden && (ahoraMs - p.orden) < sieteDs) {
+            badgeInline = '<div class="stock-badge-inline nuevo">🆕 Lo último</div>';
         }
 
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'">' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
+                badgeInline +
             '</div>' +
             '<div class="card-content">' +
                 (showSeccion ? '<div class="tag-category">' + (p.tagCategoria || (p.seccion || '').replace(/-/g,' ').toUpperCase()) + '</div>' : '') +
                 '<div class="product-name">' + p.nombre + '</div>' +
-                (showDetalles && p.detalles ? '<div class="details-block">' + p.detalles + '</div>' : '') +
-                (showPrecio && p.precio ? '<div class="price product-price">' + p.precio + ' ' + (p.moneda || 'MN') + '</div>' : '') +
-                badgeInline +
+                (showDetalles && p.tallas ? '<div class="details-block product-tallas">' + p.tallas + '</div>' : (showDetalles && p.detalles ? '<div class="details-block product-tallas">' + p.detalles + '</div>' : '')) +
+                (showPrecio && p.precio ? '<div class="price product-price">' + String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() + ' ' + (p.moneda || 'MN') + '</div>' : '') +
                 (showEstrellas
                     ? '<div class="stars-container" data-product="' + p.id + '">'
                         + '<div class="stars">'
@@ -1800,18 +1812,17 @@
     });
 
     document.addEventListener('click', function(e) {
-        // Click en cualquier parte de la card (móvil) o en la imagen (PC)
         var card = e.target.closest('.card');
         var container = e.target.closest('.card-img-container');
 
-        // No abrir si se hizo click en botones
+        // No abrir si se hizo click en botones de control
         if (e.target.closest('.card-nav-btn')) return;
         if (e.target.closest('.btn-lo-quiero')) return;
         if (e.target.closest('.stars')) return;
         if (e.target.closest('.card-photo-dots')) return;
 
         if (isMobile()) {
-            // En móvil: click en cualquier parte de la card
+            // En móvil: TODA la card (foto incluida) abre bottom sheet — sin lightbox
             if (!card) return;
             var imgContainer = card.querySelector('.card-img-container');
             var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
@@ -1825,7 +1836,7 @@
             var tallas = tallasEl ? tallasEl.textContent : '';
             openBottomSheet(title, desc, imgs, price, tallas);
         } else {
-            // En PC: click en imagen abre lightbox
+            // En PC: solo click en la imagen abre lightbox
             if (!container) return;
             var raw = container.getAttribute('data-images') || '';
             var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);

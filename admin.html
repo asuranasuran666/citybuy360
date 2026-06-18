@@ -402,8 +402,8 @@
       <div class="form-group">
         <label>Precio</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="number" id="prod-price" placeholder="2900" style="flex:1;">
-          <select id="prod-moneda" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;font-weight:700;">
+          <input type="number" id="prod-price" placeholder="2900" style="flex:1;min-width:0;">
+          <select id="prod-moneda" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 14px;font-size:1rem;font-weight:700;min-width:80px;">
             <option value="MN">MN</option>
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
@@ -849,6 +849,8 @@ async function loadStructureFromIndex() {
       var ib = orden[b.id] !== undefined ? orden[b.id] : 99;
       return ia - ib;
     });
+    // Re-renderizar con el orden correcto
+    if (typeof renderControl === 'function') renderControl();
   });
 }
 
