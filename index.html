@@ -35,10 +35,11 @@
         #tienda-cerrada .tc-brand { margin-top: 32px; font-size: 1.1rem; font-weight: 900; color: var(--brand-blue); }
         .main-content { flex: 1; min-width: 0; max-width: 100%; display: flex; flex-direction: column; }
 
-        header { padding: 0; display: flex; flex-direction: column; width: 100%; overflow: hidden; }
+        header { padding: 0; display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow: hidden; box-sizing: border-box; }
 
         .header-brand {
             width: 100%;
+            max-width: 100%;
             background: var(--dark-header);
             display: flex;
             flex-direction: row;
@@ -46,6 +47,7 @@
             gap: 12px;
             padding: 7px 20px;
             box-sizing: border-box;
+            overflow: hidden;
         }
         .header-brand h1 {
             color: var(--brand-blue);
@@ -73,6 +75,7 @@
         }
         .slide {
             width: 100%;
+            max-width: 100%;
             position: relative;
             align-items: center;
             justify-content: center;
@@ -80,12 +83,16 @@
             padding: 0 80px;
             height: 70px;
             box-sizing: border-box;
+            overflow: hidden;
         }
         .slide-label {
             font-size: 0.82rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .slide-title {
             font-size: 1.4rem;
@@ -93,6 +100,9 @@
             color: white;
             text-transform: uppercase;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
         .slide-cta {
             position: absolute;
@@ -227,6 +237,10 @@
             -webkit-overflow-scrolling: touch;
             width: 100%; box-sizing: border-box;
             max-width: 100%;
+        }
+        @media (min-width: 1025px) {
+            #cat-bar { justify-content: space-between; overflow-x: visible; }
+            .cat-btn { flex: 1; text-align: center; }
         }
         #cat-bar::-webkit-scrollbar { display: none; }
         .cat-btn { flex-shrink: 0; }
@@ -430,13 +444,14 @@
             padding: 20px 28px;
             font-weight: 800;
             font-size: 1.05rem;
-            margin: 30px 0;
+            margin: 8px 0 30px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 20px;
         }
+        #ticker-wrap + .lifestyle-ribbon { margin-top: 0; }
         .ribbon-text { flex: 1; text-align: left; }
         .ribbon-cta { white-space: nowrap; background: rgba(255,255,255,0.2); padding: 8px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 900; flex-shrink: 0; }
         @media (max-width: 700px) { .lifestyle-ribbon { flex-direction: column; text-align: center; gap: 10px; padding: 18px; } .ribbon-text { text-align: center; } }
@@ -1227,15 +1242,6 @@
                 }
             }, { passive: true });
 
-            // Click en imagen abre lightbox
-            if (imgEl) {
-                imgEl.style.cursor = 'pointer';
-                imgEl.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    openLightbox(images, current);
-                });
-            }
-
             startAuto();
         });
     }
@@ -1243,20 +1249,6 @@
     // Inicializar sliders después de que cargue la página
     document.addEventListener('DOMContentLoaded', initCardSliders);
     if (document.readyState !== 'loading') initCardSliders();
-
-    // Click en imagen de card con una sola foto abre lightbox
-    document.addEventListener('click', function(e) {
-        var img = e.target.closest('.card-img');
-        if (!img) return;
-        var container = img.closest('.card-img-container');
-        if (!container) return;
-        var imagesStr = container.getAttribute('data-images') || '';
-        var images = imagesStr.split(',').filter(Boolean);
-        if (images.length <= 1) {
-            e.stopPropagation();
-            openLightbox(images.length ? images : [img.src], 0);
-        }
-    });
 
     // ── Tracking de ventas al hacer clic en Lo quiero ────────────────────────
     document.addEventListener('click', function(e) {
@@ -1371,7 +1363,7 @@
             '<div class="card-content">' +
                 (showSeccion ? '<div class="tag-category">' + (p.tagCategoria || (p.seccion || '').replace(/-/g,' ').toUpperCase()) + '</div>' : '') +
                 '<div class="product-name">' + p.nombre + '</div>' +
-                (showDetalles && p.tallas ? '<div class="details-block product-tallas">' + p.tallas + '</div>' : (showDetalles && p.detalles ? '<div class="details-block product-tallas">' + p.detalles + '</div>' : '')) +
+                (showDetalles && p.tallas ? '<div class="details-block product-tallas">' + p.tallas + '</div>' : '') +
                 (showPrecio && p.precio ? '<div class="price product-price">' + String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() + ' ' + (p.moneda || 'MN') + '</div>' : '') +
                 (showEstrellas
                     ? '<div class="stars-container" data-product="' + p.id + '">'
@@ -1813,7 +1805,7 @@
 
     document.addEventListener('click', function(e) {
         var card = e.target.closest('.card');
-        var container = e.target.closest('.card-img-container');
+        if (!card) return;
 
         // No abrir si se hizo click en botones de control
         if (e.target.closest('.card-nav-btn')) return;
@@ -1821,27 +1813,20 @@
         if (e.target.closest('.stars')) return;
         if (e.target.closest('.card-photo-dots')) return;
 
-        if (isMobile()) {
-            // En móvil: TODA la card (foto incluida) abre bottom sheet — sin lightbox
-            if (!card) return;
-            var imgContainer = card.querySelector('.card-img-container');
-            var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
-            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-            var tooltip = imgContainer ? imgContainer.querySelector('.hover-tooltip') : null;
-            var title = (card.querySelector('.product-name') || {}).textContent || '';
-            var desc = tooltip ? tooltip.innerHTML : '';
-            var priceEl = card.querySelector('.product-price');
-            var price = priceEl ? priceEl.textContent.trim() : '';
-            var tallasEl = card.querySelector('.product-tallas');
-            var tallas = tallasEl ? tallasEl.textContent : '';
-            openBottomSheet(title, desc, imgs, price, tallas);
-        } else {
-            // En PC: solo click en la imagen abre lightbox
-            if (!container) return;
-            var raw = container.getAttribute('data-images') || '';
-            var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-            if (imgs.length > 0) openLightbox(imgs, 0);
-        }
+        // TODA la card (foto incluida) abre el bottom sheet — igual en PC y móvil
+        // El hover-tooltip en PC sigue funcionando aparte, sin tocar
+        var imgContainer = card.querySelector('.card-img-container');
+        var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
+        var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        var tooltip = imgContainer ? imgContainer.querySelector('.hover-tooltip') : null;
+        var title = (card.querySelector('.product-name') || {}).textContent || '';
+        var desc = tooltip ? tooltip.innerHTML : '';
+        var priceEl = card.querySelector('.product-price');
+        var price = priceEl ? priceEl.textContent.trim() : '';
+        var tallasEl = card.querySelector('.product-tallas');
+        var tallas = tallasEl ? tallasEl.textContent : '';
+
+        openBottomSheet(title, desc, imgs, price, tallas);
     });
 
     // Tooltip solo en PC — event delegation para cards dinámicas
