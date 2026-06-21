@@ -238,12 +238,7 @@
             width: 100%; box-sizing: border-box;
             max-width: 100%;
         }
-        @media (min-width: 1025px) {
-            #cat-bar { justify-content: space-between; overflow-x: visible; }
-            .cat-btn { flex: 1; text-align: center; }
-        }
         #cat-bar::-webkit-scrollbar { display: none; }
-        .cat-btn { flex-shrink: 0; }
         .cat-btn {
             flex-shrink: 0; background: #1e1e1e; color: #aaa;
             border: 1px solid #333; border-radius: 20px;
@@ -255,6 +250,14 @@
         @media (max-width: 1024px) {
             #cat-bar { padding: 8px 12px; gap: 6px; }
             .cat-btn { padding: 5px 12px; font-size: 0.75rem; }
+        }
+        /* PC: catbar reparte los botones de borde a borde. Va AL FINAL del bloque
+           a propósito — en CSS, con igual especificidad, gana la última regla en
+           el archivo. Si se mueve código nuevo de .cat-btn por encima de esto en
+           el futuro, este bloque deja de funcionar; siempre debe quedar último. */
+        @media (min-width: 1025px) {
+            #cat-bar { justify-content: space-between; overflow-x: visible; }
+            #cat-bar .cat-btn { flex: 1 1 0; flex-shrink: 1; text-align: center; }
         }
 
         /* ── BARRA NAVEGACIÓN INFERIOR ── */
@@ -1427,7 +1430,7 @@
             porSeccion[p.seccion].push(p);
         });
 
-        // Render destacados
+        // Render destacados — siempre independiente, nunca se mezcla
         var gridDest = document.getElementById('grid-destacado');
         if (gridDest) {
             if (destacados.length > 0) {
@@ -1437,68 +1440,21 @@
             }
         }
 
-        // Comprobar si todos los títulos están desactivados
-        // Modo mezclado: verdadero si NINGUNA sección con productos reales tiene el título visible.
-        // Se basa en las secciones que existen de verdad en los productos (incluye dinámicas como
-        // Electrónica/Aseo que no están hardcodeadas en SECCIONES), no solo en el array fijo.
-        var idsSeccionesConProductos = Object.keys(porSeccion);
-        var hayTituloVisible = idsSeccionesConProductos.some(function(secId) {
+        function tituloVisible(secId) {
             var cfg = configSecciones[secId] || {};
             return cfg.showTitle !== false; // sin config explícita = visible por defecto
-        });
-        var todosTitulosOcultos = idsSeccionesConProductos.length > 0 && !hayTituloVisible;
-
-        if (todosTitulosOcultos) {
-            // Modo mezclado — TODOS los productos (incluidos destacados) en un único grid continuo
-            var todosProductos = Object.values(productos).filter(function(p){ return p.activo !== false; });
-            shuffleArray(todosProductos);
-
-            // Ocultar TODAS las secciones hardcodeadas y sus títulos
-            SECCIONES.forEach(function(sec) {
-                var sw = document.getElementById('sec-' + sec.id);
-                var st = document.getElementById('sec-title-' + sec.id);
-                var g = document.getElementById(sec.contenedor);
-                if (sw) sw.style.display = 'none';
-                if (st) st.style.display = 'none';
-                if (g) g.innerHTML = '';
-            });
-            // Ocultar también cualquier título de sección dinámica generado en el DOM
-            document.querySelectorAll('.section-title').forEach(function(el) {
-                el.style.display = 'none';
-            });
-            document.querySelectorAll('[id^="grid-"]').forEach(function(el) {
-                if (el.id !== 'grid-mix') el.innerHTML = '';
-            });
-
-            // Crear o reusar el grid mezclado único
-            var productsContainer = document.getElementById('products-container');
-            var gridMix = document.getElementById('grid-mix');
-            if (!gridMix && productsContainer) {
-                gridMix = document.createElement('div');
-                gridMix.id = 'grid-mix';
-                gridMix.className = 'grid';
-                productsContainer.appendChild(gridMix);
-            }
-            if (gridMix) {
-                gridMix.style.display = '';
-                gridMix.innerHTML = todosProductos.map(buildCard).join('');
-            }
-
-            initAllRatings();
-            initCardSliders();
-            if (typeof applyFilter === 'function') applyFilter(currentFilter || 'todos');
-            return;
+        }
+        function seccionActiva(secId) {
+            var cfg = configSecciones[secId] || {};
+            return cfg.active !== false;
         }
 
-        // Si salimos del modo mezclado, ocultar el grid-mix si existe
+        // Limpiar el grid mezclado de la ejecución anterior (se reconstruye abajo si aplica)
         var gridMixOld = document.getElementById('grid-mix');
-        if (gridMixOld) gridMixOld.style.display = 'none';
-
-        // Render each section - including dynamic ones not in SECCIONES
-        var seccionesVistas = new Set(['destacado']);
-        var productsContainer = document.getElementById('products-container');
+        if (gridMixOld) { gridMixOld.innerHTML = ''; gridMixOld.style.display = 'none'; }
 
         // Reordenar los divs de sección en el DOM según el orden de SECCIONES
+        var productsContainer = document.getElementById('products-container');
         SECCIONES.forEach(function(sec) {
             if (sec.id === 'destacado') return;
             var st = document.getElementById('sec-title-' + sec.id);
@@ -1507,30 +1463,61 @@
             if (g && productsContainer) productsContainer.appendChild(g);
         });
 
+        // Productos que van al grid mezclado (secciones activas con título oculto)
+        var productosParaMezclar = [];
+        var seccionesVistas = new Set(['destacado']);
+
         SECCIONES.forEach(function(sec) {
             if (sec.id === 'destacado') return;
             seccionesVistas.add(sec.id);
-            var secCfg = configSecciones[sec.id] || {};
             var secWrapper = document.getElementById('sec-' + sec.id);
             var secTitle = document.getElementById('sec-title-' + sec.id);
             var grid = document.getElementById(sec.contenedor);
             if (!grid) return;
-            if (secCfg.active === false) {
+
+            if (!seccionActiva(sec.id)) {
                 if (secWrapper) secWrapper.style.display = 'none';
                 if (secTitle) secTitle.style.display = 'none';
+                grid.innerHTML = '';
                 return;
             }
+
+            if (!tituloVisible(sec.id)) {
+                // Esta sección entra al grupo mezclado: se oculta su título/grid propio
+                // y sus productos se acumulan para el grid-mix
+                if (secWrapper) secWrapper.style.display = 'none';
+                if (secTitle) secTitle.style.display = 'none';
+                grid.innerHTML = '';
+                grid.style.display = 'none';
+                (porSeccion[sec.id] || []).forEach(function(p){ productosParaMezclar.push(p); });
+                return;
+            }
+
+            // Sección normal e independiente, con su título visible
             if (secWrapper) secWrapper.style.display = '';
-            if (secTitle) secTitle.style.display = secCfg.showTitle === false ? 'none' : '';
+            if (secTitle) secTitle.style.display = '';
+            if (grid) grid.style.display = '';
             var prods = shuffleArray((porSeccion[sec.id] || []).slice());
             grid.innerHTML = prods.map(buildCard).join('');
         });
 
-        // Secciones dinámicas (no hardcodeadas)
+        // Secciones dinámicas (no hardcodeadas, ej. Electrónica/Aseo creadas desde admin)
         Object.keys(porSeccion).forEach(function(secId) {
             if (seccionesVistas.has(secId)) return;
+            if (!seccionActiva(secId)) return;
+
+            if (!tituloVisible(secId)) {
+                // Sección dinámica con título oculto: ocultar su wrapper propio si existe
+                // y sumar sus productos al grupo mezclado
+                var existingHidden = document.getElementById('sec-dyn-' + secId);
+                if (existingHidden) existingHidden.style.display = 'none';
+                var gridHidden = document.getElementById('grid-dyn-' + secId);
+                if (gridHidden) { gridHidden.innerHTML = ''; gridHidden.style.display = 'none'; }
+                (porSeccion[secId] || []).forEach(function(p){ productosParaMezclar.push(p); });
+                return;
+            }
+
             var secCfg = configSecciones[secId] || {};
-            if (secCfg.active === false) return;
             var wrapperId = 'sec-dyn-' + secId;
             var gridId = 'grid-dyn-' + secId;
             var existing = document.getElementById(wrapperId);
@@ -1541,7 +1528,6 @@
                 title.className = 'section-title';
                 title.id = 'sec-title-' + secId;
                 title.textContent = (secCfg.nombre || secId).toUpperCase();
-                if (secCfg.showTitle === false) title.style.display = 'none';
                 var grid = document.createElement('div');
                 grid.className = 'grid';
                 grid.id = gridId;
@@ -1549,12 +1535,31 @@
                 wrapper.appendChild(grid);
                 productsContainer.appendChild(wrapper);
             }
+            var wrapperEl = document.getElementById(wrapperId);
+            if (wrapperEl) wrapperEl.style.display = '';
             var grid2 = document.getElementById(gridId);
             if (grid2) {
-                var prods2 = (porSeccion[secId] || []).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+                grid2.style.display = '';
+                var prods2 = shuffleArray((porSeccion[secId] || []).slice());
                 grid2.innerHTML = prods2.map(buildCard).join('');
             }
         });
+
+        // Si hay productos de secciones con título oculto, mostrarlos en un único grid continuo
+        if (productosParaMezclar.length > 0) {
+            shuffleArray(productosParaMezclar);
+            var gridMix = document.getElementById('grid-mix');
+            if (!gridMix && productsContainer) {
+                gridMix = document.createElement('div');
+                gridMix.id = 'grid-mix';
+                gridMix.className = 'grid';
+                productsContainer.appendChild(gridMix);
+            }
+            if (gridMix) {
+                gridMix.style.display = '';
+                gridMix.innerHTML = productosParaMezclar.map(buildCard).join('');
+            }
+        }
 
         // Rotación aleatoria cada 5 minutos
         function shuffleArray(arr) {

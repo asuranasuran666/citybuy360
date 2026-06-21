@@ -2287,12 +2287,33 @@ function loadCatalogoAdmin() {
     });
     // Añadir secciones dinámicas
     var secIds = SECTIONS.map(function(s){ return s.id; });
+    var huboNuevas = false;
     Object.values(catalogoAdminData).forEach(function(p) {
       if (p.seccion && !secIds.includes(p.seccion)) {
         SECTIONS.push({ id: p.seccion, emoji: '📦', name: p.seccion.toUpperCase(), products: [] });
         secIds.push(p.seccion);
+        huboNuevas = true;
       }
     });
+    // Si se añadieron secciones dinámicas nuevas, reaplicar el orden guardado
+    // para que no queden siempre al final ignorando lo que el usuario movió
+    if (huboNuevas) {
+      db.ref('config/seccionesOrden').once('value', function(snap) {
+        var orden = snap.val();
+        if (orden) {
+          SECTIONS.sort(function(a, b) {
+            var ia = orden[a.id] !== undefined ? orden[a.id] : 99;
+            var ib = orden[b.id] !== undefined ? orden[b.id] : 99;
+            return ia - ib;
+          });
+        }
+        renderControl();
+        renderCatalogoAdmin();
+        populateProdSeccionSelect();
+        populateInventario();
+      });
+      return;
+    }
     renderControl();
     renderCatalogoAdmin();
     populateProdSeccionSelect();
