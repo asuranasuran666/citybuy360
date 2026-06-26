@@ -1894,20 +1894,22 @@ async function doPublish() {
   const id = editPid || slugify(name);
 
   try {
-    // 1. Asignar nombre definitivo a las fotos nuevas (temporales) usando el ID real del producto
-    // + sufijo corto de seguridad por si dos productos terminan con el mismo id (nombre repetido)
+    // 1. Solo las fotos con tempName=true son nuevas — asignarles nombre definitivo
+    // Las fotos cargadas desde Firebase al editar NO tienen tempName y mantienen su nombre original
     const idSufijo = Date.now().toString(36).slice(-4);
-    let fotoIdx = 1;
+    let fotoNuevaIdx = 1;
     uploadedPhotos.forEach(p => {
       if (p.tempName) {
-        const numero = fotoIdx > 1 ? '-' + fotoIdx : '';
+        // Contar solo las fotos nuevas para el índice
+        const numero = fotoNuevaIdx > 1 ? '-' + fotoNuevaIdx : '';
         p.name = id + '-' + idSufijo + numero + '.' + p.ext;
         delete p.tempName;
+        fotoNuevaIdx++;
       }
-      fotoIdx++;
+      // Si no tiene tempName = foto existente, mantiene su nombre original sin cambiar
     });
 
-    // 2. Subir fotos al repo si tienen base64
+    // 2. Subir SOLO las fotos nuevas (las que tienen base64 real)
     const fotosNuevas = uploadedPhotos.filter(p => p.base64 && p.base64.length > 0);
     if (fotosNuevas.length > 0 && token) {
       log('📤 Subiendo fotos…');
@@ -2361,22 +2363,26 @@ function loadVentasVendedores() {
 }
 
 function loadInventarioAdmin() {
-  var productos = [];
-  SECTIONS.forEach(s => { if (s.id !== 'destacado') s.products.forEach(p => productos.push(p)); });
-  productosParaVendedor = productos;
-  db.ref('inventario').once('value', snap => {
-    inventarioData = snap.val() || {};
-    var list = document.getElementById('inventario-list');
-    if (!list) return;
-    list.innerHTML = productos.map(pid => {
-      var stock = inventarioData[pid] !== undefined ? inventarioData[pid] : '';
-      var nombre = PRODUCT_NAMES[pid] || pid;
-      return '<div style="display:flex;align-items:center;gap:8px;">' +
-        '<span style="flex:1;font-size:0.8rem;color:var(--text-muted);">' + nombre + '</span>' +
-        '<input type="number" id="inv-' + pid + '" value="' + stock + '" min="0" placeholder="—" ' +
-        'style="width:60px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.8rem;text-align:center;">' +
-        '</div>';
-    }).join('');
+  db.ref('catalogo').once('value', function(catSnap) {
+    var catalogo = catSnap.val() || {};
+    var todos = Object.keys(catalogo).filter(function(id) {
+      return catalogo[id].activo !== false;
+    });
+    productosParaVendedor = todos;
+    db.ref('inventario').once('value', function(snap) {
+      inventarioData = snap.val() || {};
+      var list = document.getElementById('inventario-list');
+      if (!list) return;
+      list.innerHTML = todos.map(function(pid) {
+        var stock = inventarioData[pid] !== undefined ? inventarioData[pid] : '';
+        var nombre = (catalogo[pid] && catalogo[pid].nombre) || pid;
+        return '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span style="flex:1;font-size:0.8rem;color:var(--text-muted);">' + nombre + '</span>' +
+          '<input type="number" id="inv-' + pid + '" value="' + (stock === -1 ? '' : stock) + '" min="0" placeholder="—" ' +
+          'style="width:60px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.8rem;text-align:center;">' +
+          '</div>';
+      }).join('');
+    });
   });
 }
 

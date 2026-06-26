@@ -233,7 +233,7 @@
             display: flex; overflow-x: auto; gap: 8px;
             padding: 10px 20px; background: var(--bg-dark);
             border-bottom: 1px solid #222;
-            scrollbar-width: none; position: sticky; top: 0; z-index: 50;
+            scrollbar-width: none; z-index: 50;
             -webkit-overflow-scrolling: touch;
             width: 100%; box-sizing: border-box;
             max-width: 100%;
@@ -1633,9 +1633,21 @@
                     cardCfg = cardSnap.val() || {};
                     db.ref('config/tasasConversion').once('value', function(tasasSnap) {
                         tasasConversion = tasasSnap.val() || { usd: 0, eur: 0 };
-                        db.ref('inventario').once('value', function(invSnap) {
-                            inventarioData = invSnap.val() || {};
-                            renderCatalogo(productos, cfg.products || {}, sections);
+                        // Leer también config/secciones (español) para secciones dinámicas
+                        db.ref('config/secciones').once('value', function(secDynSnap) {
+                            var secDyn = secDynSnap.val() || {};
+                            // Fusionar: secciones dinámicas en español complementan sections en inglés
+                            Object.keys(secDyn).forEach(function(secId) {
+                                if (!sections[secId]) sections[secId] = {};
+                                // activo en español → active en inglés
+                                if (secDyn[secId].activo === false) sections[secId].active = false;
+                                // showTitle heredado si existe
+                                if (secDyn[secId].showTitle !== undefined) sections[secId].showTitle = secDyn[secId].showTitle;
+                            });
+                            db.ref('inventario').once('value', function(invSnap) {
+                                inventarioData = invSnap.val() || {};
+                                renderCatalogo(productos, cfg.products || {}, sections);
+                            });
                         });
                     });
                 });
