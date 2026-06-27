@@ -256,8 +256,10 @@
            el archivo. Si se mueve código nuevo de .cat-btn por encima de esto en
            el futuro, este bloque deja de funcionar; siempre debe quedar último. */
         @media (min-width: 1025px) {
-            #cat-bar { justify-content: space-between; overflow-x: visible; width: 100%; }
-            #cat-bar .cat-btn { flex: 1 1 0; flex-shrink: 1; text-align: center; min-width: 0; }
+            #cat-bar { justify-content: space-between; overflow-x: visible; width: 100%; padding-left: 0; padding-right: 0; }
+            #cat-bar .cat-btn { flex: 1 1 0; flex-shrink: 1; text-align: center; min-width: 0; border-radius: 0; border-left: none; border-right: none; border-top: none; }
+            #cat-bar .cat-btn:first-child { border-radius: 0; }
+            #cat-bar .cat-btn:last-child { border-radius: 0; }
         }
 
         /* ── BARRA NAVEGACIÓN INFERIOR ── */
@@ -802,27 +804,6 @@
 
         
         /* ── CARD TASAS DE CAMBIO ── */
-        #tasas-card {
-            background: linear-gradient(135deg, #0d1117, #161b22);
-            border: 1px solid #30363d;
-            border-radius: 14px;
-            padding: 18px 20px;
-            margin: 20px 0;
-            display: none;
-        }
-        #tasas-card.visible { display: block; }
-        .tasas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .tasas-title { color: #e6edf3; font-size: 0.88rem; font-weight: 700; }
-        .tasas-source { color: #6e7681; font-size: 0.72rem; }
-        .tasas-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-        .tasa-item { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 12px 10px; text-align: center; }
-        .tasa-moneda { color: #8b949e; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
-        .tasa-valor { color: #f0f6fc; font-size: 1.25rem; font-weight: 900; }
-        .tasa-label { color: #6e7681; font-size: 0.65rem; margin-top: 2px; }
-        .tasa-error { color: #f85149; font-size: 0.75rem; text-align: center; padding: 10px; }
-        .tasas-loading { color: #8b949e; font-size: 0.8rem; text-align: center; padding: 10px; }
-        .tasas-update { color: #6e7681; font-size: 0.68rem; text-align: right; margin-top: 10px; }
-        @media (max-width: 700px) { .tasas-grid { grid-template-columns: repeat(3,1fr); gap: 8px; } .tasa-valor { font-size: 1.05rem; } }
 
         
         /* ── TICKER / MARQUESINA ── */
@@ -1379,10 +1360,10 @@
             bajadaPrecioHTML = '<span class="price-down-arrow">▼</span>';
         }
         var conversionHTML = '';
-        if (cardCfg.conversion === true && monedaProd !== 'MN' && precioMostrar) {
+        if (monedaProd !== 'MN' && precioMostrar) {
             var tasa = monedaProd === 'USD' ? tasasConversion.usd : (monedaProd === 'EUR' ? tasasConversion.eur : 0);
             if (tasa > 0) {
-                var valorMN = (parseFloat(precioMostrar) * tasa).toLocaleString('es-ES', {maximumFractionDigits:0});
+                var valorMN = Math.round(parseFloat(precioMostrar) * tasa).toLocaleString('es-ES');
                 conversionHTML = '<div class="price-conversion">≈ ' + valorMN + ' MN</div>';
             }
         }
