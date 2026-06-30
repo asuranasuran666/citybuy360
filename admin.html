@@ -383,71 +383,96 @@
       <span class="token-status" id="token-status">Sin token</span>
     </div>
 
-    <!-- Fotos -->
-    <div class="form-group">
-      <label>Fotos del producto (primera = principal)</label>
-      <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()" style="max-width:280px;padding:14px;">
-        <div style="font-size:1.4rem">📷</div>
-        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Click para añadir fotos</div>
-        <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(this)">
-      </div>
-      <div class="photo-previews" id="photo-previews"></div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nombre del producto</label>
-        <input type="text" id="prod-name" placeholder="Ej: Pulover estampado NYC">
-      </div>
-      <div class="form-group">
-        <label>Precio</label>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input type="number" id="prod-price" placeholder="2900" style="width:120px !important;flex:none !important;min-width:120px;max-width:120px;font-size:1rem;">
-          <select id="prod-moneda" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 2px;font-size:0.78rem;font-weight:700;width:52px;flex:none;text-align:center;">
-            <option value="MN">MN</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-          </select>
+    <!-- Fotos + campos principales en dos columnas -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+      <!-- Columna izquierda: Fotos, Destacado, Etiqueta, Desc corta, Vendedor -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-group" style="margin:0;">
+          <label>Fotos del producto (primera = principal)</label>
+          <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()" style="padding:14px;">
+            <div style="font-size:1.4rem">📷</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Click para añadir fotos</div>
+            <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(this)">
+          </div>
+          <div class="photo-previews" id="photo-previews"></div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <div class="checkbox-row">
+            <input type="checkbox" id="prod-destacado">
+            <label for="prod-destacado" style="text-transform:none;letter-spacing:0;font-size:0.88rem;color:var(--text);margin:0">Incluir también en ⭐ Lo más destacado</label>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Etiqueta especial (opcional)</label>
+          <div class="genero-chips" id="etiqueta-chips">
+            <span class="genero-chip" data-val="regalo" onclick="toggleEtiquetaChip(this)">🎁 Regalo</span>
+            <span class="genero-chip" data-val="recomendado" onclick="toggleEtiquetaChip(this)">👍 Recomendado</span>
+            <span class="genero-chip" data-val="calidad" onclick="toggleEtiquetaChip(this)">💎 Máxima Calidad</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Descripción corta (tallas, estilo, colores…)</label>
+          <textarea id="prod-desc" placeholder="Estilo casual. Tallas: S, M, L&#10;Colores: Blanco, Negro" style="min-height:60px;"></textarea>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Vendedor / Empresa <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <input type="text" id="prod-vendedor" placeholder="Ej: Tienda Fashion Cuba">
         </div>
       </div>
-    </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Tallas</label>
-        <input type="text" id="prod-tallas" placeholder="S, M, L, XL" style="max-width:220px;">
-      </div>
-      <div class="form-group">
-        <label>Colores</label>
-        <input type="text" id="prod-colores" placeholder="Blanco, Negro, Azul">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Sección</label>
-        <select id="prod-seccion">
-          <option value="">Cargando secciones…</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Nueva sección</label>
-        <div style="display:flex;gap:6px;">
-          <input type="text" id="nueva-seccion-input" placeholder="ej: zapatos" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;">
-          <button onclick="crearNuevaSeccion()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-size:0.85rem;">+ Crear</button>
+      <!-- Columna derecha: Nombre, Precio MN + USD, Tallas, Colores, Sección, Género, Tooltip -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-row" style="margin:0;">
+          <div class="form-group" style="margin:0;">
+            <label>Nombre del producto</label>
+            <input type="text" id="prod-name" placeholder="Nombre del producto">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Precio MN</label>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="number" id="prod-price" placeholder="2900" style="width:90px !important;flex:none !important;min-width:90px;font-size:0.95rem;">
+              <select id="prod-moneda" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 2px;font-size:0.78rem;font-weight:700;width:52px;flex:none;text-align:center;">
+                <option value="MN">MN</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Categoría / Género</label>
-      <div class="genero-chips" id="genero-chips">
-        <span class="genero-chip" data-val="mujer" onclick="toggleGeneroChip(this)">👗 Mujer</span>
-        <span class="genero-chip" data-val="hombre" onclick="toggleGeneroChip(this)">👕 Hombre</span>
-        <span class="genero-chip" data-val="unisex" onclick="toggleGeneroChip(this)">🔄 Unisex</span>
-        <span class="genero-chip" data-val="ninos" onclick="toggleGeneroChip(this)">👶 Niños</span>
-        <span class="genero-chip" data-val="electronica" onclick="toggleGeneroChip(this)">🔌 Electrónica</span>
-        <span class="genero-chip" data-val="aseo" onclick="toggleGeneroChip(this)">🧴 Aseo</span>
+        <div class="form-row" style="margin:0;">
+          <div class="form-group" style="margin:0;">
+            <label>Tallas</label>
+            <input type="text" id="prod-tallas" placeholder="S, M, L, XL">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Colores</label>
+            <input type="text" id="prod-colores" placeholder="Blanco, Negro, Azul">
+          </div>
+        </div>
+        <div class="form-row" style="margin:0;">
+          <div class="form-group" style="margin:0;">
+            <label>Sección</label>
+            <select id="prod-seccion">
+              <option value="">Cargando secciones…</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Nueva sección</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="nueva-seccion-input" placeholder="ej: zapatos" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;">
+              <button onclick="crearNuevaSeccion()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-size:0.85rem;">+ Crear</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Categoría / Género</label>
+          <div class="genero-chips" id="genero-chips">
+            <span class="genero-chip" data-val="mujer" onclick="toggleGeneroChip(this)">👗 Mujer</span>
+            <span class="genero-chip" data-val="hombre" onclick="toggleGeneroChip(this)">👕 Hombre</span>
+            <span class="genero-chip" data-val="unisex" onclick="toggleGeneroChip(this)">🔄 Unisex</span>
+            <span class="genero-chip" data-val="ninos" onclick="toggleGeneroChip(this)">👶 Niños</span>
+            <span class="genero-chip" data-val="electronica" onclick="toggleGeneroChip(this)">🔌 Electrónica</span>
+            <span class="genero-chip" data-val="aseo" onclick="toggleGeneroChip(this)">🧴 Aseo</span>
         <span class="genero-chip" data-val="servicios" onclick="toggleGeneroChip(this)">⚡ Servicios</span>
       </div>
       <div class="genero-add-row">

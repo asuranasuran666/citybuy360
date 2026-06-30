@@ -62,6 +62,10 @@
             font-size: 0.78rem;
             color: rgba(255,255,255,0.75);
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
         }
         .header-brand .brand-sep {
             color: rgba(255,255,255,0.3);
@@ -1360,12 +1364,20 @@
             bajadaPrecioHTML = '<span class="price-down-arrow">▼</span>';
         }
         var conversionHTML = '';
-        if (monedaProd !== 'MN' && precioMostrar) {
-            var tasa = monedaProd === 'USD' ? tasasConversion.usd : (monedaProd === 'EUR' ? tasasConversion.eur : 0);
-            if (tasa > 0) {
-                var valorMN = Math.round(parseFloat(precioMostrar) * tasa).toLocaleString('es-ES');
-                conversionHTML = '<div class="price-conversion">≈ ' + valorMN + ' MN</div>';
-            }
+        // Para productos en MN: mostrar equivalente en USD debajo
+        if (monedaProd === 'MN' && precioMostrar && tasasConversion.usd > 0) {
+            var valorUSD = (parseFloat(precioMostrar) / tasasConversion.usd).toFixed(2);
+            conversionHTML = '<div class="price-conversion">≈ ' + valorUSD + ' USD</div>';
+        }
+        // Para productos en USD: mostrar equivalente en MN debajo
+        if (monedaProd === 'USD' && precioMostrar && tasasConversion.usd > 0) {
+            var valorMN2 = Math.round(parseFloat(precioMostrar) * tasasConversion.usd).toLocaleString('es-ES');
+            conversionHTML = '<div class="price-conversion">≈ ' + valorMN2 + ' MN</div>';
+        }
+        // Para productos en EUR: mostrar equivalente en MN debajo
+        if (monedaProd === 'EUR' && precioMostrar && tasasConversion.eur > 0) {
+            var valorMN3 = Math.round(parseFloat(precioMostrar) * tasasConversion.eur).toLocaleString('es-ES');
+            conversionHTML = '<div class="price-conversion">≈ ' + valorMN3 + ' MN</div>';
         }
 
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
@@ -1429,20 +1441,22 @@
 
         function tituloVisible(secId) {
             var cfg = configSecciones[secId] || {};
-            return cfg.showTitle !== false; // sin config explícita = visible por defecto
+            return cfg.showTitle !== false;
         }
         function seccionActiva(secId) {
             var cfg = configSecciones[secId] || {};
             return cfg.active !== false;
         }
 
-        // Limpiar el grid mezclado de la ejecución anterior (se reconstruye abajo si aplica)
+        // productsContainer declarado PRIMERO — se usa en todo lo que sigue
+        var productsContainer = document.getElementById('products-container');
+
+        // Crear/ubicar el grid-mix inmediatamente después de grid-destacado
         var gridMix = document.getElementById('grid-mix');
         if (!gridMix && productsContainer) {
             gridMix = document.createElement('div');
             gridMix.id = 'grid-mix';
             gridMix.className = 'grid';
-            // Insertar después del grid-destacado, antes de cualquier sección con título
             var gridDest2 = document.getElementById('grid-destacado');
             if (gridDest2 && gridDest2.nextSibling) {
                 productsContainer.insertBefore(gridMix, gridDest2.nextSibling);
@@ -1452,8 +1466,7 @@
         }
         if (gridMix) { gridMix.innerHTML = ''; gridMix.style.display = 'none'; }
 
-        // Reordenar los divs de sección con título activo en el DOM según el orden de SECCIONES
-        var productsContainer = document.getElementById('products-container');
+        // Reordenar secciones hardcodeadas en el DOM según SECCIONES (ya ordenado por seccionesOrden)
         SECCIONES.forEach(function(sec) {
             if (sec.id === 'destacado') return;
             var st = document.getElementById('sec-title-' + sec.id);
@@ -1500,14 +1513,21 @@
             grid.innerHTML = prods.map(buildCard).join('');
         });
 
-        // Secciones dinámicas (no hardcodeadas, ej. Electrónica/Aseo creadas desde admin)
-        Object.keys(porSeccion).forEach(function(secId) {
-            if (seccionesVistas.has(secId)) return;
+        // Secciones dinámicas (Electrónica, Aseo, etc.) — respetar orden de seccionesOrden
+        // Ordenar las secciones dinámicas según el orden guardado antes de procesarlas
+        var seccionesOrden = configSecciones._orden || {};
+        var seccionsDinamicas = Object.keys(porSeccion).filter(function(secId) {
+            return !seccionesVistas.has(secId);
+        }).sort(function(a, b) {
+            var ia = seccionesOrden[a] !== undefined ? seccionesOrden[a] : 99;
+            var ib = seccionesOrden[b] !== undefined ? seccionesOrden[b] : 99;
+            return ia - ib;
+        });
+
+        seccionsDinamicas.forEach(function(secId) {
             if (!seccionActiva(secId)) return;
 
             if (!tituloVisible(secId)) {
-                // Sección dinámica con título oculto: ocultar su wrapper propio si existe
-                // y sumar sus productos al grupo mezclado
                 var existingHidden = document.getElementById('sec-dyn-' + secId);
                 if (existingHidden) existingHidden.style.display = 'none';
                 var gridHidden = document.getElementById('grid-dyn-' + secId);
@@ -1519,22 +1539,23 @@
             var secCfg = configSecciones[secId] || {};
             var wrapperId = 'sec-dyn-' + secId;
             var gridId = 'grid-dyn-' + secId;
-            var existing = document.getElementById(wrapperId);
-            if (!existing && productsContainer) {
-                var wrapper = document.createElement('div');
-                wrapper.id = wrapperId;
+            var wrapperEl = document.getElementById(wrapperId);
+            if (!wrapperEl && productsContainer) {
+                wrapperEl = document.createElement('div');
+                wrapperEl.id = wrapperId;
                 var title = document.createElement('div');
                 title.className = 'section-title';
                 title.id = 'sec-title-' + secId;
-                title.textContent = (secCfg.nombre || secId).toUpperCase();
+                title.textContent = (secCfg.nombre || secId).replace(/-/g,' ').toUpperCase();
                 var grid = document.createElement('div');
                 grid.className = 'grid';
                 grid.id = gridId;
-                wrapper.appendChild(title);
-                wrapper.appendChild(grid);
-                productsContainer.appendChild(wrapper);
+                wrapperEl.appendChild(title);
+                wrapperEl.appendChild(grid);
+                productsContainer.appendChild(wrapperEl);
             }
-            var wrapperEl = document.getElementById(wrapperId);
+            // Reposicionar según orden (mover al lugar correcto en el DOM)
+            if (wrapperEl && productsContainer) productsContainer.appendChild(wrapperEl);
             if (wrapperEl) wrapperEl.style.display = '';
             var grid2 = document.getElementById(gridId);
             if (grid2) {
