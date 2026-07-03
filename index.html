@@ -97,6 +97,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: rgba(255,255,255,0.85);
         }
         .slide-title {
             font-size: 1.4rem;
@@ -118,6 +119,7 @@
             font-size: 0.85rem;
             text-decoration: none;
             white-space: nowrap;
+            color: #222;
         }
         .slider-nav-btn {
             position: absolute;
@@ -1466,14 +1468,8 @@
         }
         if (gridMix) { gridMix.innerHTML = ''; gridMix.style.display = 'none'; }
 
-        // Reordenar secciones hardcodeadas en el DOM según SECCIONES (ya ordenado por seccionesOrden)
-        SECCIONES.forEach(function(sec) {
-            if (sec.id === 'destacado') return;
-            var st = document.getElementById('sec-title-' + sec.id);
-            var g = document.getElementById(sec.contenedor);
-            if (st && productsContainer) productsContainer.appendChild(st);
-            if (g && productsContainer) productsContainer.appendChild(g);
-        });
+        // (El reordenamiento real de TODAS las secciones -fijas y dinámicas juntas- ocurre
+        // al final de esta función, en un solo paso unificado, para respetar seccionesOrden.)
 
         // Productos que van al grid mezclado (secciones activas con título oculto)
         var productosParaMezclar = [];
@@ -1562,6 +1558,29 @@
                 grid2.style.display = '';
                 var prods2 = shuffleArray((porSeccion[secId] || []).slice());
                 grid2.innerHTML = prods2.map(buildCard).join('');
+            }
+        });
+
+        // Reordenar TODAS las secciones juntas (fijas + dinámicas) en un solo paso,
+        // para que seccionesOrden se respete entre ambos tipos sin que las dinámicas
+        // queden siempre debajo de las fijas.
+        var idsSecFijas = SECCIONES.filter(function(s){ return s.id !== 'destacado'; }).map(function(s){ return s.id; });
+        var idsTodasSecciones = idsSecFijas.concat(seccionsDinamicas);
+        idsTodasSecciones.sort(function(a, b) {
+            var ia = seccionesOrden[a] !== undefined ? seccionesOrden[a] : 99;
+            var ib = seccionesOrden[b] !== undefined ? seccionesOrden[b] : 99;
+            return ia - ib;
+        });
+        idsTodasSecciones.forEach(function(id) {
+            var secFija = SECCIONES.filter(function(s){ return s.id === id; })[0];
+            if (secFija) {
+                var st = document.getElementById('sec-title-' + id);
+                var g = document.getElementById(secFija.contenedor);
+                if (st && productsContainer) productsContainer.appendChild(st);
+                if (g && productsContainer) productsContainer.appendChild(g);
+            } else {
+                var wrapperDyn = document.getElementById('sec-dyn-' + id);
+                if (wrapperDyn && productsContainer) productsContainer.appendChild(wrapperDyn);
             }
         });
 
