@@ -1058,6 +1058,7 @@ async function generarIndexEstatico() {
       var waText = encodeURIComponent('Hola, quiero: ' + p.nombre + (p.precio ? ' ('+p.precio+' '+(p.moneda||'MN')+')' : ''));
       var waLink = 'https://wa.me/5353255813?text=' + waText;
       var tallasHTML = p.tallas ? '<div class="details-block product-tallas">'+p.tallas+'</div>' : '';
+      var detallesHTML = p.detalles ? '<div class="details-block product-desc-corta">'+p.detalles+'</div>' : '';
       var tooltipHTML = p.descripcion ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = p.vendedor ? '<div class="card-vendedor">'+p.vendedor+'</div>' : '';
       var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
@@ -1072,9 +1073,10 @@ async function generarIndexEstatico() {
         tooltipHTML+
         '</div>'+
         '<div class="card-content">'+
-        '<div class="tag-category">'+(p.seccion||'').replace(/-/g,' ').toUpperCase()+'</div>'+
+        '<div class="tag-category">'+(p.tagCategoria || (p.seccion||'').replace(/-/g,' ').toUpperCase())+'</div>'+
         '<div class="product-name">'+p.nombre+'</div>'+
         tallasHTML+
+        detallesHTML+
         precioHTML+
         vendedorHTML+
         '<a href="'+waLink+'" class="btn-lo-quiero">Lo quiero</a>'+
