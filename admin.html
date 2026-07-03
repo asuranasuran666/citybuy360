@@ -429,14 +429,10 @@
             <input type="text" id="prod-name" placeholder="Nombre del producto">
           </div>
           <div class="form-group" style="margin:0;">
-            <label>Precio</label>
+            <label>Precio (USD)</label>
             <div style="display:flex;gap:4px;align-items:center;">
-              <input type="number" id="prod-price" placeholder="2900" style="width:90px !important;flex:none !important;min-width:90px;font-size:0.95rem;">
-              <select id="prod-moneda" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 2px;font-size:0.78rem;font-weight:700;width:52px;flex:none;text-align:center;">
-                <option value="MN">MN</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
+              <input type="number" id="prod-price" placeholder="29" step="0.01" style="width:90px !important;flex:none !important;min-width:90px;font-size:0.95rem;">
+              <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">USD</span>
             </div>
           </div>
         </div>
@@ -577,21 +573,14 @@
         <div style="flex:1"><div class="interfaz-name">Precio</div><div class="interfaz-desc">Precio visible en la card</div></div>
         <label class="toggle"><input type="checkbox" id="if-card-precio" checked onchange="saveCardElements()"><span class="toggle-slider"></span></label>
       </div>
-      <div class="interfaz-row">
-        <div style="flex:1"><div class="interfaz-name">Conversión a MN</div><div class="interfaz-desc">Muestra el equivalente en MN debajo del precio en USD/EUR</div></div>
-        <label class="toggle"><input type="checkbox" id="if-card-conversion" onchange="saveCardElements()"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="interfaz-row" id="tasas-conversion-row" style="display:none;">
+      <div class="interfaz-row" id="tasas-conversion-row">
         <div style="flex:1">
-          <div class="interfaz-name">Tasas de cambio</div>
+          <div class="interfaz-name">Tasa de cambio (USD → MN)</div>
+          <div class="interfaz-desc">Todos los productos se cargan en USD. Este valor calcula el precio en MN que se muestra siempre debajo, en la misma card.</div>
           <div style="display:flex;gap:10px;margin-top:6px;">
             <div style="flex:1">
               <label style="font-size:0.75rem;color:var(--text-muted);">1 USD =</label>
               <input type="number" id="tasa-usd-mn" placeholder="320" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 10px;font-size:0.85rem;">
-            </div>
-            <div style="flex:1">
-              <label style="font-size:0.75rem;color:var(--text-muted);">1 EUR =</label>
-              <input type="number" id="tasa-eur-mn" placeholder="350" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 10px;font-size:0.85rem;">
             </div>
             <button onclick="saveTasasConversion()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:6px 14px;cursor:pointer;align-self:flex-end;">Guardar</button>
           </div>
@@ -1053,6 +1042,10 @@ async function generarIndexEstatico() {
     var catalogo = snap.val() || {};
     var productos = Object.values(catalogo).filter(function(p){ return p.activo !== false; });
 
+    // 1b. Leer tasa de cambio para el doble precio (USD + MN)
+    var tasaSnap = await new Promise(function(res) { db.ref('config/tasasConversion').once('value', res); });
+    var tasaUsdMn = (tasaSnap.val() || {}).usd || 0;
+
     // 2. Leer index.html actual de GitHub
     logEl.textContent = '⏳ Leyendo index.html de GitHub...';
     var indexFile = await ghGet('index.html');
@@ -1067,7 +1060,12 @@ async function generarIndexEstatico() {
       var tallasHTML = p.tallas ? '<div class="details-block product-tallas">'+p.tallas+'</div>' : '';
       var tooltipHTML = p.descripcion ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = p.vendedor ? '<div class="card-vendedor">'+p.vendedor+'</div>' : '';
-      var precioHTML = p.precio ? '<div class="price product-price">'+p.precio+' '+(p.moneda||'MN')+'</div>' : '';
+      var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
+      var precioHTML = precioNum ? '<div class="price product-price">'+precioNum+' USD</div>' : '';
+      if (precioNum && tasaUsdMn > 0) {
+        var mnEquiv = Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES');
+        precioHTML += '<div class="price-conversion">≈ '+mnEquiv+' MN</div>';
+      }
       return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
@@ -1141,34 +1139,23 @@ function loadInterfaz() {
       var el = document.getElementById(elId);
       if (el) el.checked = cardCfg[key] !== false;
     });
-    // Conversión a MN
-    var convEl = document.getElementById('if-card-conversion');
-    if (convEl) convEl.checked = cardCfg.conversion === true;
-    var tasasRow = document.getElementById('tasas-conversion-row');
-    if (tasasRow) tasasRow.style.display = (cardCfg.conversion === true) ? 'flex' : 'none';
   });
-  // Cargar tasas guardadas
+  // Cargar tasa guardada
   db.ref('config/tasasConversion').once('value', snap => {
     var t = snap.val() || {};
     var usdEl = document.getElementById('tasa-usd-mn');
-    var eurEl = document.getElementById('tasa-eur-mn');
     if (usdEl && t.usd) usdEl.value = t.usd;
-    if (eurEl && t.eur) eurEl.value = t.eur;
   });
 }
 
 function saveCardElements() {
-  var conversionOn = document.getElementById('if-card-conversion').checked;
   var cfg = {
     seccion:     document.getElementById('if-card-seccion').checked,
     estrellas:   document.getElementById('if-card-estrellas').checked,
     detalles:    document.getElementById('if-card-detalles').checked,
     descripcion: document.getElementById('if-card-descripcion').checked,
     precio:      document.getElementById('if-card-precio').checked,
-    conversion:  conversionOn,
   };
-  var tasasRow = document.getElementById('tasas-conversion-row');
-  if (tasasRow) tasasRow.style.display = conversionOn ? 'flex' : 'none';
   db.ref('interfaz/card').update(cfg).then(() => {
     const chip = document.getElementById('save-chip');
     if (chip) { chip.classList.add('show'); setTimeout(() => chip.classList.remove('show'), 2500); }
@@ -1177,8 +1164,7 @@ function saveCardElements() {
 
 function saveTasasConversion() {
   var usd = parseFloat(document.getElementById('tasa-usd-mn').value) || 0;
-  var eur = parseFloat(document.getElementById('tasa-eur-mn').value) || 0;
-  db.ref('config/tasasConversion').set({ usd: usd, eur: eur }).then(() => {
+  db.ref('config/tasasConversion').set({ usd: usd }).then(() => {
     const chip = document.getElementById('save-chip');
     if (chip) { chip.classList.add('show'); setTimeout(() => chip.classList.remove('show'), 2500); }
   });
@@ -1574,8 +1560,6 @@ function editProduct(pid) {
     document.getElementById('prod-desc').value = p.detalles || '';
     document.getElementById('prod-tooltip').value = p.descripcion || '';
     document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
-    var monedaSel = document.getElementById('prod-moneda');
-    if (monedaSel) monedaSel.value = p.moneda || 'MN';
     var vendedorEl = document.getElementById('prod-vendedor');
     if (vendedorEl) vendedorEl.value = p.vendedor || '';
     setSelectedEtiqueta(p.etiqueta || '');
@@ -1878,7 +1862,7 @@ async function doPublish() {
   const tooltip = document.getElementById('prod-tooltip').value.trim();
   const secId   = document.getElementById('prod-seccion').value;
   const genero  = getSelectedGenero();
-  const moneda   = (document.getElementById('prod-moneda') || {}).value || 'MN';
+  const moneda   = 'USD';
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
