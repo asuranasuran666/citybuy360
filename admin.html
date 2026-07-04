@@ -1906,13 +1906,12 @@ async function doPublish() {
   try {
     // 1. Solo las fotos con tempName=true son nuevas — asignarles nombre definitivo
     // Las fotos cargadas desde Firebase al editar NO tienen tempName y mantienen su nombre original
-    const idSufijo = Date.now().toString(36).slice(-4);
+    // Nombre simple: id-del-producto.jpg, id-del-producto02.jpg, etc. (sin sufijo aleatorio)
     let fotoNuevaIdx = 1;
     uploadedPhotos.forEach(p => {
       if (p.tempName) {
-        // Contar solo las fotos nuevas para el índice
-        const numero = fotoNuevaIdx > 1 ? '-' + fotoNuevaIdx : '';
-        p.name = id + '-' + idSufijo + numero + '.' + p.ext;
+        const numero = fotoNuevaIdx > 1 ? String(fotoNuevaIdx).padStart(2, '0') : '';
+        p.name = id + numero + '.' + p.ext;
         delete p.tempName;
         fotoNuevaIdx++;
       }
