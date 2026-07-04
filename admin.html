@@ -1055,6 +1055,21 @@ async function ghPut(path, content64, message, sha) {
 let interfazData = {};
 
 async function generarIndexEstatico() {
+  // Encuentra el </div> que realmente cierra el div abierto en openTagEndIdx,
+  // contando divs anidados (una card de producto tiene varios divs adentro).
+  function findMatchingCloseDiv(html, openTagEndIdx) {
+    var depth = 1;
+    var re = /<div\b[^>]*>|<\/div\s*>/gi;
+    re.lastIndex = openTagEndIdx;
+    var match;
+    while ((match = re.exec(html)) !== null) {
+      if (/^<div/i.test(match[0])) depth++;
+      else depth--;
+      if (depth === 0) return match.index;
+    }
+    return -1;
+  }
+
   var btn = document.getElementById('btn-estatico');
   var logEl = document.getElementById('estatico-log');
   var token = localStorage.getItem('gh_token');
@@ -1122,12 +1137,14 @@ async function generarIndexEstatico() {
         ? productos.filter(function(p){ return p.destacado; })
         : (porSeccion[secId] || []);
       var cardsHTML = prods.map(buildStaticCard).join('\n');
-      // Reemplazar contenido del grid en el HTML
-      var gridRegex = new RegExp('(<div[^>]+id="'+gridId+'"[^>]*>)[\\s\\S]*?(<!-- Cargando desde Firebase|<\\/div>)', 'm');
+      // Reemplazar contenido del grid en el HTML (usando el cierre REAL del div, no el primero que aparezca)
       if (indexHTML.match(new RegExp('id="'+gridId+'"'))) {
         var startIdx = indexHTML.indexOf('id="'+gridId+'"');
         var openTag = indexHTML.indexOf('>', startIdx) + 1;
-        var closeTag = indexHTML.indexOf('</div>', openTag);
+        var closeTag = findMatchingCloseDiv(indexHTML, openTag);
+        if (closeTag === -1) {
+          throw new Error('No se pudo encontrar el cierre real de "' + gridId + '" — abortado para no corromper el archivo.');
+        }
         indexHTML = indexHTML.substring(0, openTag) + '\n' + cardsHTML + '\n' + indexHTML.substring(closeTag);
       }
     });
