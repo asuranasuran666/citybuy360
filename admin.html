@@ -930,16 +930,43 @@ function getPhotoSessionId() {
 function handlePhotos(input) {
   const files = Array.from(input.files);
   files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const dataUrl = e.target.result;
+    compressImage(file, 1280, 0.82).then(function(result) {
+      const dataUrl = result.dataUrl;
       const base64 = dataUrl.split(',')[1];
-      const ext = file.name.split('.').pop().toLowerCase();
-      // Nombre temporal único — el nombre definitivo se asigna al publicar, con el nombre real del producto
+      const ext = 'jpg'; // la compresión siempre reexporta como JPEG
       const tempId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
       const name = 'tmp-' + tempId + '.' + ext;
       uploadedPhotos.push({ name, base64, dataUrl, ext, tempName: true });
       renderPreviews();
+    }).catch(function(err) {
+      log('❌ No se pudo procesar la foto "' + file.name + '": ' + err.message, 'log-err');
+    });
+  });
+}
+
+// Redimensiona y comprime una imagen a JPEG en el navegador antes de subirla.
+// Evita fallos de subida por tamaño (GitHub limita ~1MB por archivo vía la API que usamos).
+function compressImage(file, maxDim, quality) {
+  return new Promise(function(resolve, reject) {
+    const reader = new FileReader();
+    reader.onerror = function() { reject(new Error('No se pudo leer el archivo')); };
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onerror = function() { reject(new Error('Archivo de imagen inválido')); };
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else { w = Math.round(w * (maxDim / h)); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ dataUrl: dataUrl, width: w, height: h });
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
@@ -1058,7 +1085,6 @@ async function generarIndexEstatico() {
       var waText = encodeURIComponent('Hola, quiero: ' + p.nombre + (p.precio ? ' ('+p.precio+' '+(p.moneda||'MN')+')' : ''));
       var waLink = 'https://wa.me/5353255813?text=' + waText;
       var tallasHTML = p.tallas ? '<div class="details-block product-tallas">'+p.tallas+'</div>' : '';
-      var detallesHTML = p.detalles ? '<div class="details-block product-desc-corta">'+p.detalles+'</div>' : '';
       var tooltipHTML = p.descripcion ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = p.vendedor ? '<div class="card-vendedor">'+p.vendedor+'</div>' : '';
       var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
@@ -1073,10 +1099,9 @@ async function generarIndexEstatico() {
         tooltipHTML+
         '</div>'+
         '<div class="card-content">'+
-        '<div class="tag-category">'+(p.tagCategoria || (p.seccion||'').replace(/-/g,' ').toUpperCase())+'</div>'+
+        '<div class="tag-category">'+(p.seccion||'').replace(/-/g,' ').toUpperCase()+'</div>'+
         '<div class="product-name">'+p.nombre+'</div>'+
         tallasHTML+
-        detallesHTML+
         precioHTML+
         vendedorHTML+
         '<a href="'+waLink+'" class="btn-lo-quiero">Lo quiero</a>'+
@@ -1896,13 +1921,30 @@ async function doPublish() {
 
     // 2. Subir SOLO las fotos nuevas (las que tienen base64 real)
     const fotosNuevas = uploadedPhotos.filter(p => p.base64 && p.base64.length > 0);
-    if (fotosNuevas.length > 0 && token) {
+    if (fotosNuevas.length > 0) {
+      if (!token) {
+        log('❌ No se puede publicar: hay fotos nuevas por subir pero no tienes el token de GitHub cargado. Pégalo arriba, en "Token de GitHub", y vuelve a intentar. Nada se guardó todavía.', 'log-err');
+        btn.disabled = false;
+        return;
+      }
       log('📤 Subiendo fotos…');
       for (const photo of fotosNuevas) {
         let sha = null;
         try { const ex = await ghGet(photo.name); sha = ex.sha; } catch(e) {}
         await ghPut(photo.name, photo.base64, `foto: ${photo.name}`, sha);
-        log(`✅ Foto subida: ${photo.name}`, 'log-ok');
+        // Verificar que el archivo quedó realmente accesible (no solo que la API dijo "OK")
+        let confirmado = false;
+        for (let intento = 0; intento < 3 && !confirmado; intento++) {
+          if (intento > 0) await new Promise(r => setTimeout(r, 1200));
+          try {
+            const check = await fetch('https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + photo.name, { cache: 'no-store' });
+            if (check.ok) confirmado = true;
+          } catch (e) {}
+        }
+        if (!confirmado) {
+          throw new Error('La foto "' + photo.name + '" se subió pero no se pudo confirmar que quedó accesible. No se guardó el producto — intenta publicar de nuevo.');
+        }
+        log(`✅ Foto subida y confirmada: ${photo.name}`, 'log-ok');
       }
     }
 
