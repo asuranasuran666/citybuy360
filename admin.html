@@ -1023,13 +1023,14 @@ function clearLog() {
 
 async function ghGet(path) {
   const token = localStorage.getItem('gh_token');
-  const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, {
-    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}&_=${Date.now()}`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+    cache: 'no-store'
   });
   if (!res.ok) throw new Error('Error leyendo ' + path + ': ' + res.status);
   const data = await res.json();
   if (data.content === null && data.download_url) {
-    const raw = await fetch(data.download_url);
+    const raw = await fetch(data.download_url, { cache: 'no-store' });
     if (!raw.ok) throw new Error('Error descargando ' + path);
     const text = await raw.text();
     data.content = btoa(unescape(encodeURIComponent(text)));
