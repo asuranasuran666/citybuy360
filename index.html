@@ -1933,6 +1933,7 @@
     // Tooltip solo en PC — event delegation para cards dinámicas
     document.addEventListener('mouseenter', function(e) {
         if (isMobile()) return;
+        if (!e.target || e.target.nodeType !== 1) return;
         var container = e.target.closest('.card-img-container');
         if (!container) return;
         var tooltip = container.querySelector('.hover-tooltip');
@@ -1959,6 +1960,7 @@
 
     document.addEventListener('mouseleave', function(e) {
         if (isMobile()) return;
+        if (!e.target || e.target.nodeType !== 1) return;
         var container = e.target.closest('.card-img-container');
         if (!container) return;
         var tooltip = container.querySelector('.hover-tooltip');
