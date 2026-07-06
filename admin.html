@@ -1089,6 +1089,10 @@ async function generarIndexEstatico() {
     var tasaSnap = await new Promise(function(res) { db.ref('config/tasasConversion').once('value', res); });
     var tasaUsdMn = (tasaSnap.val() || {}).usd || 0;
 
+    // 1c. Leer inventario para los badges de stock (Agotado / Últimas unidades)
+    var invSnap = await new Promise(function(res) { db.ref('inventario').once('value', res); });
+    var inventarioEstatico = invSnap.val() || {};
+
     // 2. Leer index.html actual de GitHub
     logEl.textContent = '⏳ Leyendo index.html de GitHub...';
     var indexFile = await ghGet('index.html');
@@ -1099,25 +1103,60 @@ async function generarIndexEstatico() {
     function buildStaticCard(p) {
       var imgs = (p.imagenes || (p.id+'.jpg')).split(',');
       var waText = encodeURIComponent('Hola, quiero: ' + p.nombre + (p.precio ? ' ('+p.precio+' '+(p.moneda||'MN')+')' : ''));
-      var waLink = 'https://wa.me/5353255813?text=' + waText;
+      var waLink = p.waLink || ('https://wa.me/5353255813?text=' + waText);
       var tallasHTML = p.tallas ? '<div class="details-block product-tallas">'+p.tallas+'</div>' : '';
+      var detallesHTML = p.detalles ? '<div class="details-block product-desc-corta">'+p.detalles+'</div>' : '';
       var tooltipHTML = p.descripcion ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = p.vendedor ? '<div class="card-vendedor">'+p.vendedor+'</div>' : '';
       var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
-      var precioHTML = precioNum ? '<div class="price product-price">'+precioNum+' USD</div>' : '';
-      if (precioNum && tasaUsdMn > 0) {
+      var monedaProd = p.moneda || 'MN';
+      var precioHTML = precioNum ? '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>' : '';
+      if (precioNum && monedaProd === 'MN' && tasaUsdMn > 0) {
+        var usdEquiv = (parseFloat(precioNum) / tasaUsdMn).toFixed(2);
+        precioHTML += '<div class="price-conversion">'+usdEquiv+' USD</div>';
+      } else if (precioNum && monedaProd === 'USD' && tasaUsdMn > 0) {
         var mnEquiv = Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES');
-        precioHTML += '<div class="price-conversion">≈ '+mnEquiv+' MN</div>';
+        precioHTML += '<div class="price-conversion">'+mnEquiv+' MN</div>';
       }
+
+      // Badge inferior derecho de la imagen — misma lógica y prioridad que la card dinámica
+      var stock = inventarioEstatico[p.id];
+      var badgeInline = '';
+      var ahoraMs = Date.now();
+      var sieteDs = 7 * 24 * 60 * 60 * 1000;
+      if (stock === 0 && inventarioEstatico[p.id] !== undefined) {
+        badgeInline = '<div class="stock-badge-inline agotado">Agotado</div>';
+      } else if (stock !== undefined && stock !== null && stock > 0 && stock <= 3) {
+        badgeInline = '<div class="stock-badge-inline ultimas">¡Últimas ' + stock + '!</div>';
+      } else if (p.ventas && p.ventas > 5) {
+        badgeInline = '<div class="stock-badge-inline masvendido">⭐ Más vendido</div>';
+      } else if (p.ventas && p.ventas > 3) {
+        badgeInline = '<div class="stock-badge-inline pedido">🔥 Muy pedido</div>';
+      } else if (p.orden && (ahoraMs - p.orden) < sieteDs) {
+        badgeInline = '<div class="stock-badge-inline nuevo">🆕 Lo último</div>';
+      }
+      // Etiqueta manual elegida en el admin — tiene prioridad sobre los badges automáticos
+      var etiquetasMap = {
+        regalo:      { icon: '🎁', text: 'Regalo',          cls: 'nuevo' },
+        recomendado: { icon: '👍', text: 'Recomendado',     cls: 'pedido' },
+        calidad:     { icon: '💎', text: 'Máxima Calidad',  cls: 'masvendido' }
+      };
+      if (p.etiqueta && etiquetasMap[p.etiqueta]) {
+        var et = etiquetasMap[p.etiqueta];
+        badgeInline = '<div class="stock-badge-inline ' + et.cls + '">' + et.icon + ' ' + et.text + '</div>';
+      }
+
       return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
+        badgeInline+
         tooltipHTML+
         '</div>'+
         '<div class="card-content">'+
-        '<div class="tag-category">'+(p.seccion||'').replace(/-/g,' ').toUpperCase()+'</div>'+
+        '<div class="tag-category">'+(p.tagCategoria || (p.seccion||'').replace(/-/g,' ').toUpperCase())+'</div>'+
         '<div class="product-name">'+p.nombre+'</div>'+
         tallasHTML+
+        detallesHTML+
         precioHTML+
         vendedorHTML+
         '<a href="'+waLink+'" class="btn-lo-quiero">Lo quiero</a>'+
