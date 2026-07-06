@@ -171,8 +171,7 @@
             .stars-container { display: none; }
             .tag-category { display: none; }
             .details-block { display: none; }
-    
-
+        }
 
 
         /* ── SLIDER DE FOTOS EN CARD ── */
@@ -363,7 +362,6 @@
         .badge-360:hover { box-shadow: 0 0 22px rgba(255,215,0,0.95); transform: scale(1.05); transition: all 0.2s; }
         .badge-360.disabled { pointer-events: none; opacity: 0.45; }
         .section-title { font-size: 0.9rem; padding: 10px 12px; }
-        }
 
         .section-title { 
             background: white; padding: 15px 25px; margin: 4px 0 6px; font-weight: bold; 
@@ -709,6 +707,67 @@
             font-size: 1rem;
         }
 
+        /* ===== PANEL DE DETALLE DE PRODUCTO (pdp) ===== */
+        #pdp-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6); z-index: 19998;
+        }
+        #pdp-overlay.active { display: block; }
+        #pdp-modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 19999; background: #fff; border-radius: 14px;
+            overflow: hidden; width: min(900px, 94vw); max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+        #pdp-modal.active { display: flex; flex-direction: row; }
+        @media (max-width: 700px) {
+            #pdp-modal.active { flex-direction: column; overflow-y: auto; }
+        }
+        #pdp-close {
+            position: absolute; top: 10px; right: 10px; z-index: 3;
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.55); color: #fff; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #pdp-gallery {
+            position: relative; flex: 0 0 45%; background: #f8f8f8;
+            display: flex; align-items: center; justify-content: center;
+        }
+        @media (max-width: 700px) { #pdp-gallery { flex: 0 0 auto; width: 100%; } }
+        #pdp-img { width: 100%; max-height: 460px; object-fit: contain; display: block; cursor: zoom-in; }
+        .pdp-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.9); border: none; width: 34px; height: 34px;
+            border-radius: 50%; font-size: 1.2rem; cursor: pointer; line-height: 1;
+        }
+        #pdp-prev { left: 10px; }
+        #pdp-next { right: 10px; }
+        #pdp-dots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+        #pdp-dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(0,0,0,0.25); }
+        #pdp-dots span.active { background: #333; }
+        #pdp-info {
+            flex: 1; padding: 26px 30px; display: flex; flex-direction: column;
+            gap: 4px; overflow-y: auto; min-width: 0;
+        }
+        #pdp-title { font-size: 1.25rem; font-weight: 800; color: #111; margin-bottom: 6px; }
+        #pdp-desc { font-size: 0.9rem; color: #444; line-height: 1.6; margin-bottom: 12px; }
+        #pdp-price { font-size: 1.55rem; font-weight: 800; color: #22a745; margin-bottom: 16px; }
+        .pdp-option-wrap { display: none; margin-bottom: 16px; }
+        .pdp-option-wrap.show { display: block; }
+        .pdp-option-label { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 8px; }
+        .pdp-options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pdp-option-btn {
+            border: 1px solid #ccc; background: #fff; padding: 7px 16px; border-radius: 8px;
+            font-size: 0.85rem; cursor: pointer; color: #333; transition: all 0.15s;
+        }
+        .pdp-option-btn.selected { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
+        #pdp-lo-quiero {
+            margin-top: auto; display: block; text-align: center; background: var(--brand-blue);
+            color: white; padding: 15px; border-radius: 12px; font-weight: bold;
+            text-decoration: none; font-size: 1rem;
+        }
+
         /* ===== CARRUSEL ===== */
         @media (min-width: 1025px) {
             .grid { grid-template-columns: repeat(5, 1fr); gap: 14px; }
@@ -869,6 +928,32 @@
         <div id="bs-content"></div>
         <div id="bs-tallas"></div>
         <button id="bs-ver-foto">📷 Ver foto</button>
+    </div>
+</div>
+
+<!-- PANEL DE DETALLE DE PRODUCTO (reemplaza el bottom-sheet) -->
+<div id="pdp-overlay"></div>
+<div id="pdp-modal">
+    <button id="pdp-close" title="Cerrar">✕</button>
+    <div id="pdp-gallery">
+        <img id="pdp-img" src="" alt="">
+        <button id="pdp-prev" class="pdp-nav" title="Anterior">‹</button>
+        <button id="pdp-next" class="pdp-nav" title="Siguiente">›</button>
+        <div id="pdp-dots"></div>
+    </div>
+    <div id="pdp-info">
+        <div id="pdp-title"></div>
+        <div id="pdp-desc"></div>
+        <div id="pdp-price"></div>
+        <div id="pdp-tallas-wrap" class="pdp-option-wrap">
+            <div class="pdp-option-label">Talla</div>
+            <div id="pdp-tallas-options" class="pdp-options"></div>
+        </div>
+        <div id="pdp-colores-wrap" class="pdp-option-wrap">
+            <div class="pdp-option-label">Color</div>
+            <div id="pdp-colores-options" class="pdp-options"></div>
+        </div>
+        <a id="pdp-lo-quiero" class="btn-lo-quiero" target="_blank" rel="noopener">Lo quiero</a>
     </div>
 </div>
 
@@ -1382,20 +1467,20 @@
         // Para productos en MN: mostrar equivalente en USD debajo
         if (monedaProd === 'MN' && precioMostrar && tasasConversion.usd > 0) {
             var valorUSD = (parseFloat(precioMostrar) / tasasConversion.usd).toFixed(2);
-            conversionHTML = '<div class="price-conversion">≈ ' + valorUSD + ' USD</div>';
+            conversionHTML = '<div class="price-conversion">' + valorUSD + ' USD</div>';
         }
         // Para productos en USD: mostrar equivalente en MN debajo
         if (monedaProd === 'USD' && precioMostrar && tasasConversion.usd > 0) {
             var valorMN2 = Math.round(parseFloat(precioMostrar) * tasasConversion.usd).toLocaleString('es-ES');
-            conversionHTML = '<div class="price-conversion">≈ ' + valorMN2 + ' MN</div>';
+            conversionHTML = '<div class="price-conversion">' + valorMN2 + ' MN</div>';
         }
         // Para productos en EUR: mostrar equivalente en MN debajo
         if (monedaProd === 'EUR' && precioMostrar && tasasConversion.eur > 0) {
             var valorMN3 = Math.round(parseFloat(precioMostrar) * tasasConversion.eur).toLocaleString('es-ES');
-            conversionHTML = '<div class="price-conversion">≈ ' + valorMN3 + ' MN</div>';
+            conversionHTML = '<div class="price-conversion">' + valorMN3 + ' MN</div>';
         }
 
-        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" id="card-' + p.id + '">' +
+        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'">' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
@@ -1904,6 +1989,127 @@
         if (bsImgs.length > 0) openLightbox(bsImgs, 0);
     });
 
+    // ===== PANEL DE DETALLE DE PRODUCTO (pdp) =====
+    var pdpOverlay = document.getElementById('pdp-overlay');
+    var pdpModal = document.getElementById('pdp-modal');
+    var pdpImg = document.getElementById('pdp-img');
+    var pdpDots = document.getElementById('pdp-dots');
+    var pdpPrev = document.getElementById('pdp-prev');
+    var pdpNext = document.getElementById('pdp-next');
+    var pdpTitle = document.getElementById('pdp-title');
+    var pdpDesc = document.getElementById('pdp-desc');
+    var pdpPrice = document.getElementById('pdp-price');
+    var pdpTallasWrap = document.getElementById('pdp-tallas-wrap');
+    var pdpTallasOptions = document.getElementById('pdp-tallas-options');
+    var pdpColoresWrap = document.getElementById('pdp-colores-wrap');
+    var pdpColoresOptions = document.getElementById('pdp-colores-options');
+    var pdpLoQuiero = document.getElementById('pdp-lo-quiero');
+    var pdpImgs = [];
+    var pdpIdx = 0;
+    var pdpSelTalla = '';
+    var pdpSelColor = '';
+    var pdpBaseName = '';
+    var pdpBasePrice = '';
+
+    function pdpShowImg(i) {
+        if (!pdpImgs.length) return;
+        pdpIdx = (i + pdpImgs.length) % pdpImgs.length;
+        pdpImg.src = pdpImgs[pdpIdx];
+        pdpDots.querySelectorAll('span').forEach(function(d, di) {
+            d.classList.toggle('active', di === pdpIdx);
+        });
+    }
+
+    function pdpBuildOptions(container, wrap, values, isColor) {
+        wrap.classList.toggle('show', values.length > 0);
+        container.innerHTML = '';
+        values.forEach(function(val) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pdp-option-btn';
+            btn.textContent = val;
+            btn.addEventListener('click', function() {
+                container.querySelectorAll('.pdp-option-btn').forEach(function(b){ b.classList.remove('selected'); });
+                btn.classList.add('selected');
+                if (isColor) pdpSelColor = val; else pdpSelTalla = val;
+                pdpUpdateLink();
+            });
+            container.appendChild(btn);
+        });
+    }
+
+    function pdpUpdateLink() {
+        var extra = '';
+        if (pdpSelTalla) extra += ' - Talla: ' + pdpSelTalla;
+        if (pdpSelColor) extra += ' - Color: ' + pdpSelColor;
+        var waText = encodeURIComponent('Hola, quiero: ' + pdpBaseName + (pdpBasePrice ? ' (' + pdpBasePrice + ')' : '') + extra);
+        pdpLoQuiero.href = 'https://wa.me/5353255813?text=' + waText;
+    }
+
+    function openProductDetail(card) {
+        var imgContainer = card.querySelector('.card-img-container');
+        var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
+        pdpImgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        var tooltip = imgContainer ? imgContainer.querySelector('.hover-tooltip') : null;
+        var descCorta = card.querySelector('.product-desc-corta');
+        var title = (card.querySelector('.product-name') || {}).textContent || '';
+        var desc = tooltip ? tooltip.innerHTML : (descCorta ? descCorta.innerHTML : '');
+        var priceEl = card.querySelector('.product-price');
+        var price = priceEl ? priceEl.textContent.trim() : '';
+        var tallasEl = card.querySelector('.product-tallas');
+        var tallasRaw = tallasEl ? tallasEl.textContent.trim() : '';
+        var coloresRaw = (card.getAttribute('data-colores') || '').trim();
+
+        pdpBaseName = title;
+        pdpBasePrice = price;
+        pdpSelTalla = '';
+        pdpSelColor = '';
+
+        pdpTitle.textContent = title;
+        pdpDesc.innerHTML = desc;
+        pdpPrice.textContent = price;
+
+        // Tallas: separadas por coma; si viene texto tipo "S, M, L, XL" se listan como opciones
+        var tallasArr = tallasRaw ? tallasRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+        pdpBuildOptions(pdpTallasOptions, pdpTallasWrap, tallasArr, false);
+
+        var coloresArr = coloresRaw ? coloresRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+        pdpBuildOptions(pdpColoresOptions, pdpColoresWrap, coloresArr, true);
+
+        pdpUpdateLink();
+
+        // Galería
+        pdpDots.innerHTML = '';
+        pdpImgs.forEach(function(_, i) {
+            var d = document.createElement('span');
+            if (i === 0) d.classList.add('active');
+            pdpDots.appendChild(d);
+        });
+        var hasMultiple = pdpImgs.length > 1;
+        pdpPrev.style.display = hasMultiple ? '' : 'none';
+        pdpNext.style.display = hasMultiple ? '' : 'none';
+        pdpDots.style.display = hasMultiple ? '' : 'none';
+        pdpShowImg(0);
+
+        pdpOverlay.classList.add('active');
+        pdpModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeProductDetail() {
+        pdpOverlay.classList.remove('active');
+        pdpModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('pdp-close').addEventListener('click', closeProductDetail);
+    pdpOverlay.addEventListener('click', closeProductDetail);
+    pdpPrev.addEventListener('click', function(){ pdpShowImg(pdpIdx - 1); });
+    pdpNext.addEventListener('click', function(){ pdpShowImg(pdpIdx + 1); });
+    pdpImg.addEventListener('click', function(){
+        if (pdpImgs.length > 0) { closeProductDetail(); openLightbox(pdpImgs, pdpIdx); }
+    });
+
     document.addEventListener('click', function(e) {
         var card = e.target.closest('.card');
         if (!card) return;
@@ -1914,20 +2120,7 @@
         if (e.target.closest('.stars')) return;
         if (e.target.closest('.card-photo-dots')) return;
 
-        // TODA la card (foto incluida) abre el bottom sheet — igual en PC y móvil
-        // El hover-tooltip en PC sigue funcionando aparte, sin tocar
-        var imgContainer = card.querySelector('.card-img-container');
-        var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
-        var imgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-        var tooltip = imgContainer ? imgContainer.querySelector('.hover-tooltip') : null;
-        var title = (card.querySelector('.product-name') || {}).textContent || '';
-        var desc = tooltip ? tooltip.innerHTML : '';
-        var priceEl = card.querySelector('.product-price');
-        var price = priceEl ? priceEl.textContent.trim() : '';
-        var tallasEl = card.querySelector('.product-tallas');
-        var tallas = tallasEl ? tallasEl.textContent : '';
-
-        openBottomSheet(title, desc, imgs, price, tallas);
+        openProductDetail(card);
     });
 
     // Tooltip solo en PC — event delegation para cards dinámicas
