@@ -1093,6 +1093,28 @@ async function generarIndexEstatico() {
     var invSnap = await new Promise(function(res) { db.ref('inventario').once('value', res); });
     var inventarioEstatico = invSnap.val() || {};
 
+    // 1d. Leer interfaz (ribbons, ticker, tienda cerrada, toggles de la card)
+    var interfazSnap = await new Promise(function(res) { db.ref('interfaz').once('value', res); });
+    var interfazEstatico = interfazSnap.val() || {};
+    var cardCfgEstatico = interfazEstatico.card || {};
+
+    // 1e. Leer config de secciones (orden, activo/oculto) — ambos formatos (inglés y español)
+    var configSnap = await new Promise(function(res) { db.ref('config').once('value', res); });
+    var configEstatico = configSnap.val() || {};
+    var seccionesOrdenEstatico = configEstatico.seccionesOrden || {};
+    var sectionsEstatico = configEstatico.sections || {};
+    var secDynSnap = await new Promise(function(res) { db.ref('config/secciones').once('value', res); });
+    var secDynEstatico = secDynSnap.val() || {};
+    Object.keys(secDynEstatico).forEach(function(secId) {
+      if (!sectionsEstatico[secId]) sectionsEstatico[secId] = {};
+      if (secDynEstatico[secId].activo === false) sectionsEstatico[secId].active = false;
+      if (secDynEstatico[secId].showTitle !== undefined) sectionsEstatico[secId].showTitle = secDynEstatico[secId].showTitle;
+    });
+
+    // 1f. Leer slides del slider configurable
+    var sliderSnap = await new Promise(function(res) { db.ref('config/slider').once('value', res); });
+    var sliderSlidesEstatico = (sliderSnap.val() || {}).slides || null;
+
     // 2. Leer index.html actual de GitHub
     logEl.textContent = '⏳ Leyendo index.html de GitHub...';
     var indexFile = await ghGet('index.html');
@@ -1104,19 +1126,26 @@ async function generarIndexEstatico() {
       var imgs = (p.imagenes || (p.id+'.jpg')).split(',');
       var waText = encodeURIComponent('Hola, quiero: ' + p.nombre + (p.precio ? ' ('+p.precio+' '+(p.moneda||'MN')+')' : ''));
       var waLink = p.waLink || ('https://wa.me/5353255813?text=' + waText);
-      var tallasHTML = p.tallas ? '<div class="details-block product-tallas">'+p.tallas+'</div>' : '';
-      var detallesHTML = p.detalles ? '<div class="details-block product-desc-corta">'+p.detalles+'</div>' : '';
-      var tooltipHTML = p.descripcion ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
+      var showSeccion = cardCfgEstatico.seccion !== false;
+      var showDetalles = cardCfgEstatico.detalles !== false;
+      var showDescripcion = cardCfgEstatico.descripcion !== false;
+      var showPrecio = cardCfgEstatico.precio !== false;
+      var tallasHTML = (showDetalles && p.tallas) ? '<div class="details-block product-tallas">'+p.tallas+'</div>' : '';
+      var detallesHTML = (showDetalles && p.detalles) ? '<div class="details-block product-desc-corta">'+p.detalles+'</div>' : '';
+      var tooltipHTML = (showDescripcion && p.descripcion) ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = p.vendedor ? '<div class="card-vendedor">'+p.vendedor+'</div>' : '';
       var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
       var monedaProd = p.moneda || 'MN';
-      var precioHTML = precioNum ? '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>' : '';
-      if (precioNum && monedaProd === 'MN' && tasaUsdMn > 0) {
-        var usdEquiv = (parseFloat(precioNum) / tasaUsdMn).toFixed(2);
-        precioHTML += '<div class="price-conversion">'+usdEquiv+' USD</div>';
-      } else if (precioNum && monedaProd === 'USD' && tasaUsdMn > 0) {
-        var mnEquiv = Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES');
-        precioHTML += '<div class="price-conversion">'+mnEquiv+' MN</div>';
+      var precioHTML = '';
+      if (showPrecio && precioNum) {
+        precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>';
+        if (monedaProd === 'MN' && tasaUsdMn > 0) {
+          var usdEquiv = (parseFloat(precioNum) / tasaUsdMn).toFixed(2);
+          precioHTML += '<div class="price-conversion">'+usdEquiv+' USD</div>';
+        } else if (monedaProd === 'USD' && tasaUsdMn > 0) {
+          var mnEquiv = Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES');
+          precioHTML += '<div class="price-conversion">'+mnEquiv+' MN</div>';
+        }
       }
 
       // Badge inferior derecho de la imagen — misma lógica y prioridad que la card dinámica
@@ -1146,14 +1175,14 @@ async function generarIndexEstatico() {
         badgeInline = '<div class="stock-badge-inline ' + et.cls + '">' + et.icon + ' ' + et.text + '</div>';
       }
 
-      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'">'+
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
         badgeInline+
         tooltipHTML+
         '</div>'+
         '<div class="card-content">'+
-        '<div class="tag-category">'+(p.tagCategoria || (p.seccion||'').replace(/-/g,' ').toUpperCase())+'</div>'+
+        (showSeccion ? '<div class="tag-category">'+(p.tagCategoria || (p.seccion||'').replace(/-/g,' ').toUpperCase())+'</div>' : '')+
         '<div class="product-name">'+p.nombre+'</div>'+
         tallasHTML+
         detallesHTML+
@@ -1163,31 +1192,142 @@ async function generarIndexEstatico() {
         '</div></div>';
     }
 
-    // 4. Agrupar por sección e inyectar en los grids
+    // 4. Determinar TODAS las secciones (fijas conocidas + dinámicas detectadas en los productos),
+    //    aplicar orden personalizado, activo/inactivo, y título oculto (modo mezclado) — igual que la
+    //    tienda dinámica, pero horneado en el HTML para que Cuba lo vea también.
     var porSeccion = {};
     productos.forEach(function(p) {
       if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
       porSeccion[p.seccion].push(p);
     });
 
-    var secciones = ['destacado','ropa-interior','ropa-moda','accesorios','servicios','acceso360'];
-    secciones.forEach(function(secId) {
-      var gridId = secId === 'destacado' ? 'grid-destacado' : 'grid-' + secId;
-      var prods = secId === 'destacado'
-        ? productos.filter(function(p){ return p.destacado; })
-        : (porSeccion[secId] || []);
-      var cardsHTML = prods.map(buildStaticCard).join('\n');
-      // Reemplazar contenido del grid en el HTML (usando el cierre REAL del div, no el primero que aparezca)
-      if (indexHTML.match(new RegExp('id="'+gridId+'"'))) {
-        var startIdx = indexHTML.indexOf('id="'+gridId+'"');
-        var openTag = indexHTML.indexOf('>', startIdx) + 1;
-        var closeTag = findMatchingCloseDiv(indexHTML, openTag);
-        if (closeTag === -1) {
-          throw new Error('No se pudo encontrar el cierre real de "' + gridId + '" — abortado para no corromper el archivo.');
-        }
-        indexHTML = indexHTML.substring(0, openTag) + '\n' + cardsHTML + '\n' + indexHTML.substring(closeTag);
-      }
+    var seccionMeta = {
+      'ropa-interior': { emoji: '👙', nombre: 'ROPA INTERIOR' },
+      'ropa-moda':     { emoji: '👕', nombre: 'ROPA Y MODA' },
+      'accesorios':    { emoji: '👜', nombre: 'ACCESORIOS' },
+      'servicios':     { emoji: '⚡', nombre: 'SERVICIOS' },
+      'acceso360':     { emoji: '🔐', nombre: 'ACCESO 360' }
+    };
+    var seccionesFijas = Object.keys(seccionMeta);
+    var seccionesDinamicasDetectadas = Object.keys(porSeccion).filter(function(s) {
+      return s && s !== 'destacado' && seccionesFijas.indexOf(s) === -1;
     });
+
+    function estaActivaEstatico(id) {
+      var cfg = sectionsEstatico[id] || {};
+      return cfg.active !== false;
+    }
+    function tituloVisibleEstatico(id) {
+      var cfg = sectionsEstatico[id] || {};
+      return cfg.showTitle !== false;
+    }
+    function nombreSeccion(id) {
+      if (seccionMeta[id]) return seccionMeta[id].emoji + ' ' + seccionMeta[id].nombre;
+      var cfg = sectionsEstatico[id] || {};
+      var nombre = cfg.nombre || id.replace(/-/g, ' ').toUpperCase();
+      return '🔹 ' + nombre;
+    }
+
+    // Destacado siempre aparte, nunca se mezcla ni se reordena
+    var prodsDestacado = productos.filter(function(p){ return p.destacado; });
+    if (indexHTML.indexOf('id="grid-destacado"') !== -1) {
+      var dOpen = indexHTML.indexOf('>', indexHTML.indexOf('id="grid-destacado"')) + 1;
+      var dClose = findMatchingCloseDiv(indexHTML, dOpen);
+      if (dClose === -1) throw new Error('No se pudo encontrar el cierre real de "grid-destacado" — abortado para no corromper el archivo.');
+      indexHTML = indexHTML.substring(0, dOpen) + '\n' + prodsDestacado.map(buildStaticCard).join('\n') + '\n' + indexHTML.substring(dClose);
+    }
+
+    // Ordenar el resto de secciones según seccionesOrden (fijas + dinámicas juntas)
+    var idsTodas = seccionesFijas.concat(seccionesDinamicasDetectadas);
+    idsTodas.sort(function(a, b) {
+      var ia = seccionesOrdenEstatico[a] !== undefined ? seccionesOrdenEstatico[a] : 99;
+      var ib = seccionesOrdenEstatico[b] !== undefined ? seccionesOrdenEstatico[b] : 99;
+      return ia - ib;
+    });
+
+    var productosParaMezclar = [];
+    var bloquesHTML = '';
+    idsTodas.forEach(function(secId) {
+      if (!estaActivaEstatico(secId)) return; // sección inactiva: no se muestra en absoluto
+      var prods = porSeccion[secId] || [];
+      if (!tituloVisibleEstatico(secId)) {
+        // Título oculto: sus productos se unen al grid mezclado, sin título ni grid propio
+        productosParaMezclar = productosParaMezclar.concat(prods);
+        return;
+      }
+      bloquesHTML += '\n<div class="section-title" id="sec-title-' + secId + '" data-section="' + secId + '">' + nombreSeccion(secId) + '</div>\n' +
+        '<div class="grid" id="grid-' + secId + '">' + prods.map(buildStaticCard).join('\n') + '</div>\n';
+    });
+
+    // Grid mezclado (secciones activas con título oculto) — va primero, justo después de Destacados/ribbons,
+    // igual que en la tienda dinámica, para que separe Destacados del resto del catálogo.
+    if (productosParaMezclar.length > 0) {
+      bloquesHTML = '\n<div class="grid" id="grid-mix">' + productosParaMezclar.map(buildStaticCard).join('\n') + '</div>\n' + bloquesHTML;
+    }
+
+    // Reemplazar TODA la zona de secciones (desde justo después de ribbon-2, o donde corresponda,
+    // hasta el cierre de products-container) por el bloque recién armado — más seguro que editar
+    // cada sección en su lugar, porque no depende de que el HTML original ya tenga cada id.
+    var anchorId = indexHTML.indexOf('id="ribbon-2"') !== -1 ? 'ribbon-2'
+                 : (indexHTML.indexOf('id="ribbon-1"') !== -1 ? 'ribbon-1'
+                 : (indexHTML.indexOf('id="ticker-wrap"') !== -1 ? 'ticker-wrap' : 'grid-destacado'));
+    var anchorIdx = indexHTML.indexOf('id="' + anchorId + '"');
+    var anchorOpen = indexHTML.indexOf('>', anchorIdx) + 1;
+    var anchorClose = findMatchingCloseDiv(indexHTML, anchorOpen);
+    if (anchorClose === -1) throw new Error('No se pudo encontrar el cierre real de "' + anchorId + '" — abortado para no corromper el archivo.');
+    var zonaInicio = anchorClose + '</div>'.length;
+
+    var contIdx = indexHTML.indexOf('id="products-container"');
+    var contOpen = indexHTML.indexOf('>', contIdx) + 1;
+    var zonaFin = findMatchingCloseDiv(indexHTML, contOpen);
+    if (zonaFin === -1) throw new Error('No se pudo encontrar el cierre real de "products-container" — abortado para no corromper el archivo.');
+    if (zonaFin < zonaInicio) throw new Error('Estructura de secciones inesperada — abortado para no corromper el archivo.');
+
+    indexHTML = indexHTML.substring(0, zonaInicio) + bloquesHTML + '\n' + indexHTML.substring(zonaFin);
+
+    // 4b. Ribbons: texto y visibilidad
+    function setTextInside(id, texto) {
+      if (!texto) return;
+      var idx = indexHTML.indexOf('id="' + id + '"');
+      if (idx === -1) return;
+      var openEnd = indexHTML.indexOf('>', idx) + 1;
+      var closeStart = indexHTML.indexOf('<', openEnd);
+      indexHTML = indexHTML.substring(0, openEnd) + texto + indexHTML.substring(closeStart);
+    }
+    function ocultarPorId(id) {
+      var idx = indexHTML.indexOf('id="' + id + '"');
+      if (idx === -1) return;
+      var tagEnd = indexHTML.indexOf('>', idx);
+      indexHTML = indexHTML.substring(0, tagEnd) + ' style="display:none;"' + indexHTML.substring(tagEnd);
+    }
+    if (interfazEstatico.ribbon1) setTextInside('ribbon-1-text', interfazEstatico.ribbon1);
+    if (interfazEstatico.ribbon2) setTextInside('ribbon-2-text', interfazEstatico.ribbon2);
+    if (interfazEstatico.ribbon1active === false) ocultarPorId('ribbon-1');
+    if (interfazEstatico.ribbon2active === false) ocultarPorId('ribbon-2');
+
+    // 4c. Ticker/marquesina
+    var tickerVal = interfazEstatico.ticker;
+    if (tickerVal && typeof tickerVal === 'string') {
+      setTextInside('ticker-content', tickerVal + ' ★ ');
+    } else if (!tickerVal) {
+      ocultarPorId('ticker-wrap');
+    }
+
+    // 4d. Tienda cerrada
+    if (interfazEstatico.tiendaActiva === false) {
+      indexHTML = indexHTML.replace('id="tienda-cerrada"', 'id="tienda-cerrada" class="show"');
+      if (interfazEstatico.tiendaMensaje) setTextInside('tc-msg-text', interfazEstatico.tiendaMensaje);
+    }
+
+    // 4e. Slider — actualizar texto de los slides existentes (mismo orden fijo de 6)
+    if (sliderSlidesEstatico && sliderSlidesEstatico.length) {
+      var slideLabelIdx = 0, slideTitleIdx = 0, slideCtaIdx = 0;
+      sliderSlidesEstatico.forEach(function(s) {
+        if (s.label) { var li = indexHTML.indexOf('class="slide-label"', slideLabelIdx); if (li !== -1) { var oe = indexHTML.indexOf('>', li)+1; var ce = indexHTML.indexOf('<', oe); indexHTML = indexHTML.substring(0,oe)+s.label+indexHTML.substring(ce); slideLabelIdx = oe + s.label.length; } }
+        if (s.title) { var ti = indexHTML.indexOf('class="slide-title"', slideTitleIdx); if (ti !== -1) { var oe2 = indexHTML.indexOf('>', ti)+1; var ce2 = indexHTML.indexOf('<', oe2); indexHTML = indexHTML.substring(0,oe2)+s.title+indexHTML.substring(ce2); slideTitleIdx = oe2 + s.title.length; } }
+        if (s.btnText) { var ci = indexHTML.indexOf('class="slide-cta"', slideCtaIdx); if (ci !== -1) { var oe3 = indexHTML.indexOf('>', ci)+1; var ce3 = indexHTML.indexOf('<', oe3); indexHTML = indexHTML.substring(0,oe3)+s.btnText+indexHTML.substring(ce3); slideCtaIdx = oe3 + s.btnText.length; } }
+      });
+    }
 
     // 5. Subir a GitHub
     logEl.textContent = '⏳ Subiendo a GitHub...';
