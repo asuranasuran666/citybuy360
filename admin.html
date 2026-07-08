@@ -1228,6 +1228,48 @@ async function generarIndexEstatico() {
       return '🔹 ' + nombre;
     }
 
+    // Extrae el bloque título+grid de una sección YA PRESENTE en el archivo (y lo quita de su
+    // posición actual). Nunca borra información: solo mueve texto de un lugar a otro.
+    function extraerBloqueSeccion(secId) {
+      var titleId = 'sec-title-' + secId;
+      var gridId = 'grid-' + secId;
+      if (indexHTML.indexOf('id="' + titleId + '"') === -1) return null;
+      var tIdx = indexHTML.indexOf('id="' + titleId + '"');
+      var tTagStart = indexHTML.lastIndexOf('<', tIdx);
+      var tOpenEnd = indexHTML.indexOf('>', tIdx) + 1;
+      var tClose = findMatchingCloseDiv(indexHTML, tOpenEnd);
+      if (tClose === -1) throw new Error('No se pudo encontrar el cierre real de "' + titleId + '" — abortado para no corromper el archivo.');
+      var tBlockEnd = tClose + '</div>'.length;
+      if (indexHTML.indexOf('id="' + gridId + '"') === -1) {
+        var soloTitulo = indexHTML.substring(tTagStart, tBlockEnd);
+        indexHTML = indexHTML.substring(0, tTagStart) + indexHTML.substring(tBlockEnd);
+        return soloTitulo;
+      }
+      var gIdx = indexHTML.indexOf('id="' + gridId + '"');
+      var gTagStart = indexHTML.lastIndexOf('<', gIdx);
+      var gOpenEnd = indexHTML.indexOf('>', gIdx) + 1;
+      var gClose = findMatchingCloseDiv(indexHTML, gOpenEnd);
+      if (gClose === -1) throw new Error('No se pudo encontrar el cierre real de "' + gridId + '" — abortado para no corromper el archivo.');
+      var gBlockEnd = gClose + '</div>'.length;
+      var bloque = indexHTML.substring(tTagStart, gBlockEnd);
+      indexHTML = indexHTML.substring(0, tTagStart) + indexHTML.substring(gBlockEnd);
+      return bloque;
+    }
+    function setGridContentInBlock(blockHtml, gridId, cardsHtml) {
+      var idx = blockHtml.indexOf('id="' + gridId + '"');
+      if (idx === -1) return blockHtml;
+      var openEnd = blockHtml.indexOf('>', idx) + 1;
+      var close = findMatchingCloseDiv(blockHtml, openEnd);
+      if (close === -1) throw new Error('No se pudo encontrar el cierre real de "' + gridId + '" dentro de su bloque — abortado para no corromper el archivo.');
+      return blockHtml.substring(0, openEnd) + cardsHtml + blockHtml.substring(close);
+    }
+    function hideBlockElement(blockHtml, id) {
+      var idx = blockHtml.indexOf('id="' + id + '"');
+      if (idx === -1) return blockHtml;
+      var tagEnd = blockHtml.indexOf('>', idx);
+      return blockHtml.substring(0, tagEnd) + ' style="display:none;"' + blockHtml.substring(tagEnd);
+    }
+
     // Destacado siempre aparte, nunca se mezcla ni se reordena
     var prodsDestacado = productos.filter(function(p){ return p.destacado; });
     if (indexHTML.indexOf('id="grid-destacado"') !== -1) {
@@ -1235,6 +1277,19 @@ async function generarIndexEstatico() {
       var dClose = findMatchingCloseDiv(indexHTML, dOpen);
       if (dClose === -1) throw new Error('No se pudo encontrar el cierre real de "grid-destacado" — abortado para no corromper el archivo.');
       indexHTML = indexHTML.substring(0, dOpen) + '\n' + prodsDestacado.map(buildStaticCard).join('\n') + '\n' + indexHTML.substring(dClose);
+    }
+
+    // Sacar el grid-mix existente de su posición (si ya había uno de una generación anterior);
+    // se vuelve a insertar más abajo, siempre presente aunque esté vacío/oculto.
+    var gridMixExtraido = '';
+    if (indexHTML.indexOf('id="grid-mix"') !== -1) {
+      var gmIdx = indexHTML.indexOf('id="grid-mix"');
+      var gmTagStart = indexHTML.lastIndexOf('<', gmIdx);
+      var gmOpenEnd = indexHTML.indexOf('>', gmIdx) + 1;
+      var gmClose = findMatchingCloseDiv(indexHTML, gmOpenEnd);
+      if (gmClose === -1) throw new Error('No se pudo encontrar el cierre real de "grid-mix" — abortado para no corromper el archivo.');
+      var gmBlockEnd = gmClose + '</div>'.length;
+      indexHTML = indexHTML.substring(0, gmTagStart) + indexHTML.substring(gmBlockEnd);
     }
 
     // Ordenar el resto de secciones según seccionesOrden (fijas + dinámicas juntas)
@@ -1248,22 +1303,38 @@ async function generarIndexEstatico() {
     var productosParaMezclar = [];
     var bloquesHTML = '';
     idsTodas.forEach(function(secId) {
-      if (!estaActivaEstatico(secId)) return; // sección inactiva: no se muestra en absoluto
       var prods = porSeccion[secId] || [];
-      if (!tituloVisibleEstatico(secId)) {
-        // Título oculto: sus productos se unen al grid mezclado, sin título ni grid propio
+      var extraido = extraerBloqueSeccion(secId);
+      var bloque = extraido !== null ? extraido :
+        ('\n<div class="section-title" id="sec-title-' + secId + '" data-section="' + secId + '">' + nombreSeccion(secId) + '</div>\n' +
+         '<div class="grid" id="grid-' + secId + '"></div>\n');
+
+      if (!estaActivaEstatico(secId)) {
+        // Sección inactiva: se mantiene en el archivo (para poder reactivarla luego), pero
+        // oculta y vacía — NUNCA se borra del HTML.
+        bloque = setGridContentInBlock(bloque, 'grid-' + secId, '');
+        bloque = hideBlockElement(bloque, 'sec-title-' + secId);
+        bloque = hideBlockElement(bloque, 'grid-' + secId);
+      } else if (!tituloVisibleEstatico(secId)) {
+        // Título oculto: sus productos se unen al grid mezclado; el bloque propio se mantiene
+        // en el archivo, oculto y vacío (no borrado).
         productosParaMezclar = productosParaMezclar.concat(prods);
-        return;
+        bloque = setGridContentInBlock(bloque, 'grid-' + secId, '');
+        bloque = hideBlockElement(bloque, 'sec-title-' + secId);
+        bloque = hideBlockElement(bloque, 'grid-' + secId);
+      } else {
+        bloque = setGridContentInBlock(bloque, 'grid-' + secId, prods.map(buildStaticCard).join('\n'));
       }
-      bloquesHTML += '\n<div class="section-title" id="sec-title-' + secId + '" data-section="' + secId + '">' + nombreSeccion(secId) + '</div>\n' +
-        '<div class="grid" id="grid-' + secId + '">' + prods.map(buildStaticCard).join('\n') + '</div>\n';
+      bloquesHTML += '\n' + bloque + '\n';
     });
 
     // Grid mezclado (secciones activas con título oculto) — va primero, justo después de Destacados/ribbons,
-    // igual que en la tienda dinámica, para que separe Destacados del resto del catálogo.
-    if (productosParaMezclar.length > 0) {
-      bloquesHTML = '\n<div class="grid" id="grid-mix">' + productosParaMezclar.map(buildStaticCard).join('\n') + '</div>\n' + bloquesHTML;
-    }
+    // igual que en la tienda dinámica, para que separe Destacados del resto del catálogo. Siempre presente
+    // en el archivo (oculto si no hay nada que mezclar), para que la dinámica lo pueda reutilizar.
+    var gridMixHTML = productosParaMezclar.length > 0
+      ? '\n<div class="grid" id="grid-mix">' + productosParaMezclar.map(buildStaticCard).join('\n') + '</div>\n'
+      : '\n<div class="grid" id="grid-mix" style="display:none;"></div>\n';
+    bloquesHTML = gridMixHTML + bloquesHTML;
 
     // Reemplazar TODA la zona de secciones (desde justo después de ribbon-2, o donde corresponda,
     // hasta el cierre de products-container) por el bloque recién armado — más seguro que editar
