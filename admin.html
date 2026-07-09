@@ -1175,6 +1175,11 @@ async function generarIndexEstatico() {
         badgeInline = '<div class="stock-badge-inline ' + et.cls + '">' + et.icon + ' ' + et.text + '</div>';
       }
 
+      // Cuando quedan pocas unidades, además del badge de la foto, mostrar "Lo más vendido" en la card
+      var masVendidoTag = (stock !== undefined && stock !== null && stock > 0 && stock <= 3)
+        ? '<div class="mas-vendido-tag">🔥 Lo más vendido</div>'
+        : '';
+
       return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
@@ -1187,6 +1192,7 @@ async function generarIndexEstatico() {
         tallasHTML+
         detallesHTML+
         precioHTML+
+        masVendidoTag+
         vendedorHTML+
         '<a href="'+waLink+'" class="btn-lo-quiero">Lo quiero</a>'+
         '</div></div>';
