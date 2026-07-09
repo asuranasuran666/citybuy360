@@ -237,6 +237,7 @@
     <button class="tab-btn active" onclick="showTab('control',this)">🎛 Productos y Secciones</button>
     <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
     <button class="tab-btn" onclick="showTab('ventas',this)">💰 Ventas</button>
+    <button class="tab-btn" onclick="showTab('precios',this)">💲 Precios</button>
     <button class="tab-btn" onclick="showTab('nuevo',this)">➕ Nuevo producto</button>
     <button class="tab-btn" onclick="showTab('interfaz',this)">🖥 Interfaz</button>
     <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
@@ -815,6 +816,16 @@
     <table class="sales-table">
       <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th></tr></thead>
       <tbody id="sales-tbody"><tr><td colspan="3" class="empty-state">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div id="tab-precios" class="tab-content">
+    <div style="padding:12px 16px;color:var(--text-muted);font-size:0.85rem;">
+      Tasa actual: 1 USD = <span id="precios-tasa-info">—</span> MN. Cambia el precio en USD y el equivalente en MN se calcula solo, en tiempo real, sin entrar a cada producto.
+    </div>
+    <table class="sales-table">
+      <thead><tr><th>Producto</th><th>Precio (USD)</th><th>Equivalente (MN)</th><th></th></tr></thead>
+      <tbody id="precios-tbody"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
     </table>
   </div>
 
@@ -1656,10 +1667,80 @@ function showTab(id, btn) {
   if (id === 'mensajes') loadMensajesAdmin();
   if (id === 'interfaz') loadRibbonsAdmin();
   if (id === 'vendedores') { loadVendedores(); loadVentasVendedores(); loadInventarioAdmin(); }
+  if (id === 'precios') loadPreciosTab();
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
+}
+
+// ── PESTAÑA PRECIOS ──────────────────────────────────────────────────────────
+var preciosTasaUsdMn = 0;
+
+function loadPreciosTab() {
+  var tbody = document.getElementById('precios-tbody');
+  tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Cargando…</td></tr>';
+  db.ref('config/tasasConversion').once('value', function(tasaSnap) {
+    preciosTasaUsdMn = (tasaSnap.val() || {}).usd || 0;
+    var tasaInfo = document.getElementById('precios-tasa-info');
+    if (tasaInfo) tasaInfo.textContent = preciosTasaUsdMn > 0 ? preciosTasaUsdMn : '(sin definir, ve a Interfaz)';
+    db.ref('catalogo').once('value', function(snap) {
+      var catalogo = snap.val() || {};
+      var ids = Object.keys(catalogo).sort(function(a, b) {
+        return (catalogo[a].nombre || '').localeCompare(catalogo[b].nombre || '');
+      });
+      if (ids.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin productos</td></tr>';
+        return;
+      }
+      tbody.innerHTML = ids.map(function(id) {
+        var p = catalogo[id];
+        var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i, '').trim() : '';
+        return '<tr id="precio-row-' + id + '">' +
+          '<td>' + (p.nombre || '(sin nombre)') + '</td>' +
+          '<td><input type="number" step="0.01" value="' + precioNum + '" ' +
+              'oninput="preciosRecalcMN(\'' + id + '\', this.value)" ' +
+              'onblur="guardarPrecioProducto(\'' + id + '\')" ' +
+              'style="width:90px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 8px;"></td>' +
+          '<td id="precio-mn-' + id + '">' + preciosCalcMN(precioNum) + '</td>' +
+          '<td><span id="precio-status-' + id + '" style="font-size:0.78rem;"></span></td>' +
+        '</tr>';
+      }).join('');
+    });
+  });
+}
+
+function preciosCalcMN(usdVal) {
+  var n = parseFloat(usdVal);
+  if (!n || preciosTasaUsdMn <= 0) return '—';
+  return Math.round(n * preciosTasaUsdMn).toLocaleString('es-ES') + ' MN';
+}
+
+function preciosRecalcMN(id, usdVal) {
+  var el = document.getElementById('precio-mn-' + id);
+  if (el) el.textContent = preciosCalcMN(usdVal);
+}
+
+var preciosSaveTimers = {};
+function guardarPrecioProducto(id) {
+  var row = document.getElementById('precio-row-' + id);
+  if (!row) return;
+  var input = row.querySelector('input');
+  var val = input.value.trim();
+  var statusEl = document.getElementById('precio-status-' + id);
+  if (!val) return;
+  clearTimeout(preciosSaveTimers[id]);
+  preciosSaveTimers[id] = setTimeout(function() {
+    db.ref('catalogo/' + id).update({ precio: val, moneda: 'USD' }).then(function() {
+      if (statusEl) {
+        statusEl.textContent = '✓ Guardado';
+        statusEl.style.color = '#4ade80';
+        setTimeout(function() { statusEl.textContent = ''; }, 2000);
+      }
+    }).catch(function(e) {
+      if (statusEl) { statusEl.textContent = '✗ Error'; statusEl.style.color = '#f87171'; }
+    });
+  }, 400);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
