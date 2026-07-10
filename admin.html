@@ -1287,6 +1287,32 @@ async function generarIndexEstatico() {
       return blockHtml.substring(0, tagEnd) + ' style="display:none;"' + blockHtml.substring(tagEnd);
     }
 
+    // Las secciones DINÁMICAS (Electrónica, Aseo, etc.) las busca la tienda dinámica dentro de un
+    // contenedor "sec-dyn-{id}" (con el título adentro) — a diferencia de las fijas, que van sueltas.
+    // Si no coincide ese formato, el toggle de "Activo"/"Título" nunca las encuentra para ocultarlas.
+    function extraerBloqueDinamico(secId) {
+      var wrapperId = 'sec-dyn-' + secId;
+      if (indexHTML.indexOf('id="' + wrapperId + '"') !== -1) {
+        var wIdx = indexHTML.indexOf('id="' + wrapperId + '"');
+        var wTagStart = indexHTML.lastIndexOf('<', wIdx);
+        var wOpenEnd = indexHTML.indexOf('>', wIdx) + 1;
+        var wClose = findMatchingCloseDiv(indexHTML, wOpenEnd);
+        if (wClose === -1) throw new Error('No se pudo encontrar el cierre real de "' + wrapperId + '" — abortado para no corromper el archivo.');
+        var wBlockEnd = wClose + '</div>'.length;
+        var bloqueW = indexHTML.substring(wTagStart, wBlockEnd);
+        indexHTML = indexHTML.substring(0, wTagStart) + indexHTML.substring(wBlockEnd);
+        return bloqueW;
+      }
+      // Formato viejo (suelto, sin envoltura) de una generación anterior con el bug — se repara
+      // envolviéndolo correctamente esta vez, para que quede bien de aquí en adelante.
+      var flatBloque = extraerBloqueSeccion(secId);
+      if (flatBloque === null) return null;
+      var gridPlano = 'grid-' + secId;
+      var gridDin = 'grid-dyn-' + secId;
+      var reparado = flatBloque.split('id="' + gridPlano + '"').join('id="' + gridDin + '"');
+      return '<div id="' + wrapperId + '">' + reparado + '</div>';
+    }
+
     // Destacado siempre aparte, nunca se mezcla ni se reordena
     var prodsDestacado = productos.filter(function(p){ return p.destacado; });
     if (indexHTML.indexOf('id="grid-destacado"') !== -1) {
@@ -1321,26 +1347,45 @@ async function generarIndexEstatico() {
     var bloquesHTML = '';
     idsTodas.forEach(function(secId) {
       var prods = porSeccion[secId] || [];
-      var extraido = extraerBloqueSeccion(secId);
-      var bloque = extraido !== null ? extraido :
-        ('\n<div class="section-title" id="sec-title-' + secId + '" data-section="' + secId + '">' + nombreSeccion(secId) + '</div>\n' +
-         '<div class="grid" id="grid-' + secId + '"></div>\n');
+      var esFija = seccionMeta.hasOwnProperty(secId);
+      var gridRealId = esFija ? ('grid-' + secId) : ('grid-dyn-' + secId);
+      var extraido = esFija ? extraerBloqueSeccion(secId) : extraerBloqueDinamico(secId);
+      var bloque;
+      if (extraido !== null) {
+        bloque = extraido;
+      } else if (esFija) {
+        bloque = '\n<div class="section-title" id="sec-title-' + secId + '" data-section="' + secId + '">' + nombreSeccion(secId) + '</div>\n' +
+                 '<div class="grid" id="' + gridRealId + '"></div>\n';
+      } else {
+        bloque = '\n<div id="sec-dyn-' + secId + '">' +
+                   '<div class="section-title" id="sec-title-' + secId + '" data-section="' + secId + '">' + nombreSeccion(secId) + '</div>' +
+                   '<div class="grid" id="' + gridRealId + '"></div>' +
+                 '</div>\n';
+      }
 
       if (!estaActivaEstatico(secId)) {
         // Sección inactiva: se mantiene en el archivo (para poder reactivarla luego), pero
         // oculta y vacía — NUNCA se borra del HTML.
-        bloque = setGridContentInBlock(bloque, 'grid-' + secId, '');
-        bloque = hideBlockElement(bloque, 'sec-title-' + secId);
-        bloque = hideBlockElement(bloque, 'grid-' + secId);
+        bloque = setGridContentInBlock(bloque, gridRealId, '');
+        if (esFija) {
+          bloque = hideBlockElement(bloque, 'sec-title-' + secId);
+          bloque = hideBlockElement(bloque, gridRealId);
+        } else {
+          bloque = hideBlockElement(bloque, 'sec-dyn-' + secId);
+        }
       } else if (!tituloVisibleEstatico(secId)) {
         // Título oculto: sus productos se unen al grid mezclado; el bloque propio se mantiene
         // en el archivo, oculto y vacío (no borrado).
         productosParaMezclar = productosParaMezclar.concat(prods);
-        bloque = setGridContentInBlock(bloque, 'grid-' + secId, '');
-        bloque = hideBlockElement(bloque, 'sec-title-' + secId);
-        bloque = hideBlockElement(bloque, 'grid-' + secId);
+        bloque = setGridContentInBlock(bloque, gridRealId, '');
+        if (esFija) {
+          bloque = hideBlockElement(bloque, 'sec-title-' + secId);
+          bloque = hideBlockElement(bloque, gridRealId);
+        } else {
+          bloque = hideBlockElement(bloque, 'sec-dyn-' + secId);
+        }
       } else {
-        bloque = setGridContentInBlock(bloque, 'grid-' + secId, prods.map(buildStaticCard).join('\n'));
+        bloque = setGridContentInBlock(bloque, gridRealId, prods.map(buildStaticCard).join('\n'));
       }
       bloquesHTML += '\n' + bloque + '\n';
     });
