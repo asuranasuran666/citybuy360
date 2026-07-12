@@ -1603,9 +1603,17 @@ function renderClientes(clientes) {
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
         <span style="font-size:0.85rem;color:#ffd700;font-weight:700;letter-spacing:1px;">${code}</span>
         <span style="font-size:0.72rem;color:var(--text-muted);">Expira: ${c.expira||'—'}</span>
+        <button onclick="revocarCodigoAcceso('${code}')" style="background:none;border:1px solid #661111;color:#ff6b6b;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;">Eliminar</button>
       </div>
       <div style="font-size:0.8rem;color:#aaa;margin-top:3px;">${c.correo||'—'} · ${c.referencia||''}</div>
     </div>`).join('');
+}
+
+function revocarCodigoAcceso(code) {
+  if (!confirm('¿Eliminar el acceso de "' + code + '"? Nota: si el cliente no tiene internet en el momento de usarlo, el código seguirá funcionando hasta que expire solo — esto solo lo bloquea cuando hay conexión.')) return;
+  db.ref('acceso360/revocados/' + code).set(true);
+  db.ref('acceso360/clientes/' + code).remove();
+  loadAcceso360Admin();
 }
 
 function usarSolicitud(correo, id) {
@@ -1622,14 +1630,29 @@ function descartarSolicitud(id) {
   loadAcceso360Admin();
 }
 
+// ===== ACCESO 360: código con firma matemática — misma fórmula que index.html =====
+var ACCESO360_SECRETO = 'CB360-VIP-CLAVE-2026';
+function acceso360Sello(expiraDiaEpoch) {
+  var str = expiraDiaEpoch + ACCESO360_SECRETO;
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) { hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0; }
+  var b36 = Math.abs(hash).toString(36).toUpperCase();
+  while (b36.length < 5) b36 = '0' + b36;
+  return b36.slice(0, 5);
+}
+function acceso360Generar(dias) {
+  var expiraDiaEpoch = Math.floor(Date.now() / 86400000) + dias;
+  var expiraB36 = expiraDiaEpoch.toString(36).toUpperCase();
+  return { code: 'CB360-' + expiraB36 + '-' + acceso360Sello(expiraDiaEpoch), expiraDiaEpoch: expiraDiaEpoch };
+}
+
 function generarCodigo() {
   const email = document.getElementById('gen-email').value.trim();
   const ref = document.getElementById('gen-ref').value.trim();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Introduce un correo válido'); return; }
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = 'CB360-';
-  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  const expira = new Date(); expira.setMonth(expira.getMonth() + 1);
+  const gen = acceso360Generar(30); // 30 días — código de compra/desbloqueo (el automático del cliente es de 7 días)
+  const code = gen.code;
+  const expira = new Date(gen.expiraDiaEpoch * 86400000);
   const expiraStr = expira.toLocaleDateString('es-ES');
   document.getElementById('codigo-generado').textContent = code;
   document.getElementById('email-preview-body').innerHTML = `
