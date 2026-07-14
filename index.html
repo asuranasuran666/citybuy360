@@ -1295,8 +1295,13 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
         appId: "1:701999748308:web:85c320687f6eb10471d741",
         measurementId: "G-BM5N0W6KJE"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    var db;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+    } catch (e) {
+        console.warn('Firebase no disponible (modo offline):', e);
+    }
 
     // ===== ACCESO 360: código con firma matemática — se genera y verifica SIN Firebase =====
     // Misma fórmula que en admin.html; si se cambia aquí, hay que cambiarla ahí también.
@@ -1327,11 +1332,11 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
 
     // ── Tracking de visitas ──────────────────────────────────────────────────
     const today = new Date().toISOString().split('T')[0];
-    if (!localStorage.getItem('cb360_admin')) { db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1); }
+    if (db && !localStorage.getItem('cb360_admin')) { db.ref('analytics/visits/' + today).transaction(c => (c || 0) + 1); }
 
     // ── PRECIOS DESDE FIREBASE ───────────────────────────────────────────────
     // ── Configuración de interfaz desde Firebase ─────────────────────────────
-    db.ref('interfaz').once('value', function(snap) {
+    if (db) db.ref('interfaz').once('value', function(snap) {
         var interfaz = snap.val();
         if (!interfaz) return;
         // Tienda cerrada
@@ -1370,12 +1375,12 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
     });
 
     // ── Estado sección Acceso 360 desde Firebase ──────────────────────────────
-    db.ref('acceso360/seccionActiva').once('value', function(snap) {
+    if (db) db.ref('acceso360/seccionActiva').once('value', function(snap) {
         var secAcceso = document.getElementById('sec-acceso360');
         if (secAcceso) secAcceso.style.display = snap.val() === true ? '' : 'none';
     });
 
-    db.ref('prices').once('value', function(snap) {
+    if (db) db.ref('prices').once('value', function(snap) {
         var prices = snap.val();
         if (!prices) return;
         document.querySelectorAll('[data-product]').forEach(function(card) {
@@ -1417,29 +1422,42 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
 
         // El código ya es válido matemáticamente (funciona siempre, con o sin conexión).
         // Bonus: si hay internet en este momento, se revisa además si tú lo revocaste a mano
-        // desde el admin. Sin conexión, se salta este paso y el acceso se otorga igual.
+        // desde el admin. Sin conexión (o Firebase no cargó), se salta este paso y el acceso se otorga igual.
+        if (typeof firebase === 'undefined' || !db) {
+            otorgarAcceso();
+            return;
+        }
+
         var yaResuelto = false;
         var revocarTimer = setTimeout(function() {
             if (yaResuelto) return;
             yaResuelto = true;
             otorgarAcceso();
         }, 1500);
-        db.ref('acceso360/revocados/' + code).once('value', function(snap) {
-            if (yaResuelto) return;
-            yaResuelto = true;
-            clearTimeout(revocarTimer);
-            if (snap.val() === true) {
-                errEl.textContent = 'Este código ya no está disponible';
-                document.getElementById('acceso360-code').value = '';
-            } else {
+        try {
+            db.ref('acceso360/revocados/' + code).once('value', function(snap) {
+                if (yaResuelto) return;
+                yaResuelto = true;
+                clearTimeout(revocarTimer);
+                if (snap.val() === true) {
+                    errEl.textContent = 'Este código ya no está disponible';
+                    document.getElementById('acceso360-code').value = '';
+                } else {
+                    otorgarAcceso();
+                }
+            }, function() {
+                if (yaResuelto) return;
+                yaResuelto = true;
+                clearTimeout(revocarTimer);
+                otorgarAcceso();
+            });
+        } catch (e) {
+            if (!yaResuelto) {
+                yaResuelto = true;
+                clearTimeout(revocarTimer);
                 otorgarAcceso();
             }
-        }, function() {
-            if (yaResuelto) return;
-            yaResuelto = true;
-            clearTimeout(revocarTimer);
-            otorgarAcceso();
-        });
+        }
     }
 
     // ── BARRA DE CATEGORÍAS ──────────────────────────────────────────────────

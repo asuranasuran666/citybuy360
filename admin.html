@@ -435,6 +435,9 @@
               <input type="number" id="prod-price" placeholder="29" step="0.01" style="width:90px !important;flex:none !important;min-width:90px;font-size:0.95rem;">
               <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">USD</span>
             </div>
+            <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);cursor:pointer;">
+              <input type="checkbox" id="prod-solo-mn" style="width:auto;"> Solo mostrar en MN (sin conversión)
+            </label>
           </div>
         </div>
         <div class="form-row" style="margin:0;">
@@ -864,6 +867,13 @@ try {
   document.getElementById('login-error').textContent = 'Error de conexión con Firebase: ' + e.message;
 }
 
+// Si ya había una sesión iniciada (no se cerró con "Cerrar sesión"), saltar la pantalla de contraseña
+if (localStorage.getItem('cb360_admin') === 'true') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-panel').style.display = 'block';
+  try { initAdmin(); } catch(e) { console.error('initAdmin error:', e); }
+}
+
 // ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
 let SECTIONS = [];
 let PRODUCT_NAMES = {};
@@ -1148,7 +1158,11 @@ async function generarIndexEstatico() {
       var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
       var monedaProd = p.moneda || 'MN';
       var precioHTML = '';
-      if (showPrecio && precioNum) {
+      if (showPrecio && precioNum && p.soloMN) {
+        // Solo MN: el precio se guarda en USD como siempre, pero se muestra convertido y solo en MN
+        var mnSolo = tasaUsdMn > 0 ? Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES') : precioNum;
+        precioHTML = '<div class="price product-price">'+mnSolo+' MN</div><div class="price-conversion"></div>';
+      } else if (showPrecio && precioNum) {
         precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>';
         if (monedaProd === 'MN' && tasaUsdMn > 0) {
           var usdEquiv = (parseFloat(precioNum) / tasaUsdMn).toFixed(2);
@@ -2004,6 +2018,7 @@ function editProduct(pid) {
     if (!p) { alert('Producto no encontrado en Firebase'); return; }
     document.getElementById('prod-name').value = p.nombre || '';
     document.getElementById('prod-price').value = p.precio || '';
+    if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = !!p.soloMN;
     // Firebase guarda tallas/colores dentro de 'detalles' — intentar ambos campos
     document.getElementById('prod-tallas').value = p.tallas || '';
     document.getElementById('prod-colores').value = p.colores || '';
@@ -2313,6 +2328,7 @@ async function doPublish() {
   const secId   = document.getElementById('prod-seccion').value;
   const genero  = getSelectedGenero();
   const moneda   = 'USD';
+  const soloMN   = document.getElementById('prod-solo-mn') ? document.getElementById('prod-solo-mn').checked : false;
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
@@ -2374,7 +2390,7 @@ async function doPublish() {
     log('💾 Guardando en Firebase…');
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
-      id, nombre: name, precio: price, moneda, tallas, colores, vendedor, etiqueta,
+      id, nombre: name, precio: price, moneda, soloMN, tallas, colores, vendedor, etiqueta,
       detalles: desc, descripcion: tooltip,
       seccion: secId, genero, destacado,
       imagenes, activo: true,
@@ -2399,6 +2415,7 @@ async function doPublish() {
       var el = document.getElementById(fid); if(el) el.value = '';
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
+    if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = false;
   setSelectedEtiqueta('');
     btn.dataset.editPid = '';
     btn.textContent = '🚀 Publicar producto';
@@ -2481,6 +2498,7 @@ function cancelarFormulario() {
   document.getElementById('prod-desc').value = '';
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
+  if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = false;
   setSelectedEtiqueta('');
   document.getElementById('prod-seccion').value = '';
   document.querySelectorAll('.genero-chip').forEach(function(c){ c.classList.remove('selected'); });
