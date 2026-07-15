@@ -2713,15 +2713,37 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
         document.getElementById('modal-codigo-generado').textContent = gen.code;
         showModalStep(3);
 
-        // Guardar la solicitud en Firebase es solo para que tú lo veas en el admin — si falla
-        // (sin VPN en Cuba), no afecta en nada al cliente, que ya tiene su código.
-        db.ref('acceso360/solicitudes/' + Date.now()).set({
-            correo: email, fecha: new Date().toISOString(), estado: 'entregado', code: gen.code
-        }).catch(function(){ /* sin conexión — no pasa nada, el cliente ya tiene su código */ });
         var expiraStr = new Date(gen.expiraDiaEpoch * 86400000).toLocaleDateString('es-ES');
-        db.ref('acceso360/clientes/' + gen.code).set({
-            correo: email, referencia: 'Autogenerado (7 días)', fecha_activacion: new Date().toISOString().split('T')[0], expira: expiraStr
-        }).catch(function(){});
+
+        // Avisarte a ti por WhatsApp si el registro no llega a Firebase (sin conexión, típico
+        // en Cuba) — para que sepas de esta solicitud aunque nunca aparezca en el admin.
+        function avisarPorWhatsapp() {
+            var waText = encodeURIComponent('Nueva solicitud ACCESO 360 (sin conexión a Firebase). Correo: ' + email + ' — Código: ' + gen.code + ' — Expira: ' + expiraStr);
+            window.open('https://wa.me/5353255813?text=' + waText, '_blank');
+        }
+
+        if (!db) { avisarPorWhatsapp(); return; }
+
+        var registrado = false;
+        var fallbackTimer = setTimeout(function() {
+            if (registrado) return;
+            avisarPorWhatsapp();
+        }, 4000);
+
+        try {
+            // Guardar la solicitud en Firebase es solo para que tú lo veas en el admin — si falla
+            // (sin VPN en Cuba), avisa por WhatsApp en su lugar; el cliente ya tiene su código.
+            db.ref('acceso360/solicitudes/' + Date.now()).set({
+                correo: email, fecha: new Date().toISOString(), estado: 'entregado', code: gen.code
+            }).then(function(){ registrado = true; clearTimeout(fallbackTimer); })
+              .catch(function(){ clearTimeout(fallbackTimer); avisarPorWhatsapp(); });
+            db.ref('acceso360/clientes/' + gen.code).set({
+                correo: email, referencia: 'Autogenerado (7 días)', fecha_activacion: new Date().toISOString().split('T')[0], expira: expiraStr
+            }).catch(function(){});
+        } catch (e) {
+            clearTimeout(fallbackTimer);
+            avisarPorWhatsapp();
+        }
     }
     var vipOverlay = document.getElementById('modal-vip-overlay');
     if (vipOverlay) vipOverlay.addEventListener('click', function(e){
