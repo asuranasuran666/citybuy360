@@ -233,6 +233,12 @@
     <button class="logout" onclick="logout()">Cerrar sesión</button>
   </div>
 
+  <div class="token-box" style="margin:12px 16px 0;">
+    <span style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">🔑 Token GitHub:</span>
+    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" oninput="saveToken(this.value)">
+    <span class="token-status" id="token-status">Sin token</span>
+  </div>
+
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('control',this)">🎛 Productos y Secciones</button>
     <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
@@ -294,6 +300,9 @@
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Precio (ej: 2,900 MN)</label>
           <input type="text" id="edit-precio" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);cursor:pointer;">
+            <input type="checkbox" id="edit-solo-mn" style="width:auto;"> Solo mostrar en MN (sin conversión)
+          </label>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Sección</label>
@@ -317,10 +326,6 @@
             <option value="electronica">Electrónica</option>
             <option value="servicios">Servicios</option>
           </select>
-        </div>
-        <div>
-          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Detalles (tallas, colores...)</label>
-          <input type="text" id="edit-detalles" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Descripción (tooltip al pasar el ratón)</label>
@@ -377,13 +382,6 @@
   <!-- ── TAB: NUEVO PRODUCTO ── -->
   <div id="tab-nuevo" class="tab-content">
 
-    <!-- Token GitHub -->
-    <div class="token-box">
-      <span style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">🔑 Token GitHub:</span>
-      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" oninput="saveToken(this.value)">
-      <span class="token-status" id="token-status">Sin token</span>
-    </div>
-
     <!-- Fotos + campos principales en dos columnas -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
 
@@ -411,10 +409,6 @@
             <span class="genero-chip" data-val="recomendado" onclick="toggleEtiquetaChip(this)">👍 Recomendado</span>
             <span class="genero-chip" data-val="calidad" onclick="toggleEtiquetaChip(this)">💎 Máxima Calidad</span>
           </div>
-        </div>
-        <div class="form-group" style="margin:0;">
-          <label>Descripción corta (tallas, estilo, colores…)</label>
-          <textarea id="prod-desc" placeholder="Estilo casual. Tallas: S, M, L&#10;Colores: Blanco, Negro" style="min-height:60px;"></textarea>
         </div>
         <div class="form-group" style="margin:0;">
           <label>Vendedor / Empresa <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
@@ -832,6 +826,7 @@
     </table>
   </div>
 
+<script src="acceso360-core.js"></script>
 <script>
 const PASS = 'CityBUY360/-+*';
 
@@ -1644,21 +1639,7 @@ function descartarSolicitud(id) {
   loadAcceso360Admin();
 }
 
-// ===== ACCESO 360: código con firma matemática — misma fórmula que index.html =====
-var ACCESO360_SECRETO = 'CB360-VIP-CLAVE-2026';
-function acceso360Sello(expiraDiaEpoch) {
-  var str = expiraDiaEpoch + ACCESO360_SECRETO;
-  var hash = 0;
-  for (var i = 0; i < str.length; i++) { hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0; }
-  var b36 = Math.abs(hash).toString(36).toUpperCase();
-  while (b36.length < 5) b36 = '0' + b36;
-  return b36.slice(0, 5);
-}
-function acceso360Generar(dias) {
-  var expiraDiaEpoch = Math.floor(Date.now() / 86400000) + dias;
-  var expiraB36 = expiraDiaEpoch.toString(36).toUpperCase();
-  return { code: 'CB360-' + expiraB36 + '-' + acceso360Sello(expiraDiaEpoch), expiraDiaEpoch: expiraDiaEpoch };
-}
+// ===== ACCESO 360: código con firma matemática — núcleo compartido en acceso360-core.js =====
 
 function generarCodigo() {
   const email = document.getElementById('gen-email').value.trim();
@@ -1739,9 +1720,7 @@ function toggleEmailjsConfig() {
 
 function logout() {
   localStorage.removeItem('cb360_admin');
-  document.getElementById('admin-panel').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('pwd-input').value = '';
+  location.reload();
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
@@ -1826,17 +1805,41 @@ function guardarPrecioProducto(id) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+function cargarConfigConTimeout() {
+  const container = document.getElementById('sections-container');
+  let resuelto = false;
+  const timeoutId = setTimeout(() => {
+    if (resuelto) return;
+    resuelto = true;
+    if (container) {
+      container.innerHTML = '<div class="empty-state">⚠️ No se pudo conectar con la base de datos.<br><button onclick="cargarConfigConTimeout()" style="margin-top:10px;background:var(--brand);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">🔄 Reintentar</button></div>';
+    }
+  }, 10000);
+  db.ref('config').once('value', snap => {
+    if (resuelto) return;
+    resuelto = true;
+    clearTimeout(timeoutId);
+    const data = snap.val() || {};
+    cfg.sections = data.sections || {};
+    cfg.products = data.products || {};
+    renderControl();
+  }, err => {
+    if (resuelto) return;
+    resuelto = true;
+    clearTimeout(timeoutId);
+    console.error('Error cargando config:', err);
+    if (container) {
+      container.innerHTML = '<div class="empty-state">⚠️ Error al cargar: ' + err.message + '<br><button onclick="cargarConfigConTimeout()" style="margin-top:10px;background:var(--brand);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">🔄 Reintentar</button></div>';
+    }
+  });
+}
+
 async function initAdmin() {
   loadCustomGeneros();
   loadToken();
   await loadStructureFromIndex();
   populateSections();
-  db.ref('config').once('value', snap => {
-    const data = snap.val() || {};
-    cfg.sections = data.sections || {};
-    cfg.products = data.products || {};
-    renderControl();
-  });
+  cargarConfigConTimeout();
   db.ref('analytics/visits').once('value', snap => {
     visitsData = snap.val() || {};
     renderAnalytics();
@@ -2022,7 +2025,6 @@ function editProduct(pid) {
     // Firebase guarda tallas/colores dentro de 'detalles' — intentar ambos campos
     document.getElementById('prod-tallas').value = p.tallas || '';
     document.getElementById('prod-colores').value = p.colores || '';
-    document.getElementById('prod-desc').value = p.detalles || '';
     document.getElementById('prod-tooltip').value = p.descripcion || '';
     document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
     var vendedorEl = document.getElementById('prod-vendedor');
@@ -2323,7 +2325,6 @@ async function doPublish() {
   const price   = document.getElementById('prod-price').value.trim();
   const tallas  = document.getElementById('prod-tallas').value.trim();
   const colores = document.getElementById('prod-colores').value.trim();
-  const desc    = document.getElementById('prod-desc').value.trim();
   const tooltip = document.getElementById('prod-tooltip').value.trim();
   const secId   = document.getElementById('prod-seccion').value;
   const genero  = getSelectedGenero();
@@ -2391,7 +2392,7 @@ async function doPublish() {
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
       id, nombre: name, precio: price, moneda, soloMN, tallas, colores, vendedor, etiqueta,
-      detalles: desc, descripcion: tooltip,
+      descripcion: tooltip,
       seccion: secId, genero, destacado,
       imagenes, activo: true,
       orden: Date.now()
@@ -2411,7 +2412,7 @@ async function doPublish() {
     log('✅ ¡Publicado en Firebase!', 'log-ok');
 
     // Limpiar formulario
-    ['prod-name','prod-price','prod-tallas','prod-colores','prod-desc','prod-tooltip','prod-vendedor'].forEach(function(fid){
+    ['prod-name','prod-price','prod-tallas','prod-colores','prod-tooltip','prod-vendedor'].forEach(function(fid){
       var el = document.getElementById(fid); if(el) el.value = '';
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
@@ -2495,7 +2496,6 @@ function cancelarFormulario() {
   document.getElementById('prod-price').value = '';
   document.getElementById('prod-tallas').value = '';
   document.getElementById('prod-colores').value = '';
-  document.getElementById('prod-desc').value = '';
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
   if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = false;
@@ -2625,9 +2625,9 @@ function abrirModalEditar(pid) {
     document.getElementById('edit-pid').value = pid;
     document.getElementById('edit-nombre').value = p.nombre || '';
     document.getElementById('edit-precio').value = p.precio || '';
+    document.getElementById('edit-solo-mn').checked = !!p.soloMN;
     document.getElementById('edit-seccion').value = p.seccion || 'ropa-moda';
     document.getElementById('edit-genero').value = p.genero || 'unisex';
-    document.getElementById('edit-detalles').value = p.detalles || '';
     document.getElementById('edit-descripcion').value = p.descripcion || '';
     document.getElementById('edit-destacado').checked = !!p.destacado;
     document.getElementById('edit-activo').checked = p.activo !== false;
@@ -2664,9 +2664,9 @@ function guardarEdicionProducto() {
   var updates = {
     nombre: document.getElementById('edit-nombre').value.trim(),
     precio: document.getElementById('edit-precio').value.trim(),
+    soloMN: document.getElementById('edit-solo-mn').checked,
     seccion: document.getElementById('edit-seccion').value,
     genero: document.getElementById('edit-genero').value,
-    detalles: document.getElementById('edit-detalles').value.trim(),
     descripcion: document.getElementById('edit-descripcion').value.trim(),
     destacado: document.getElementById('edit-destacado').checked,
     activo: document.getElementById('edit-activo').checked,
@@ -3256,6 +3256,9 @@ function saveSliderConfig() {
 }
 
 </script>
+
+</div>
+<!-- fin #admin-panel -->
 
   <!-- ── MODAL BACKUP ── -->
   <div class="modal-overlay hidden" id="backup-modal">
