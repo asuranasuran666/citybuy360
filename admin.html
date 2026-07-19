@@ -721,6 +721,19 @@
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+        <span style="color:var(--text);font-weight:700;">✦ Mensaje privado a un cliente</span>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">Solo lo ve el correo que escribas abajo. Necesita haberse identificado antes en la campanita del catálogo.</div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <input type="email" id="msg-priv-email" placeholder="correo@cliente.com" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <textarea id="msg-priv-texto" placeholder="Escribe el mensaje privado…" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:0.9rem;min-height:70px;resize:vertical;"></textarea>
+        <button onclick="publicarMensajePrivado()" style="background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">✦ Enviar privado</button>
+        <div id="msg-priv-status" style="font-size:0.82rem;text-align:center;"></div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
         <span style="color:var(--text);font-weight:700;">Mensajes publicados</span>
         <button onclick="loadMensajesAdmin()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;">↺ Refrescar</button>
@@ -741,7 +754,7 @@
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
         <div style="font-weight:700;color:var(--text);margin-bottom:12px;">➕ Nuevo vendedor</div>
         <input type="text" id="v-nombre" placeholder="Nombre del vendedor" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
-        <input type="text" id="v-codigo" placeholder="Código de acceso (ej: VEND01)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">El código de acceso se genera solo, funciona sin internet para el vendedor.</div>
         <button onclick="crearVendedor()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">Crear vendedor</button>
         <div id="v-status" style="font-size:0.8rem;margin-top:6px;text-align:center;"></div>
       </div>
@@ -810,6 +823,9 @@
 
   <!-- ── TAB: VENTAS ── -->
   <div id="tab-ventas" class="tab-content">
+    <div style="padding:8px 16px;display:flex;justify-content:flex-end;">
+      <button onclick="borrarDatosVentas()" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:6px 12px;font-size:0.8rem;cursor:pointer;">🗑️ Borrar datos de ventas</button>
+    </div>
     <table class="sales-table">
       <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th></tr></thead>
       <tbody id="sales-tbody"><tr><td colspan="3" class="empty-state">Cargando…</td></tr></tbody>
@@ -827,6 +843,7 @@
   </div>
 
 <script src="acceso360-core.js"></script>
+<script src="vendedor-core.js"></script>
 <script>
 const PASS = 'CityBUY360/-+*';
 
@@ -2238,6 +2255,14 @@ function renderAnalytics() {
 }
 
 // ── VENTAS ────────────────────────────────────────────────────────────────────
+function borrarDatosVentas() {
+  if (!confirm('¿Borrar todos los datos de ventas (clics en "Lo quiero")? Esta acción no se puede deshacer.')) return;
+  db.ref('sales').remove().then(() => {
+    salesData = {};
+    renderSales();
+  }).catch(e => alert('Error al borrar: ' + e.message));
+}
+
 function renderSales() {
   const tbody = document.getElementById('sales-tbody');
   const entries = Object.entries(salesData).sort((a,b) => b[1]-a[1]);
@@ -2957,16 +2982,24 @@ function crearNuevaSeccion() {
 
 function crearVendedor() {
   var nombre = document.getElementById('v-nombre').value.trim();
-  var codigo = document.getElementById('v-codigo').value.trim().toUpperCase();
   var status = document.getElementById('v-status');
-  if (!nombre || !codigo) { status.textContent = 'Rellena nombre y código'; status.style.color='#ff4444'; return; }
-  db.ref('vendedores/' + codigo).set({ nombre, codigo, activo: true, creado: new Date().toISOString() }).then(() => {
-    status.textContent = '✓ Vendedor ' + nombre + ' creado';
-    status.style.color = '#22c55e';
-    document.getElementById('v-nombre').value = '';
-    document.getElementById('v-codigo').value = '';
-    loadVendedores();
-    setTimeout(() => status.textContent = '', 3000);
+  if (!nombre) { status.textContent = 'Escribe el nombre del vendedor'; status.style.color='#ff4444'; return; }
+  status.textContent = 'Generando código…'; status.style.color = '';
+  db.ref('config/vendedor_contador').transaction(function(c) { return (c || 0) + 1; }).then(function(res) {
+    var idNum = res.snapshot.val();
+    var codigo = vendedorGenerar(idNum);
+    db.ref('vendedores/' + codigo).set({ nombre, codigo, idNum, activo: true, creado: new Date().toISOString() }).then(() => {
+      status.innerHTML = '✓ Vendedor ' + nombre + ' creado<br><span style="font-size:1.1rem;font-weight:900;color:#fff;user-select:all;">' + codigo + '</span><br>Dale este código al vendedor';
+      status.style.color = '#22c55e';
+      document.getElementById('v-nombre').value = '';
+      loadVendedores();
+    }).catch(function(e) {
+      status.textContent = 'Error: ' + e.message;
+      status.style.color = '#ff4444';
+    });
+  }).catch(function(e) {
+    status.textContent = 'Error generando código: ' + e.message;
+    status.style.color = '#ff4444';
   });
 }
 
@@ -2989,15 +3022,8 @@ function renderVendedoresList() {
 
 function editarVendedor(codigoActual, nombreActual) {
   var nuevoNombre = prompt('Nombre del vendedor:', nombreActual);
-  if (nuevoNombre === null) return;
-  var nuevoCodigo = prompt('Código de acceso:', codigoActual);
-  if (!nuevoCodigo) return;
-  nuevoCodigo = nuevoCodigo.trim().toUpperCase();
-  var datos = { nombre: nuevoNombre.trim(), codigo: nuevoCodigo, activo: true, creado: (vendedoresData[codigoActual] && vendedoresData[codigoActual].creado) || new Date().toISOString() };
-  if (nuevoCodigo !== codigoActual) {
-    db.ref('vendedores/' + codigoActual).remove();
-  }
-  db.ref('vendedores/' + nuevoCodigo).set(datos).then(loadVendedores);
+  if (nuevoNombre === null || !nuevoNombre.trim()) return;
+  db.ref('vendedores/' + codigoActual).update({ nombre: nuevoNombre.trim() }).then(loadVendedores);
 }
 
 function eliminarVendedor(codigo) {
@@ -3146,6 +3172,30 @@ function publicarMensaje() {
 function eliminarMensaje(id) {
   if (!confirm('¿Eliminar este mensaje?')) return;
   db.ref('mensajes/' + id).remove().then(function(){ loadMensajesAdmin(); });
+}
+
+function normalizarEmailKey(email) {
+  return email.trim().toLowerCase().replace(/[.#$\[\]\/]/g, '_');
+}
+
+function publicarMensajePrivado() {
+  var email = document.getElementById('msg-priv-email').value.trim().toLowerCase();
+  var texto = document.getElementById('msg-priv-texto').value.trim();
+  var status = document.getElementById('msg-priv-status');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { status.style.color='#ff9999'; status.textContent='Escribe un correo válido'; return; }
+  if (!texto) { status.style.color='#ff9999'; status.textContent='Escribe un mensaje primero'; return; }
+  status.style.color = '';
+  status.textContent = 'Enviando…';
+  var key = normalizarEmailKey(email);
+  db.ref('mensajes_privados/' + key).push({ texto: texto, fecha: new Date().toISOString() }).then(function() {
+    status.style.color = '#7fff7f';
+    status.textContent = '✅ Mensaje privado enviado';
+    document.getElementById('msg-priv-texto').value = '';
+    setTimeout(function(){ status.textContent = ''; }, 3000);
+  }).catch(function(e) {
+    status.style.color = '#ff9999';
+    status.textContent = '❌ Error: ' + e.message;
+  });
 }
 
 

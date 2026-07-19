@@ -1575,7 +1575,17 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
         const card = btn.closest('[data-product]');
         if (!card) return;
         const pid = card.getAttribute('data-product');
-        if (pid) db.ref('sales/' + pid).transaction(c => (c || 0) + 1);
+        if (!pid) return;
+        db.ref('sales/' + pid).transaction(c => (c || 0) + 1);
+        var nombreEl = card.querySelector('.product-name');
+        var precioEl = card.querySelector('.product-price');
+        db.ref('pedidos').push({
+            productoId: pid,
+            productoNombre: nombreEl ? nombreEl.textContent.trim() : pid,
+            precio: precioEl ? precioEl.textContent.trim() : '',
+            fecha: new Date().toISOString(),
+            estado: 'pendiente'
+        });
     });
 
     // ── Leer config admin: mostrar/ocultar secciones y productos ─────────────
@@ -1739,7 +1749,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
                 '<div class="card-vendedor">' + (p.vendedor || '') + '</div>' +
                 (stock === 0 && inventarioData[p.id] !== undefined
                     ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
-                    : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this.dataset.product)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>') +
+                    : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>') +
             '</div>' +
         '</div>';
     }
@@ -2110,8 +2120,20 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
     }
 
 
-    function trackSale(pid) {
-        if (pid) db.ref('sales/' + pid).transaction(function(c) { return (c || 0) + 1; });
+    function trackSale(el) {
+        var pid = el && el.dataset ? el.dataset.product : el;
+        if (!pid) return;
+        db.ref('sales/' + pid).transaction(function(c) { return (c || 0) + 1; });
+        var card = el && el.closest ? el.closest('[data-product]') : null;
+        var nombreEl = card ? card.querySelector('.product-name') : null;
+        var precioEl = card ? card.querySelector('.product-price') : null;
+        db.ref('pedidos').push({
+            productoId: pid,
+            productoNombre: nombreEl ? nombreEl.textContent.trim() : pid,
+            precio: precioEl ? precioEl.textContent.trim() : '',
+            fecha: new Date().toISOString(),
+            estado: 'pendiente'
+        });
     }
 
     // ===== ESTRELLAS =====
@@ -2804,36 +2826,110 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
     }
 
     
+    // ── IDENTIDAD SIMPLE POR CORREO (sesión persistente, sin contraseña) ──
+    function getUsuarioCB360() {
+        try { return JSON.parse(localStorage.getItem('cb360_usuario') || 'null'); } catch(e) { return null; }
+    }
+    function normalizarEmailKey(email) {
+        return email.trim().toLowerCase().replace(/[.#$\[\]\/]/g, '_');
+    }
+    function guardarUsuarioCB360() {
+        var input = document.getElementById('mensajes-email-input');
+        var errEl = document.getElementById('mensajes-login-error');
+        var email = (input.value || '').trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            errEl.textContent = 'Escribe un correo válido';
+            errEl.style.display = 'block';
+            return;
+        }
+        errEl.style.display = 'none';
+        var key = normalizarEmailKey(email);
+        var yaExiste = !!getUsuarioCB360();
+        var datos = { email: email, ultimaVisita: Date.now() };
+        if (!yaExiste) datos.creado = Date.now();
+        var timeoutId = setTimeout(function() {
+            errEl.textContent = '📶 Para una mejor experiencia, en Cuba se recomienda usar un VPN para acceder a esta función.';
+            errEl.style.display = 'block';
+        }, 7000);
+        db.ref('usuarios/' + key).update(datos).then(function() {
+            clearTimeout(timeoutId);
+            localStorage.setItem('cb360_usuario', JSON.stringify({ email: email, key: key }));
+            var loginBlock = document.getElementById('mensajes-login');
+            if (loginBlock) loginBlock.style.display = 'none';
+            loadMensajes();
+        }).catch(function() {
+            clearTimeout(timeoutId);
+            errEl.textContent = '📶 Para una mejor experiencia, en Cuba se recomienda usar un VPN para acceder a esta función.';
+            errEl.style.display = 'block';
+        });
+    }
+
     // ── SISTEMA DE MENSAJES CAMPANITA ──
     var mensajesLoaded = false;
     function loadMensajes() {
-        db.ref('mensajes').orderByChild('fecha').limitToLast(20).once('value', function(snap) {
-            var data = snap.val() || {};
-            var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
-            var items = Object.entries(data).reverse();
-            var nuevos = items.filter(function(e){ return !leidos.includes(e[0]); });
-            
-            var badge = document.getElementById('bell-badge');
-            if (badge) {
-                badge.textContent = nuevos.length || '';
-                badge.classList.toggle('show', nuevos.length > 0);
-            }
+        var usuario = getUsuarioCB360();
+        var loginBlock = document.getElementById('mensajes-login');
+        if (loginBlock) loginBlock.style.display = usuario ? 'none' : 'block';
 
+        var resuelto = false;
+        var timeoutId = setTimeout(function() {
+            if (resuelto) return;
+            resuelto = true;
             var list = document.getElementById('mensajes-list');
-            if (!list) return;
-            if (!items.length) {
-                list.innerHTML = '<div class="mensajes-empty">No hay mensajes aún</div>';
-                return;
+            if (list) {
+                list.innerHTML = '<div class="mensajes-empty">📶 Para una mejor experiencia, en Cuba se recomienda usar un VPN para acceder a esta función.</div>';
             }
-            list.innerHTML = items.map(function(e) {
-                var id = e[0]; var m = e[1];
-                var esNuevo = !leidos.includes(id);
-                var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
-                return '<div class="mensaje-item' + (esNuevo?' nuevo':'') + '">' +
-                    '<div class="mensaje-texto">' + (m.texto||'') + '</div>' +
-                    '<div class="mensaje-fecha">' + fecha + (esNuevo ? ' · <span style="color:#ffd700;font-weight:700;">Nuevo</span>' : '') + '</div>' +
-                    '</div>';
-            }).join('');
+        }, 7000);
+
+        db.ref('mensajes').orderByChild('fecha').limitToLast(20).once('value', function(snapGlobal) {
+            if (resuelto) return;
+            clearTimeout(timeoutId);
+            resuelto = true;
+            var globalItems = Object.entries(snapGlobal.val() || {}).map(function(e){ return [e[0], e[1], false]; });
+            var procesar = function(privItems) {
+                var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
+                var items = privItems.concat(globalItems).sort(function(a,b){ return new Date(b[1].fecha||0).getTime() - new Date(a[1].fecha||0).getTime(); });
+                var nuevos = items.filter(function(e){ return !leidos.includes(e[0]); });
+
+                var badge = document.getElementById('bell-badge');
+                if (badge) {
+                    badge.textContent = nuevos.length || '';
+                    badge.classList.toggle('show', nuevos.length > 0);
+                }
+
+                var list = document.getElementById('mensajes-list');
+                if (!list) return;
+                if (!items.length) {
+                    list.innerHTML = '<div class="mensajes-empty">No hay mensajes aún</div>';
+                    return;
+                }
+                list.innerHTML = items.map(function(e) {
+                    var id = e[0]; var m = e[1]; var esPrivado = e[2];
+                    var esNuevo = !leidos.includes(id);
+                    var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+                    return '<div class="mensaje-item' + (esNuevo?' nuevo':'') + '">' +
+                        (esPrivado ? '<div style="color:#ffd700;font-size:0.7rem;font-weight:700;margin-bottom:4px;">✦ Para ti</div>' : '') +
+                        '<div class="mensaje-texto">' + (m.texto||'') + '</div>' +
+                        '<div class="mensaje-fecha">' + fecha + (esNuevo ? ' · <span style="color:#ffd700;font-weight:700;">Nuevo</span>' : '') + '</div>' +
+                        '</div>';
+                }).join('');
+            };
+            if (usuario) {
+                db.ref('mensajes_privados/' + usuario.key).orderByChild('fecha').limitToLast(20).once('value', function(snapPriv) {
+                    var privItems = Object.entries(snapPriv.val() || {}).map(function(e){ return [e[0], e[1], true]; });
+                    procesar(privItems);
+                }, function() { procesar([]); });
+            } else {
+                procesar([]);
+            }
+        }, function() {
+            if (resuelto) return;
+            clearTimeout(timeoutId);
+            resuelto = true;
+            var list = document.getElementById('mensajes-list');
+            if (list) {
+                list.innerHTML = '<div class="mensajes-empty">📶 Para una mejor experiencia, en Cuba se recomienda usar un VPN para acceder a esta función.</div>';
+            }
         });
     }
 
@@ -2845,12 +2941,22 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
         overlay.style.display = isOpen ? 'none' : 'block';
         if (!isOpen) {
             loadMensajes();
-            // Marcar todos como leídos
+            var usuario = getUsuarioCB360();
+            // Marcar todos como leídos (globales + privados)
             db.ref('mensajes').once('value', function(snap) {
                 var ids = Object.keys(snap.val() || {});
-                localStorage.setItem('mensajes_leidos', JSON.stringify(ids));
-                var badge = document.getElementById('bell-badge');
-                if (badge) { badge.textContent = ''; badge.classList.remove('show'); }
+                var marcarLeidos = function(idsPriv) {
+                    localStorage.setItem('mensajes_leidos', JSON.stringify(ids.concat(idsPriv || [])));
+                    var badge = document.getElementById('bell-badge');
+                    if (badge) { badge.textContent = ''; badge.classList.remove('show'); }
+                };
+                if (usuario) {
+                    db.ref('mensajes_privados/' + usuario.key).once('value', function(snapPriv) {
+                        marcarLeidos(Object.keys(snapPriv.val() || {}));
+                    });
+                } else {
+                    marcarLeidos([]);
+                }
             });
         }
     }
@@ -2859,14 +2965,27 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
     window.addEventListener('load', function() {
         loadCatalogo();
         loadRibbonsFromFirebase();
+        var usuarioInit = getUsuarioCB360();
         db.ref('mensajes').once('value', function(snap) {
             var data = snap.val() || {};
             var leidos = JSON.parse(localStorage.getItem('mensajes_leidos') || '[]');
             var nuevos = Object.keys(data).filter(function(id){ return !leidos.includes(id); });
-            var badge = document.getElementById('bell-badge');
-            if (badge && nuevos.length > 0) {
-                badge.textContent = nuevos.length;
-                badge.classList.add('show');
+            var actualizarBadge = function(nuevosPriv) {
+                var total = nuevos.length + (nuevosPriv || 0);
+                var badge = document.getElementById('bell-badge');
+                if (badge && total > 0) {
+                    badge.textContent = total;
+                    badge.classList.add('show');
+                }
+            };
+            if (usuarioInit) {
+                db.ref('mensajes_privados/' + usuarioInit.key).once('value', function(snapPriv) {
+                    var dataPriv = snapPriv.val() || {};
+                    var nuevosPriv = Object.keys(dataPriv).filter(function(id){ return !leidos.includes(id); });
+                    actualizarBadge(nuevosPriv.length);
+                });
+            } else {
+                actualizarBadge(0);
             }
         });
     });
@@ -2994,6 +3113,12 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
     <div class="mensajes-header">
         <h3>📢 Mensajes de la tienda</h3>
         <button class="mensajes-close" onclick="toggleMensajesPanel()">✕</button>
+    </div>
+    <div id="mensajes-login" style="display:none;padding:14px 16px;border-bottom:1px solid #2a2a2a;">
+        <div style="color:#ccc;font-size:0.8rem;margin-bottom:8px;">Déjanos tu correo y vas a poder ver tus mensajes personalizados y ofertas para ti.</div>
+        <input type="email" id="mensajes-email-input" placeholder="tu@correo.com" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #333;background:#111;color:#fff;font-size:0.85rem;margin-bottom:8px;">
+        <button onclick="guardarUsuarioCB360()" style="width:100%;background:#ffd700;color:#111;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:0.85rem;cursor:pointer;">Guardar</button>
+        <div id="mensajes-login-error" style="color:#ff6666;font-size:0.75rem;margin-top:6px;display:none;"></div>
     </div>
     <div class="mensajes-list" id="mensajes-list">
         <div class="mensajes-empty">Cargando mensajes…</div>
