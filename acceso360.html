@@ -166,7 +166,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
     <div class="login-badge">✦ ACCESO 360</div>
     <div class="login-title">Sección Exclusiva</div>
     <div class="login-sub">Introduce tu código personal para acceder</div>
-    <input type="text" id="code-input" class="login-input" placeholder="TU CÓDIGO" maxlength="12" onkeydown="if(event.key==='Enter')checkCode()">
+    <input type="text" id="code-input" class="login-input" placeholder="TU CÓDIGO" maxlength="20" onkeydown="if(event.key==='Enter')checkCode()">
     <button class="login-btn" id="login-btn" onclick="checkCode()">Acceder ✦</button>
     <div class="login-error" id="code-error"></div>
     <div class="login-back-link" onclick="window.location.href='index.html'">← Volver al catálogo</div>
@@ -185,6 +185,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
   </div>
 </div>
 
+<script src="acceso360-core.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
@@ -199,21 +200,57 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const WA = '5353255813'; // Número WhatsApp de la tienda
 
+// ===== ACCESO 360: verificación matemática offline — núcleo compartido en acceso360-core.js =====
+
 function checkCode() {
   var code = document.getElementById('code-input').value.trim().toUpperCase();
   var errEl = document.getElementById('code-error');
   var btn = document.getElementById('login-btn');
   if (!code) { errEl.textContent = 'Introduce tu código'; return; }
+  errEl.textContent = '';
   btn.disabled = true; btn.textContent = 'Verificando…';
-  db.ref('acceso360/codes/' + code).once('value', function(snap) {
-    if (snap.val() === true) {
-      sessionStorage.setItem('acceso360_code', code);
-      unlockVip();
-    } else {
+
+  var resultado = acceso360Verificar(code);
+
+  if (!resultado.formatoReconocido) {
+    // Código de formato antiguo (emitido antes del sistema matemático) — se valida por Firebase
+    db.ref('acceso360/codes/' + code).once('value', function(snap) {
+      if (snap.val() === true) {
+        sessionStorage.setItem('acceso360_code', code);
+        unlockVip();
+      } else {
+        errEl.textContent = '❌ Código inválido o expirado';
+        btn.disabled = false; btn.textContent = 'Acceder ✦';
+      }
+    }, function() {
       errEl.textContent = '❌ Código inválido o expirado';
       btn.disabled = false; btn.textContent = 'Acceder ✦';
+    });
+    return;
+  }
+
+  if (!resultado.valido) {
+    errEl.textContent = resultado.expirado ? '❌ Código expirado' : '❌ Código inválido';
+    btn.disabled = false; btn.textContent = 'Acceder ✦';
+    return;
+  }
+
+  // Código válido offline. Revocación se chequea online si hay conexión, sin bloquear si no la hay.
+  sessionStorage.setItem('acceso360_code', code);
+  var yaEntro = false;
+  var entrarSiNoRevocado = function(snap) {
+    if (yaEntro) return;
+    yaEntro = true;
+    if (snap && snap.val() === true) {
+      sessionStorage.removeItem('acceso360_code');
+      errEl.textContent = '❌ Este código fue revocado';
+      btn.disabled = false; btn.textContent = 'Acceder ✦';
+    } else {
+      unlockVip();
     }
-  });
+  };
+  setTimeout(function() { entrarSiNoRevocado(null); }, 2500); // sin internet: entra igual
+  db.ref('acceso360/revocados/' + code).once('value', entrarSiNoRevocado, function() { entrarSiNoRevocado(null); });
 }
 
 function unlockVip() {
@@ -331,15 +368,31 @@ function launchConfetti() {
 
 // Check if already authenticated
 window.addEventListener('load', function() {
+  // Si index.html ya validó el código matemáticamente antes de redirigir aquí, no se vuelve a pedir
+  if (sessionStorage.getItem('acceso360') === 'true') {
+    unlockVip();
+    document.getElementById('code-input').focus();
+    return;
+  }
   var savedCode = sessionStorage.getItem('acceso360_code');
   if (savedCode) {
-    db.ref('acceso360/codes/' + savedCode).once('value', function(snap) {
-      if (snap.val() === true) {
+    var resultado = acceso360Verificar(savedCode);
+    if (resultado.formatoReconocido) {
+      if (resultado.valido) {
         unlockVip();
       } else {
         sessionStorage.removeItem('acceso360_code');
       }
-    });
+    } else {
+      // Formato antiguo — validar por Firebase
+      db.ref('acceso360/codes/' + savedCode).once('value', function(snap) {
+        if (snap.val() === true) {
+          unlockVip();
+        } else {
+          sessionStorage.removeItem('acceso360_code');
+        }
+      }, function() { /* sin conexión: no cerrar sesión, se revalida luego */ });
+    }
   }
   document.getElementById('code-input').focus();
 });
