@@ -233,12 +233,6 @@
     <button class="logout" onclick="logout()">Cerrar sesión</button>
   </div>
 
-  <div class="token-box" style="margin:12px 16px 0;">
-    <span style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">🔑 Token GitHub:</span>
-    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" oninput="saveToken(this.value)">
-    <span class="token-status" id="token-status">Sin token</span>
-  </div>
-
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('control',this)">🎛 Productos y Secciones</button>
     <button class="tab-btn" onclick="showTab('analytics',this)">📊 Analíticas</button>
@@ -494,6 +488,20 @@
 
   <!-- ── TAB: INTERFAZ ── -->
   <div id="tab-interfaz" class="tab-content">
+
+    <!-- TOKEN GITHUB — colapsado, es un dato fijo que no hace falta ver siempre -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;">
+      <div style="padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="var b=document.getElementById('token-box-body'); var abierto=b.style.display!=='none'; b.style.display=abierto?'none':'block'; document.getElementById('token-toggle-arrow').textContent=abierto?'▸':'▾';">
+        <span style="font-weight:700;color:var(--text);">🔑 Token GitHub</span>
+        <span id="token-toggle-arrow" style="color:var(--text-muted);">▸</span>
+      </div>
+      <div id="token-box-body" style="display:none;padding:0 16px 14px;">
+        <div class="token-box" style="margin:0;">
+          <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" oninput="saveToken(this.value)">
+          <span class="token-status" id="token-status">Sin token</span>
+        </div>
+      </div>
+    </div>
 
     <!-- MODO ESTÁTICO CUBA -->
     <div style="background:var(--surface);border:2px solid #f5c518;border-radius:12px;overflow:hidden;margin-bottom:12px;">
@@ -827,7 +835,7 @@
       <button onclick="borrarDatosVentas()" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:6px 12px;font-size:0.8rem;cursor:pointer;">🗑️ Borrar datos de ventas</button>
     </div>
     <table class="sales-table">
-      <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th></tr></thead>
+      <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th><th></th></tr></thead>
       <tbody id="sales-tbody"><tr><td colspan="3" class="empty-state">Cargando…</td></tr></tbody>
     </table>
   </div>
@@ -836,6 +844,19 @@
     <div style="padding:12px 16px;color:var(--text-muted);font-size:0.85rem;">
       Tasa actual: 1 USD = <span id="precios-tasa-info">—</span> MN. Cambia el precio en USD y el equivalente en MN se calcula solo, en tiempo real, sin entrar a cada producto.
     </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:10px;">Conversión de precios (global, todo el catálogo)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Controla si se muestra la línea de conversión debajo del precio en todas las cards. No afecta a productos con "Solo mostrar en MN" activado individualmente — esos siempre se muestran solo en MN.</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text);cursor:pointer;margin-bottom:8px;">
+        <input type="checkbox" id="toggle-conv-mn" checked onchange="guardarToggleConversion()" style="width:auto;"> Mostrar conversión a MN (para productos en USD/EUR)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text);cursor:pointer;">
+        <input type="checkbox" id="toggle-conv-usd" checked onchange="guardarToggleConversion()" style="width:auto;"> Mostrar conversión a USD (para productos en MN)
+      </label>
+      <div id="toggle-conv-status" style="font-size:0.78rem;color:#7fff7f;margin-top:8px;"></div>
+    </div>
+
     <table class="sales-table">
       <thead><tr><th>Producto</th><th>Precio (USD)</th><th>Equivalente (MN)</th><th></th></tr></thead>
       <tbody id="precios-tbody"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
@@ -847,6 +868,17 @@
 <script>
 const PASS = 'CityBUY360/-+*';
 
+// ── Vigilante de carga: si la pantalla se queda atascada en "Cargando configuración", ──
+// ── ofrece recargar, sin depender de que el resto del código haya funcionado bien.   ──
+function iniciarWatchdogCarga() {
+  setTimeout(function() {
+    var container = document.getElementById('sections-container');
+    if (container && container.textContent.indexOf('Cargando configuración') !== -1) {
+      container.innerHTML = '<div class="empty-state">⚠️ La carga se quedó atascada.<br><button onclick="location.reload()" style="margin-top:10px;background:var(--brand);border:none;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">🔄 Recargar página</button></div>';
+    }
+  }, 12000);
+}
+
 // ── checkPwd definido PRIMERO — independiente de Firebase ──
 function checkPwd() {
   const val = document.getElementById('pwd-input').value;
@@ -854,7 +886,8 @@ function checkPwd() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-panel').style.display = 'block';
     localStorage.setItem('cb360_admin', 'true');
-    try { initAdmin(); } catch(e) { console.error('initAdmin error:', e); }
+    iniciarWatchdogCarga();
+    initAdmin().catch(e => console.error('initAdmin error:', e));
   } else {
     document.getElementById('login-error').textContent = 'Contraseña incorrecta';
     document.getElementById('pwd-input').value = '';
@@ -883,7 +916,8 @@ try {
 if (localStorage.getItem('cb360_admin') === 'true') {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('admin-panel').style.display = 'block';
-  try { initAdmin(); } catch(e) { console.error('initAdmin error:', e); }
+  iniciarWatchdogCarga();
+  initAdmin().catch(e => console.error('initAdmin error:', e));
 }
 
 // ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
@@ -1170,16 +1204,18 @@ async function generarIndexEstatico() {
       var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
       var monedaProd = p.moneda || 'MN';
       var precioHTML = '';
+      var mostrarConvMNEstatico = configEstatico.mostrarConversionMN !== false;
+      var mostrarConvUSDEstatico = configEstatico.mostrarConversionUSD !== false;
       if (showPrecio && precioNum && p.soloMN) {
         // Solo MN: el precio se guarda en USD como siempre, pero se muestra convertido y solo en MN
         var mnSolo = tasaUsdMn > 0 ? Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES') : precioNum;
         precioHTML = '<div class="price product-price">'+mnSolo+' MN</div><div class="price-conversion"></div>';
       } else if (showPrecio && precioNum) {
         precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>';
-        if (monedaProd === 'MN' && tasaUsdMn > 0) {
+        if (monedaProd === 'MN' && tasaUsdMn > 0 && mostrarConvUSDEstatico) {
           var usdEquiv = (parseFloat(precioNum) / tasaUsdMn).toFixed(2);
           precioHTML += '<div class="price-conversion">'+usdEquiv+' USD</div>';
-        } else if (monedaProd === 'USD' && tasaUsdMn > 0) {
+        } else if (monedaProd === 'USD' && tasaUsdMn > 0 && mostrarConvMNEstatico) {
           var mnEquiv = Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES');
           precioHTML += '<div class="price-conversion">'+mnEquiv+' MN</div>';
         } else {
@@ -1873,6 +1909,7 @@ async function initAdmin() {
   loadSliderAdmin();
   loadAcceso360Admin();
   loadCatalogoAdmin();
+  loadToggleConversion();
   // Vendedores data preload
   db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
 }
@@ -2255,6 +2292,29 @@ function renderAnalytics() {
 }
 
 // ── VENTAS ────────────────────────────────────────────────────────────────────
+function guardarToggleConversion() {
+  var mn = document.getElementById('toggle-conv-mn').checked;
+  var usd = document.getElementById('toggle-conv-usd').checked;
+  var status = document.getElementById('toggle-conv-status');
+  status.textContent = 'Guardando…'; status.style.color = '';
+  db.ref('config').update({ mostrarConversionMN: mn, mostrarConversionUSD: usd }).then(function() {
+    status.textContent = '✅ Guardado';
+    status.style.color = '#7fff7f';
+    setTimeout(function(){ status.textContent = ''; }, 2500);
+  }).catch(function(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    status.style.color = '#ff9999';
+  });
+}
+
+function loadToggleConversion() {
+  db.ref('config').once('value', function(snap) {
+    var data = snap.val() || {};
+    document.getElementById('toggle-conv-mn').checked = data.mostrarConversionMN !== false;
+    document.getElementById('toggle-conv-usd').checked = data.mostrarConversionUSD !== false;
+  });
+}
+
 function borrarDatosVentas() {
   if (!confirm('¿Borrar todos los datos de ventas (clics en "Lo quiero")? Esta acción no se puede deshacer.')) return;
   db.ref('sales').remove().then(() => {
@@ -2267,7 +2327,7 @@ function renderSales() {
   const tbody = document.getElementById('sales-tbody');
   const entries = Object.entries(salesData).sort((a,b) => b[1]-a[1]);
   if (!entries.length) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Sin ventas registradas aún</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin ventas registradas aún</td></tr>';
     return;
   }
   const max = Math.max(...entries.map(e => e[1]));
@@ -2276,7 +2336,7 @@ function renderSales() {
   SECTIONS.forEach(sec => {
     const secEntries = entries.filter(([pid]) => sec.products.includes(pid));
     if (!secEntries.length) return;
-    html += `<tr><td colspan="3"><div class="section-title-admin">${sec.emoji} ${sec.name}</div></td></tr>`;
+    html += `<tr><td colspan="4"><div class="section-title-admin">${sec.emoji} ${sec.name}</div></td></tr>`;
     secEntries.forEach(([pid, count]) => {
       const pct = Math.round((count/max)*100);
       html += `<tr>
@@ -2286,10 +2346,19 @@ function renderSales() {
           <span class="sales-total-chip">${count}</span>
           <span class="sales-bar-wrap"><span class="sales-bar" style="width:${pct}%"></span></span>
         </td>
+        <td><button onclick="borrarVentaProducto('${pid}')" title="Borrar datos de este producto" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:4px 8px;font-size:0.75rem;cursor:pointer;">🗑️</button></td>
       </tr>`;
     });
   });
   tbody.innerHTML = html;
+}
+
+function borrarVentaProducto(pid) {
+  if (!confirm('¿Borrar los datos de ventas de "' + (PRODUCT_NAMES[pid]||pid) + '"?')) return;
+  db.ref('sales/' + pid).remove().then(() => {
+    delete salesData[pid];
+    renderSales();
+  }).catch(e => alert('Error al borrar: ' + e.message));
 }
 
 // ── BACKUP ────────────────────────────────────────────────────────────────────
