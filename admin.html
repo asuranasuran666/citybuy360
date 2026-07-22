@@ -294,8 +294,13 @@
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Precio (ej: 2,900 MN)</label>
           <input type="text" id="edit-precio" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
-          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);cursor:pointer;">
-            <input type="checkbox" id="edit-solo-mn" style="width:auto;"> Solo mostrar en MN (sin conversión)
+          <label style="display:block;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
+            Mostrar precio:
+            <select id="edit-precio-modo" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
+              <option value="">Según configuración general</option>
+              <option value="soloMN">Solo MN (sin conversión)</option>
+              <option value="soloUSD">Solo USD (sin conversión)</option>
+            </select>
           </label>
         </div>
         <div>
@@ -423,8 +428,13 @@
               <input type="number" id="prod-price" placeholder="29" step="0.01" style="width:90px !important;flex:none !important;min-width:90px;font-size:0.95rem;">
               <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">USD</span>
             </div>
-            <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);cursor:pointer;">
-              <input type="checkbox" id="prod-solo-mn" style="width:auto;"> Solo mostrar en MN (sin conversión)
+            <label style="display:block;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
+              Mostrar precio:
+              <select id="prod-precio-modo" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
+                <option value="">Según configuración general</option>
+                <option value="soloMN">Solo MN (sin conversión)</option>
+                <option value="soloUSD">Solo USD (sin conversión)</option>
+              </select>
             </label>
           </div>
         </div>
@@ -1206,10 +1216,14 @@ async function generarIndexEstatico() {
       var precioHTML = '';
       var mostrarConvMNEstatico = configEstatico.mostrarConversionMN !== false;
       var mostrarConvUSDEstatico = configEstatico.mostrarConversionUSD !== false;
-      if (showPrecio && precioNum && p.soloMN) {
+      var modoPrecio = p.precioModo || (p.soloMN ? 'soloMN' : '');
+      if (showPrecio && precioNum && modoPrecio === 'soloMN') {
         // Solo MN: el precio se guarda en USD como siempre, pero se muestra convertido y solo en MN
         var mnSolo = tasaUsdMn > 0 ? Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES') : precioNum;
         precioHTML = '<div class="price product-price">'+mnSolo+' MN</div><div class="price-conversion"></div>';
+      } else if (showPrecio && precioNum && modoPrecio === 'soloUSD') {
+        // Solo USD: se muestra el precio base tal cual, sin ninguna conversión
+        precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div><div class="price-conversion"></div>';
       } else if (showPrecio && precioNum) {
         precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>';
         if (monedaProd === 'MN' && tasaUsdMn > 0 && mostrarConvUSDEstatico) {
@@ -1492,13 +1506,29 @@ async function generarIndexEstatico() {
     function ocultarPorId(id) {
       var idx = indexHTML.indexOf('id="' + id + '"');
       if (idx === -1) return;
+      var tagStart = indexHTML.lastIndexOf('<', idx);
       var tagEnd = indexHTML.indexOf('>', idx);
+      var tagActual = indexHTML.substring(tagStart, tagEnd);
+      if (tagActual.indexOf('display:none') !== -1) return; // ya está oculto, no duplicar
       indexHTML = indexHTML.substring(0, tagEnd) + ' style="display:none;"' + indexHTML.substring(tagEnd);
+    }
+    function deshabilitarPorId(id) {
+      var idx = indexHTML.indexOf('id="' + id + '"');
+      if (idx === -1) return;
+      var tagStart = indexHTML.lastIndexOf('<', idx);
+      var tagEnd = indexHTML.indexOf('>', idx);
+      var tagActual = indexHTML.substring(tagStart, tagEnd);
+      if (tagActual.indexOf('pointer-events:none') !== -1) return; // ya está deshabilitado, no duplicar
+      indexHTML = indexHTML.substring(0, tagEnd) + ' style="pointer-events:none;opacity:0.45;"' + indexHTML.substring(tagEnd);
     }
     if (interfazEstatico.ribbon1) setTextInside('ribbon-1-text', interfazEstatico.ribbon1);
     if (interfazEstatico.ribbon2) setTextInside('ribbon-2-text', interfazEstatico.ribbon2);
     if (interfazEstatico.ribbon1active === false) ocultarPorId('ribbon-1');
     if (interfazEstatico.ribbon2active === false) ocultarPorId('ribbon-2');
+    if (interfazEstatico.catbar === false) ocultarPorId('cat-bar');
+    if (interfazEstatico.slider === false) ocultarPorId('header-slider');
+    if (interfazEstatico.bottomnav === false) ocultarPorId('bottom-nav');
+    if (interfazEstatico.acceso360 === false) deshabilitarPorId('badge-360-header');
 
     // 4c. Ticker/marquesina
     var tickerVal = interfazEstatico.ticker;
@@ -2075,7 +2105,9 @@ function editProduct(pid) {
     if (!p) { alert('Producto no encontrado en Firebase'); return; }
     document.getElementById('prod-name').value = p.nombre || '';
     document.getElementById('prod-price').value = p.precio || '';
-    if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = !!p.soloMN;
+    if (document.getElementById('prod-precio-modo')) {
+      document.getElementById('prod-precio-modo').value = p.precioModo || (p.soloMN ? 'soloMN' : '');
+    }
     // Firebase guarda tallas/colores dentro de 'detalles' — intentar ambos campos
     document.getElementById('prod-tallas').value = p.tallas || '';
     document.getElementById('prod-colores').value = p.colores || '';
@@ -2423,7 +2455,7 @@ async function doPublish() {
   const secId   = document.getElementById('prod-seccion').value;
   const genero  = getSelectedGenero();
   const moneda   = 'USD';
-  const soloMN   = document.getElementById('prod-solo-mn') ? document.getElementById('prod-solo-mn').checked : false;
+  const precioModo = document.getElementById('prod-precio-modo') ? document.getElementById('prod-precio-modo').value : '';
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
@@ -2485,7 +2517,7 @@ async function doPublish() {
     log('💾 Guardando en Firebase…');
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
-      id, nombre: name, precio: price, moneda, soloMN, tallas, colores, vendedor, etiqueta,
+      id, nombre: name, precio: price, moneda, precioModo, tallas, colores, vendedor, etiqueta,
       descripcion: tooltip,
       seccion: secId, genero, destacado,
       imagenes, activo: true,
@@ -2510,7 +2542,7 @@ async function doPublish() {
       var el = document.getElementById(fid); if(el) el.value = '';
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
-    if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = false;
+    if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
   setSelectedEtiqueta('');
     btn.dataset.editPid = '';
     btn.textContent = '🚀 Publicar producto';
@@ -2592,7 +2624,7 @@ function cancelarFormulario() {
   document.getElementById('prod-colores').value = '';
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
-  if (document.getElementById('prod-solo-mn')) document.getElementById('prod-solo-mn').checked = false;
+  if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
   setSelectedEtiqueta('');
   document.getElementById('prod-seccion').value = '';
   document.querySelectorAll('.genero-chip').forEach(function(c){ c.classList.remove('selected'); });
@@ -2719,7 +2751,7 @@ function abrirModalEditar(pid) {
     document.getElementById('edit-pid').value = pid;
     document.getElementById('edit-nombre').value = p.nombre || '';
     document.getElementById('edit-precio').value = p.precio || '';
-    document.getElementById('edit-solo-mn').checked = !!p.soloMN;
+    document.getElementById('edit-precio-modo').value = p.precioModo || (p.soloMN ? 'soloMN' : '');
     document.getElementById('edit-seccion').value = p.seccion || 'ropa-moda';
     document.getElementById('edit-genero').value = p.genero || 'unisex';
     document.getElementById('edit-descripcion').value = p.descripcion || '';
@@ -2758,7 +2790,7 @@ function guardarEdicionProducto() {
   var updates = {
     nombre: document.getElementById('edit-nombre').value.trim(),
     precio: document.getElementById('edit-precio').value.trim(),
-    soloMN: document.getElementById('edit-solo-mn').checked,
+    precioModo: document.getElementById('edit-precio-modo').value,
     seccion: document.getElementById('edit-seccion').value,
     genero: document.getElementById('edit-genero').value,
     descripcion: document.getElementById('edit-descripcion').value.trim(),
