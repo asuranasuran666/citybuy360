@@ -243,6 +243,7 @@
     <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
     <button class="tab-btn" onclick="showTab('mensajes',this)">📢 Mensajes</button>
     <button class="tab-btn" onclick="showTab('vendedores',this)">🧑‍💼 Vendedores</button>
+    <button class="tab-btn" onclick="showTab('temushein',this)">🛍️ Temu/Shein</button>
   </div>
 
   <!-- ── TAB: CONTROL ── -->
@@ -837,6 +838,65 @@
       <div id="vendedores-list"><div class="empty-state">Cargando…</div></div>
     </div>
 
+  </div>
+
+  <!-- ── TAB: TEMU/SHEIN (pedidos externos VIP) ── -->
+  <div id="tab-temushein" class="tab-content">
+    <div style="padding:12px 16px;color:var(--text-muted);font-size:0.85rem;">
+      Configuración para la calculadora de pedidos de Temu/Shein en la sección VIP. Esto define cómo se calcula el precio que ve el cliente al pedir algo de esas tiendas.
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">⚙️ Moneda y unidad</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Usa la moneda y unidad con la que realmente pagas tu agencia de envío. El total se convierte solo a MN para el cliente, igual que el resto de la tienda.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Moneda de cálculo</label>
+          <select id="ts-moneda" onchange="actualizarEtiquetasTemuShein()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Unidad de peso</label>
+          <select id="ts-unidad-peso" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+            <option value="lb">Libra</option>
+            <option value="kg">Kilogramo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">💲 Comisión (<span id="ts-moneda-label-1">USD</span>)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Se cobra la que sea mayor entre estas dos: el mínimo fijo, o el porcentaje sobre el precio del producto. Así nunca trabajas gratis en algo barato, y ganas más en algo caro.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;">
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Comisión mínima (<span id="ts-moneda-label-2">USD</span>)</label>
+          <input type="number" id="ts-comision-minima" step="0.5" placeholder="3" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Comisión (%)</label>
+          <input type="number" id="ts-comision-porcentaje" step="1" placeholder="10" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">📦 Envío</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Precio estimado por <span id="ts-unidad-label">libra</span>. El cliente ve esto como aproximado — se ajusta cuando se sepa el peso real en WhatsApp.</div>
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Precio por <span id="ts-unidad-label-2">libra</span> (<span id="ts-moneda-label-3">USD</span>)</label>
+      <input type="number" id="ts-precio-libra" step="0.5" placeholder="5" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;max-width:200px;">
+    </div>
+
+    <div style="padding:0 16px;">
+      <button onclick="guardarConfigTemuShein()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;">Guardar configuración</button>
+      <div id="ts-status" style="font-size:0.82rem;text-align:center;margin-top:8px;"></div>
+    </div>
+
+    <div style="padding:16px;margin-top:8px;color:var(--text-muted);font-size:0.78rem;border-top:1px solid var(--border);">
+      🚧 Próximo paso: la calculadora en sí, dentro de la sección VIP, usará estos valores para mostrarle al cliente el estimado en tiempo real.
+    </div>
   </div>
 
   <!-- ── TAB: VENTAS ── -->
@@ -1940,6 +2000,7 @@ async function initAdmin() {
   loadAcceso360Admin();
   loadCatalogoAdmin();
   loadToggleConversion();
+  loadConfigTemuShein();
   // Vendedores data preload
   db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
 }
@@ -2344,6 +2405,49 @@ function loadToggleConversion() {
     var data = snap.val() || {};
     document.getElementById('toggle-conv-mn').checked = data.mostrarConversionMN !== false;
     document.getElementById('toggle-conv-usd').checked = data.mostrarConversionUSD !== false;
+  });
+}
+
+function actualizarEtiquetasTemuShein() {
+  var moneda = document.getElementById('ts-moneda').value;
+  var unidad = document.getElementById('ts-unidad-peso').value === 'kg' ? 'kilogramo' : 'libra';
+  ['ts-moneda-label-1','ts-moneda-label-2','ts-moneda-label-3'].forEach(function(id){ document.getElementById(id).textContent = moneda; });
+  ['ts-unidad-label','ts-unidad-label-2'].forEach(function(id){ document.getElementById(id).textContent = unidad; });
+}
+
+function guardarConfigTemuShein() {
+  var comisionMinima = parseFloat(document.getElementById('ts-comision-minima').value) || 0;
+  var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
+  var precioLibra = parseFloat(document.getElementById('ts-precio-libra').value) || 0;
+  var moneda = document.getElementById('ts-moneda').value;
+  var unidadPeso = document.getElementById('ts-unidad-peso').value;
+  var status = document.getElementById('ts-status');
+  status.textContent = 'Guardando…'; status.style.color = '';
+  db.ref('config/temuShein').set({
+    comisionMinima: comisionMinima,
+    comisionPorcentaje: comisionPorcentaje,
+    precioLibra: precioLibra,
+    moneda: moneda,
+    unidadPeso: unidadPeso
+  }).then(function() {
+    status.textContent = '✅ Guardado';
+    status.style.color = '#7fff7f';
+    setTimeout(function(){ status.textContent = ''; }, 2500);
+  }).catch(function(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    status.style.color = '#ff9999';
+  });
+}
+
+function loadConfigTemuShein() {
+  db.ref('config/temuShein').once('value', function(snap) {
+    var data = snap.val() || {};
+    document.getElementById('ts-comision-minima').value = data.comisionMinima || '';
+    document.getElementById('ts-comision-porcentaje').value = data.comisionPorcentaje || '';
+    document.getElementById('ts-precio-libra').value = data.precioLibra || '';
+    document.getElementById('ts-moneda').value = data.moneda || 'USD';
+    document.getElementById('ts-unidad-peso').value = data.unidadPeso || 'lb';
+    actualizarEtiquetasTemuShein();
   });
 }
 
