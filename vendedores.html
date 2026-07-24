@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CityBUY360 — Vendedores</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: #161b22; border-bottom: 1px solid #30363d; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+  .header-brand { font-size: 1.1rem; font-weight: 900; color: #00a8e8; }
+  .header-brand span { color: #f5c518; }
+  .header-badge { background: #1e2a38; color: #7ee787; border: 1px solid #238636; border-radius: 12px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
+
+  /* LOGIN */
+  #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 56px); padding: 24px; }
+  .login-card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 360px; text-align: center; }
+  .login-icon { font-size: 3rem; margin-bottom: 12px; }
+  .login-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; }
+  .login-sub { font-size: 0.85rem; color: #8b949e; margin-bottom: 24px; }
+  .input { width: 100%; padding: 12px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font-size: 1rem; margin-bottom: 12px; }
+  .input:focus { outline: none; border-color: #00a8e8; }
+  .btn-primary { width: 100%; padding: 13px; background: #00a8e8; border: none; border-radius: 8px; color: #0d1117; font-size: 1rem; font-weight: 900; cursor: pointer; }
+  .btn-primary:active { opacity: 0.85; }
+  .login-error { color: #f85149; font-size: 0.85rem; margin-top: 8px; display: none; }
+
+  /* MAIN */
+  #main-screen { display: none; padding: 16px; max-width: 480px; margin: 0 auto; }
+  .vendedor-info { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .vendedor-avatar { width: 42px; height: 42px; background: #00a8e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; color: #0d1117; flex-shrink: 0; }
+  .vendedor-nombre { font-weight: 700; font-size: 1rem; }
+  .vendedor-sub { font-size: 0.75rem; color: #8b949e; }
+  .btn-logout { margin-left: auto; background: none; border: 1px solid #30363d; color: #8b949e; border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; cursor: pointer; }
+
+  /* FORM */
+  .form-card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .pedido-item { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 12px; }
+  .pedido-item .pedido-nombre { font-weight: 700; color: #e6edf3; font-size: 0.9rem; }
+  .pedido-item .pedido-meta { color: #8b949e; font-size: 0.78rem; margin-top: 2px; }
+  .pedido-item .pedido-btns { display: flex; gap: 8px; margin-top: 8px; }
+  .pedido-item .pedido-btns button { flex: 1; border: none; border-radius: 6px; padding: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+  .btn-confirmar-pedido { background: #1a4a1a; color: #7fff7f; }
+  .btn-descartar-pedido { background: #4a1a1a; color: #ff7f7f; }
+  .form-title { font-weight: 700; font-size: 1rem; margin-bottom: 16px; color: #e6edf3; }
+  .form-label { font-size: 0.8rem; color: #8b949e; margin-bottom: 5px; display: block; font-weight: 600; }
+  .form-group { margin-bottom: 14px; }
+  select.input { appearance: none; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+  textarea.input { min-height: 70px; resize: vertical; }
+  .btn-submit { width: 100%; padding: 15px; background: #22c55e; border: none; border-radius: 10px; color: #0d1117; font-size: 1.05rem; font-weight: 900; cursor: pointer; margin-top: 4px; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* SUCCESS */
+  #success-msg { display: none; background: #0f2a1a; border: 1px solid #238636; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px; }
+  #success-msg .s-icon { font-size: 2.5rem; margin-bottom: 8px; }
+  #success-msg .s-text { font-weight: 700; color: #7ee787; font-size: 1rem; }
+
+  /* HISTORIAL */
+  .hist-card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; overflow: hidden; }
+  .hist-header { padding: 14px 16px; border-bottom: 1px solid #30363d; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .hist-item { padding: 12px 16px; border-bottom: 1px solid #21262d; display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-producto { font-weight: 700; font-size: 0.9rem; }
+  .hist-meta { font-size: 0.72rem; color: #8b949e; margin-top: 2px; }
+  .hist-precio { font-weight: 900; color: #22c55e; font-size: 0.95rem; }
+  .hist-fecha { font-size: 0.7rem; color: #6e7681; }
+  .empty { padding: 24px; text-align: center; color: #8b949e; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">CityBUY<span>360</span></div>
+  <div class="header-badge">Panel Vendedor</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">🧑‍💼</div>
+    <div class="login-title">Acceso vendedores</div>
+    <div class="login-sub">Introduce tu código de vendedor</div>
+    <input type="text" id="codigo-input" class="input" placeholder="Código (ej: VEND01)" autocomplete="off" autocapitalize="characters">
+    <button class="btn-primary" onclick="login()">Entrar</button>
+    <div id="login-error" class="login-error">Código incorrecto. Contacta al administrador.</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-screen">
+
+  <!-- Info vendedor -->
+  <div class="vendedor-info">
+    <div class="vendedor-avatar" id="v-avatar">?</div>
+    <div>
+      <div class="vendedor-nombre" id="v-nombre-display">—</div>
+      <div class="vendedor-sub" id="v-fecha-display">—</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+
+  <!-- Pedidos pendientes -->
+  <div class="form-card" id="pedidos-card">
+    <div class="form-title">📦 Pedidos pendientes</div>
+    <div id="pedidos-lista" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="color:#888;font-size:0.85rem;text-align:center;padding:8px;">Cargando…</div>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div id="success-msg">
+    <div class="s-icon">✅</div>
+    <div class="s-text">¡Venta registrada correctamente!</div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="form-card">
+    <div class="form-title" id="form-venta-titulo">📝 Registrar venta</div>
+
+    <div class="form-group">
+      <label class="form-label">Producto *</label>
+      <select id="f-producto" class="input">
+        <option value="">Selecciona un producto…</option>
+      </select>
+    </div>
+
+    <div class="row-2">
+      <div class="form-group">
+        <label class="form-label">Cantidad *</label>
+        <input type="number" id="f-cantidad" class="input" value="1" min="1" placeholder="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio cobrado *</label>
+        <input type="number" id="f-precio" class="input" placeholder="0">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Moneda *</label>
+      <select id="f-moneda" class="input">
+        <option value="MN">MN — Pesos cubanos</option>
+        <option value="USD">USD — Dólares</option>
+        <option value="EUR">EUR — Euros</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Método de pago</label>
+      <select id="f-metodo" class="input">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Transferencia">Transferencia</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nombre del cliente (opcional)</label>
+      <input type="text" id="f-cliente" class="input" placeholder="Ej: María García">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Correo del cliente (opcional)</label>
+      <input type="email" id="f-cliente-email" class="input" placeholder="cliente@correo.com">
+      <div style="font-size:0.75rem;color:#8b949e;margin-top:4px;">Si lo pones, el sistema puede activarle Acceso VIP automático según sus compras.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea id="f-notas" class="input" placeholder="Talla, color, observaciones…"></textarea>
+    </div>
+
+    <button id="btn-registrar" class="btn-submit" onclick="registrarVenta()">✅ Registrar venta</button>
+  </div>
+
+  <!-- Historial del día -->
+  <div class="hist-card">
+    <div class="hist-header">
+      <span>📋 Mis ventas de hoy</span>
+      <span id="hist-total" style="color:#22c55e;font-size:0.85rem;"></span>
+    </div>
+    <div id="historial-list"><div class="empty">Sin ventas hoy</div></div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="acceso360-core.js"></script>
+<script src="vendedor-core.js"></script>
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyD5-MrbexBB7BeM2RuBa_uon31OpsFpYz8",
+  authDomain: "citybuy360.firebaseapp.com",
+  databaseURL: "https://citybuy360-default-rtdb.firebaseio.com",
+  projectId: "citybuy360",
+  storageBucket: "citybuy360.firebasestorage.app",
+  messagingSenderId: "701999748308",
+  appId: "1:701999748308:web:85c320687f6eb10471d741"
+};
+
+  // ── INIT FIREBASE ──
+  // IMPORTANTE: Reemplaza firebaseConfig con el mismo que tienes en admin.html
+  let db;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } catch(e) { console.error('Firebase init error', e); }
+
+  const PRODUCTOS = {
+    blumer: 'Blumer sin costuras',
+    sujetador: 'Ajustador sin costuras',
+    paris: 'Pulover PARIS',
+    ngu: 'Pulover NEVER GIVE UP',
+    gdm: 'Pulóver GREAT DREAM MAKER',
+    aac: 'Pulover Amor, Alegría y Cerveza',
+    usa: 'Pulover USA',
+    freedom: 'Pulover estampado FREEDOM',
+    mblancas: 'Medias Blancas',
+    mnegras: 'Medias Negras',
+    bolsomovil: 'Bolso Bandolera para Móvil',
+    gorrobebe: 'Gorro para bebé',
+    gorra: 'Gorra',
+    saldo: 'Comprar Saldo — Recargas 360',
+    citybuy360familia: 'Únete a la familia CityBUY360',
+    ventilador: 'Ventilador',
+  };
+
+  let vendedorActual = null;
+
+  // Populate producto select
+  var sel = document.getElementById('f-producto');
+  Object.entries(PRODUCTOS).forEach(([id, nombre]) => {
+    sel.innerHTML += '<option value="' + id + '">' + nombre + '</option>';
+  });
+
+  function login() {
+    var codigo = document.getElementById('codigo-input').value.trim().toUpperCase();
+    if (!codigo) return;
+    var errorEl = document.getElementById('login-error');
+    var btn = document.querySelector('#login-screen .btn-primary');
+    errorEl.style.display = 'none';
+
+    var resultado = vendedorVerificar(codigo);
+
+    if (resultado.formatoReconocido) {
+      if (!resultado.valido) {
+        errorEl.textContent = 'Código incorrecto. Contacta al administrador.';
+        errorEl.style.display = 'block';
+        return;
+      }
+      // Válido offline: entra de inmediato, sin esperar red
+      vendedorActual = { codigo: codigo, nombre: codigo, activo: true };
+      localStorage.setItem('vendedor_sesion', JSON.stringify(vendedorActual));
+      mostrarMain();
+      // En segundo plano, si hay conexión, trae el nombre real y lo actualiza (no bloquea el login)
+      if (db) {
+        db.ref('vendedores/' + codigo).once('value', function(snap) {
+          var data = snap.val();
+          if (data && data.nombre) {
+            vendedorActual.nombre = data.nombre;
+            localStorage.setItem('vendedor_sesion', JSON.stringify(vendedorActual));
+            document.getElementById('v-nombre-display').textContent = data.nombre;
+            document.getElementById('v-avatar').textContent = data.nombre[0].toUpperCase();
+          }
+        }, function() { /* sin conexión: se queda con el código como nombre por ahora */ });
+      }
+      return;
+    }
+
+    // Formato antiguo (código creado antes del sistema offline) — se valida por Firebase
+    if (!db) {
+      errorEl.textContent = '⚠️ No se pudo conectar a la base de datos. Recarga la página.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Verificando…';
+    var resuelto = false;
+    var timeoutId = setTimeout(function() {
+      if (resuelto) return;
+      resuelto = true;
+      errorEl.textContent = '⚠️ No se pudo conectar. Revisa tu conexión e intenta de nuevo.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }, 8000);
+    db.ref('vendedores/' + codigo).once('value', function(snap) {
+      if (resuelto) return;
+      resuelto = true;
+      clearTimeout(timeoutId);
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      var data = snap.val();
+      if (!data || data.activo === false) {
+        errorEl.textContent = 'Código incorrecto. Contacta al administrador.';
+        errorEl.style.display = 'block';
+        return;
+      }
+      errorEl.style.display = 'none';
+      vendedorActual = { codigo: codigo, nombre: data.nombre || codigo, activo: data.activo };
+      localStorage.setItem('vendedor_sesion', JSON.stringify(vendedorActual));
+      mostrarMain();
+    }, function(err) {
+      if (resuelto) return;
+      resuelto = true;
+      clearTimeout(timeoutId);
+      console.error('Error verificando vendedor:', err);
+      errorEl.textContent = '⚠️ Error: ' + err.message;
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('vendedor_sesion');
+    vendedorActual = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('main-screen').style.display = 'none';
+  }
+
+  function mostrarMain() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    var nombre = vendedorActual.nombre || vendedorActual.codigo;
+    document.getElementById('v-avatar').textContent = nombre[0].toUpperCase();
+    document.getElementById('v-nombre-display').textContent = nombre;
+    var ahora = new Date();
+    var dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    document.getElementById('v-fecha-display').textContent = dias[ahora.getDay()] + ' ' + ahora.toLocaleDateString('es-ES',{day:'numeric',month:'long'});
+    cargarHistorial();
+    cargarPedidosPendientes();
+  }
+
+  var pedidoEnProceso = null;
+
+  function cargarPedidosPendientes() {
+    var lista = document.getElementById('pedidos-lista');
+    db.ref('pedidos').orderByChild('estado').equalTo('pendiente').once('value', function(snap) {
+      var data = snap.val() || {};
+      var items = Object.entries(data).sort(function(a,b){ return new Date(b[1].fecha).getTime() - new Date(a[1].fecha).getTime(); });
+      if (!items.length) {
+        lista.innerHTML = '<div style="color:#888;font-size:0.85rem;text-align:center;padding:8px;">No hay pedidos pendientes</div>';
+        return;
+      }
+      lista.innerHTML = items.map(function(e) {
+        var id = e[0], p = e[1];
+        var fecha = new Date(p.fecha);
+        var horaTxt = fecha.toLocaleDateString('es-ES',{day:'numeric',month:'short'}) + ' · ' + fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+        return '<div class="pedido-item">' +
+          '<div class="pedido-nombre">' + (p.productoNombre || p.productoId) + '</div>' +
+          '<div class="pedido-meta">' + (p.precio || '') + ' · ' + horaTxt + '</div>' +
+          '<div class="pedido-btns">' +
+            '<button class="btn-confirmar-pedido" onclick="confirmarPedido(\'' + id + '\',\'' + p.productoId + '\',\'' + String(p.precio||'').replace(/'/g,"") + '\')">✅ Confirmar venta</button>' +
+            '<button class="btn-descartar-pedido" onclick="descartarPedido(\'' + id + '\')">❌ Descartar</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }, function() {
+      lista.innerHTML = '<div style="color:#888;font-size:0.85rem;text-align:center;padding:8px;">No se pudieron cargar los pedidos</div>';
+    });
+  }
+
+  function confirmarPedido(id, productoId, precio) {
+    pedidoEnProceso = id;
+    var sel = document.getElementById('f-producto');
+    if (sel.querySelector('option[value="' + productoId + '"]')) {
+      sel.value = productoId;
+    }
+    var precioNum = parseFloat(String(precio).replace(/[^0-9.]/g, ''));
+    if (!isNaN(precioNum)) document.getElementById('f-precio').value = precioNum;
+    document.getElementById('form-venta-titulo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function descartarPedido(id) {
+    if (!confirm('¿Descartar este pedido? (el cliente no siguió con la compra)')) return;
+    db.ref('pedidos/' + id).update({ estado: 'descartado' }).then(cargarPedidosPendientes);
+  }
+
+  function registrarVenta() {
+    var producto = document.getElementById('f-producto').value;
+    var cantidad = parseInt(document.getElementById('f-cantidad').value) || 1;
+    var precio = document.getElementById('f-precio').value.trim();
+    var moneda = document.getElementById('f-moneda').value;
+    var metodo = document.getElementById('f-metodo').value;
+    var cliente = document.getElementById('f-cliente').value.trim();
+    var clienteEmailRaw = document.getElementById('f-cliente-email').value.trim();
+    var notas = document.getElementById('f-notas').value.trim();
+
+    if (!producto || !precio) {
+      alert('Producto y precio son obligatorios');
+      return;
+    }
+
+    var btn = document.getElementById('btn-registrar');
+    btn.disabled = true;
+    btn.textContent = 'Registrando…';
+
+    var ahora = new Date();
+    var diasSemana = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+    var venta = {
+      vendedorCodigo: vendedorActual.codigo,
+      vendedorNombre: vendedorActual.nombre || vendedorActual.codigo,
+      producto,
+      cantidad,
+      precio: parseFloat(precio),
+      moneda,
+      metodoPago: metodo,
+      cliente: cliente || null,
+      clienteEmail: clienteEmailRaw ? clienteEmailRaw.toLowerCase() : null,
+      notas: notas || null,
+      fecha: ahora.toISOString(),
+      diaSemana: diasSemana[ahora.getDay()],
+      hora: ahora.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
+    };
+
+    // Remove null fields
+    Object.keys(venta).forEach(k => venta[k] === null && delete venta[k]);
+
+    db.ref('ventasVendedores').push(venta).then(() => {
+      // Descuentar inventario
+      db.ref('inventario/' + producto).once('value', snap => {
+        var stock = snap.val();
+        if (stock !== null && stock > 0) {
+          db.ref('inventario/' + producto).set(Math.max(0, stock - cantidad));
+        }
+      });
+
+      // Si venía de un pedido pendiente, marcarlo como confirmado
+      if (pedidoEnProceso) {
+        db.ref('pedidos/' + pedidoEnProceso).update({ estado: 'confirmado' });
+        pedidoEnProceso = null;
+        cargarPedidosPendientes();
+      }
+
+      // Mostrar success
+      document.getElementById('success-msg').style.display = 'block';
+      setTimeout(() => document.getElementById('success-msg').style.display = 'none', 3000);
+
+      // Reset form
+      document.getElementById('f-producto').value = '';
+      document.getElementById('f-cantidad').value = '1';
+      document.getElementById('f-precio').value = '';
+      document.getElementById('f-cliente').value = '';
+      document.getElementById('f-cliente-email').value = '';
+      document.getElementById('f-notas').value = '';
+
+      btn.disabled = false;
+      btn.textContent = '✅ Registrar venta';
+      cargarHistorial();
+    }).catch(e => {
+      alert('Error al guardar: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = '✅ Registrar venta';
+    });
+  }
+
+  function cargarHistorial() {
+    if (!vendedorActual) return;
+    db.ref('ventasVendedores').once('value', snap => {
+      var data = snap.val() || {};
+      var hoy = new Date().toDateString();
+      var ventas = Object.entries(data)
+        .filter(([,v]) => v.vendedorCodigo === vendedorActual.codigo && new Date(v.fecha).toDateString() === hoy)
+        .sort((a,b) => new Date(b[1].fecha) - new Date(a[1].fecha));
+
+      var list = document.getElementById('historial-list');
+      var totalEl = document.getElementById('hist-total');
+
+      if (!ventas.length) {
+        list.innerHTML = '<div class="empty">Sin ventas hoy</div>';
+        totalEl.textContent = '';
+        return;
+      }
+
+      // Total por moneda
+      var totales = {};
+      ventas.forEach(([,v]) => {
+        var m = v.moneda || 'MN';
+        totales[m] = (totales[m] || 0) + (parseFloat(v.precio) || 0);
+      });
+      totalEl.textContent = Object.entries(totales).map(([m,t]) => t.toLocaleString() + ' ' + m).join(' · ');
+
+      list.innerHTML = ventas.map(([,v]) => {
+        var hora = v.fecha ? new Date(v.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
+        return '<div class="hist-item">' +
+          '<div><div class="hist-producto">' + (PRODUCTOS[v.producto] || v.producto) + (v.cantidad > 1 ? ' x'+v.cantidad : '') + '</div>' +
+          '<div class="hist-meta">' + (v.metodoPago||'') + (v.cliente ? ' · ' + v.cliente : '') + (v.notas ? ' · ' + v.notas : '') + '</div></div>' +
+          '<div style="text-align:right;"><div class="hist-precio">' + parseFloat(v.precio).toLocaleString() + ' ' + (v.moneda||'MN') + '</div>' +
+          '<div class="hist-fecha">' + hora + '</div></div>' +
+          '</div>';
+      }).join('');
+    });
+  }
+
+  // Auto-login si hay sesión guardada
+  window.addEventListener('load', () => {
+    var sesion = localStorage.getItem('vendedor_sesion');
+    if (sesion) {
+      try {
+        vendedorActual = JSON.parse(sesion);
+        var resultado = vendedorVerificar(vendedorActual.codigo);
+        if (resultado.formatoReconocido) {
+          // Código offline: se confía en la sesión guardada, sin depender de la red
+          if (resultado.valido) {
+            mostrarMain();
+            if (db) {
+              db.ref('vendedores/' + vendedorActual.codigo).once('value', snap => {
+                var data = snap.val();
+                if (data && data.activo === false) {
+                  localStorage.removeItem('vendedor_sesion');
+                  logout();
+                } else if (data && data.nombre) {
+                  vendedorActual.nombre = data.nombre;
+                  localStorage.setItem('vendedor_sesion', JSON.stringify(vendedorActual));
+                  document.getElementById('v-nombre-display').textContent = data.nombre;
+                  document.getElementById('v-avatar').textContent = data.nombre[0].toUpperCase();
+                }
+              });
+            }
+          } else {
+            localStorage.removeItem('vendedor_sesion');
+          }
+          return;
+        }
+        // Formato antiguo: verificar contra Firebase, con timeout para no quedar colgado
+        if (!db) { mostrarMain(); return; }
+        var resuelto = false;
+        setTimeout(function() { if (!resuelto) { resuelto = true; mostrarMain(); } }, 6000);
+        db.ref('vendedores/' + vendedorActual.codigo).once('value', snap => {
+          if (resuelto) return;
+          resuelto = true;
+          if (snap.val() && snap.val().activo !== false) {
+            mostrarMain();
+          } else {
+            localStorage.removeItem('vendedor_sesion');
+          }
+        }, function() {
+          if (resuelto) return;
+          resuelto = true;
+          mostrarMain(); // sin conexión: no botarlo, se revalida luego
+        });
+      } catch(e) { localStorage.removeItem('vendedor_sesion'); }
+    }
+  });
+
+  // Login con Enter
+  document.getElementById('codigo-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+</script>
+</body>
+</html>
