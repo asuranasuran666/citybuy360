@@ -454,6 +454,14 @@
             <input type="text" id="prod-colores" placeholder="Blanco, Negro, Azul">
           </div>
         </div>
+        <div class="form-group" style="margin:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="margin:0;">Variantes con precio propio (opcional)</label>
+            <button type="button" onclick="agregarFilaVariante('prod')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;">+ Agregar</button>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Ej: color Negro a 12 USD, color Azul a 13.50 USD. Si agregas variantes aquí, la card muestra "Desde $X" y el cliente elige el precio exacto según lo que escoja.</div>
+          <div id="prod-variantes-lista"></div>
+        </div>
         <div class="form-row" style="margin:0;">
           <div class="form-group" style="margin:0;">
             <label>Sección</label>
@@ -931,8 +939,20 @@
       <div id="ts-status" style="font-size:0.82rem;text-align:center;margin-top:8px;"></div>
     </div>
 
-    <div style="padding:16px;margin-top:8px;color:var(--text-muted);font-size:0.78rem;border-top:1px solid var(--border);">
-      🚧 Próximo paso: la calculadora en sí, dentro de la sección VIP, usará estos valores para mostrarle al cliente el estimado en tiempo real.
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:20px 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🛍️ Catálogo curado de Shein (VIP)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Productos que subes tú a mano — se ven en la sección VIP con botón "Pedir este", que abre la calculadora ya rellenada. Solo tú actualizas precio/disponibilidad, no es automático.</div>
+
+      <input type="text" id="sh-nombre" placeholder="Nombre del producto" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input type="number" id="sh-precio" step="0.01" placeholder="Precio (USD)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="text" id="sh-imagen" placeholder="URL de la imagen" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <input type="text" id="sh-link" placeholder="Link del producto en Shein" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;">
+      <button onclick="agregarProductoShein()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Agregar a la galería</button>
+      <div id="sh-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
+
+      <div id="sh-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
     </div>
   </div>
 
@@ -2068,6 +2088,7 @@ async function initAdmin() {
   loadToggleConversion();
   window._cb360Etapa = 'loadConfigTemuShein';
   loadConfigTemuShein();
+  loadProductosShein();
   window._cb360Etapa = 'vendedores preload';
   // Vendedores data preload
   db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
@@ -2242,6 +2263,7 @@ function editProduct(pid) {
     // Firebase guarda tallas/colores dentro de 'detalles' — intentar ambos campos
     document.getElementById('prod-tallas').value = p.tallas || '';
     document.getElementById('prod-colores').value = p.colores || '';
+    cargarVariantes('prod', p.variantes || []);
     document.getElementById('prod-tooltip').value = p.descripcion || '';
     document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
     var vendedorEl = document.getElementById('prod-vendedor');
@@ -2485,6 +2507,65 @@ function actualizarEtiquetasTemuShein() {
   ['ts-unidad-label','ts-unidad-label-2'].forEach(function(id){ document.getElementById(id).textContent = unidad; });
 }
 
+function agregarProductoShein() {
+  var nombre = document.getElementById('sh-nombre').value.trim();
+  var precio = parseFloat(document.getElementById('sh-precio').value);
+  var imagen = document.getElementById('sh-imagen').value.trim();
+  var link = document.getElementById('sh-link').value.trim();
+  var status = document.getElementById('sh-status');
+  if (!nombre || isNaN(precio) || !link) {
+    status.style.color = '#ff9999';
+    status.textContent = 'Faltan datos: nombre, precio y link son obligatorios';
+    return;
+  }
+  status.style.color = '';
+  status.textContent = 'Guardando…';
+  db.ref('shein_productos').push({
+    nombre: nombre, precio: precio, imagen: imagen, link: link,
+    activo: true, creado: new Date().toISOString()
+  }).then(function() {
+    status.style.color = '#7fff7f';
+    status.textContent = '✅ Agregado';
+    document.getElementById('sh-nombre').value = '';
+    document.getElementById('sh-precio').value = '';
+    document.getElementById('sh-imagen').value = '';
+    document.getElementById('sh-link').value = '';
+    setTimeout(function(){ status.textContent = ''; }, 2000);
+    loadProductosShein();
+  }).catch(function(e) {
+    status.style.color = '#ff9999';
+    status.textContent = '❌ Error: ' + e.message;
+  });
+}
+
+function loadProductosShein() {
+  db.ref('shein_productos').once('value', function(snap) {
+    var data = snap.val() || {};
+    var lista = Object.entries(data).sort(function(a, b) { return new Date(b[1].creado) - new Date(a[1].creado); });
+    var cont = document.getElementById('sh-lista');
+    if (!lista.length) { cont.innerHTML = '<div class="empty-state">Sin productos todavía</div>'; return; }
+    cont.innerHTML = lista.map(function(e) {
+      var id = e[0], p = e[1];
+      return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">' +
+        (p.imagen ? '<img src="' + p.imagen + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex:none;" onerror="this.style.display=\'none\'">' : '') +
+        '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nombre + '</div>' +
+        '<div style="font-size:0.78rem;color:var(--text-muted);">' + p.precio + ' USD' + (p.activo === false ? ' · desactivado' : '') + '</div></div>' +
+        '<button onclick="toggleProductoShein(\'' + id + '\',' + (p.activo !== false) + ')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">' + (p.activo !== false ? '👁️' : '🚫') + '</button>' +
+        '<button onclick="borrarProductoShein(\'' + id + '\')" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">🗑️</button>' +
+        '</div>';
+    }).join('');
+  });
+}
+
+function toggleProductoShein(id, estaActivo) {
+  db.ref('shein_productos/' + id).update({ activo: !estaActivo }).then(loadProductosShein);
+}
+
+function borrarProductoShein(id) {
+  if (!confirm('¿Borrar este producto de la galería de Shein?')) return;
+  db.ref('shein_productos/' + id).remove().then(loadProductosShein);
+}
+
 function guardarConfigTemuShein() {
   var comisionMinima = parseFloat(document.getElementById('ts-comision-minima').value) || 0;
   var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
@@ -2519,6 +2600,35 @@ function loadConfigTemuShein() {
     document.getElementById('ts-unidad-peso').value = data.unidadPeso || 'lb';
     actualizarEtiquetasTemuShein();
   });
+}
+
+function agregarFilaVariante(prefijo, nombre, precio) {
+  var lista = document.getElementById(prefijo + '-variantes-lista');
+  var row = document.createElement('div');
+  row.className = 'variante-row';
+  row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+  row.innerHTML =
+    '<input type="text" placeholder="Nombre (ej: Negro)" value="' + (nombre ? nombre.replace(/"/g,'') : '') + '" class="variante-nombre" style="flex:2;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+    '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" class="variante-precio" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+    '<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>';
+  lista.appendChild(row);
+}
+
+function leerVariantes(prefijo) {
+  var filas = document.querySelectorAll('#' + prefijo + '-variantes-lista .variante-row');
+  var variantes = [];
+  filas.forEach(function(fila) {
+    var nombre = fila.querySelector('.variante-nombre').value.trim();
+    var precio = parseFloat(fila.querySelector('.variante-precio').value);
+    if (nombre && !isNaN(precio)) variantes.push({ nombre: nombre, precio: precio });
+  });
+  return variantes;
+}
+
+function cargarVariantes(prefijo, variantes) {
+  var lista = document.getElementById(prefijo + '-variantes-lista');
+  lista.innerHTML = '';
+  (variantes || []).forEach(function(v) { agregarFilaVariante(prefijo, v.nombre, v.precio); });
 }
 
 function actualizarLabelPrecio(prefijo) {
@@ -2640,6 +2750,7 @@ async function doPublish() {
   const genero  = getSelectedGenero();
   const moneda   = 'USD';
   const precioModo = document.getElementById('prod-precio-modo') ? document.getElementById('prod-precio-modo').value : '';
+  const variantes = leerVariantes('prod');
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
@@ -2701,7 +2812,7 @@ async function doPublish() {
     log('💾 Guardando en Firebase…');
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
-      id, nombre: name, precio: price, moneda, precioModo, tallas, colores, vendedor, etiqueta,
+      id, nombre: name, precio: price, moneda, precioModo, variantes, tallas, colores, vendedor, etiqueta,
       descripcion: tooltip,
       seccion: secId, genero, destacado,
       imagenes, activo: true,
@@ -2727,6 +2838,7 @@ async function doPublish() {
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
     if (document.getElementById('prod-precio-modo')) { document.getElementById('prod-precio-modo').value = ''; actualizarLabelPrecio('prod'); }
+    document.getElementById('prod-variantes-lista').innerHTML = '';
   setSelectedEtiqueta('');
     btn.dataset.editPid = '';
     btn.textContent = '🚀 Publicar producto';
@@ -2806,6 +2918,7 @@ function cancelarFormulario() {
   document.getElementById('prod-price').value = '';
   document.getElementById('prod-tallas').value = '';
   document.getElementById('prod-colores').value = '';
+  document.getElementById('prod-variantes-lista').innerHTML = '';
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
   if (document.getElementById('prod-precio-modo')) { document.getElementById('prod-precio-modo').value = ''; actualizarLabelPrecio('prod'); }

@@ -216,6 +216,11 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
     <div id="ts-status" style="font-size:0.78rem;text-align:center;margin-top:8px;color:#7fff7f;"></div>
   </div>
 
+  <div class="vip-section-title">🛍️ ENCONTRADOS EN SHEIN</div>
+  <div class="vip-grid" id="sh-gallery-grid">
+    <div class="vip-empty"><span class="vip-empty-icon">✦</span>Cargando…</div>
+  </div>
+
   <div class="vip-section-title">PRODUCTOS EXCLUSIVOS</div>
   <div class="vip-grid" id="vip-grid">
     <div class="vip-empty"><span class="vip-empty-icon">✦</span>Cargando productos exclusivos…</div>
@@ -262,6 +267,43 @@ function calcularTemuShein() {
   document.getElementById('ts-r-envio').textContent = envio.toFixed(2) + ' ' + m + (peso <= 0 ? ' (pon el peso)' : '');
   document.getElementById('ts-r-total').textContent = total.toFixed(2) + ' ' + m;
   resultado.style.display = 'block';
+}
+
+function loadGaleriaShein() {
+  db.ref('shein_productos').once('value', function(snap) {
+    var data = snap.val() || {};
+    var lista = Object.entries(data).filter(function(e) { return e[1].activo !== false; });
+    var cont = document.getElementById('sh-gallery-grid');
+    var seccionTitulo = cont.previousElementSibling;
+    if (!lista.length) {
+      if (seccionTitulo) seccionTitulo.style.display = 'none';
+      cont.style.display = 'none';
+      return;
+    }
+    cont.innerHTML = lista.map(function(e) {
+      var id = e[0], p = e[1];
+      var imgHtml = p.imagen ? '<img class="vip-card-img" src="' + p.imagen + '" onerror="this.style.display=\'none\'">' : '<div class="vip-card-img" style="background:#222;display:flex;align-items:center;justify-content:center;font-size:2rem;">🛍️</div>';
+      return '<div class="vip-card">' + imgHtml +
+        '<div class="vip-card-body">' +
+        '<div class="vip-card-category">SHEIN</div>' +
+        '<div class="vip-card-name">' + p.nombre + '</div>' +
+        '<div class="vip-card-price">' + p.precio + ' USD</div>' +
+        '<button class="vip-card-btn" onclick="pedirProductoShein(\'' + id + '\')">Pedir este</button>' +
+        '</div></div>';
+    }).join('');
+  });
+}
+
+function pedirProductoShein(id) {
+  db.ref('shein_productos/' + id).once('value', function(snap) {
+    var p = snap.val();
+    if (!p) return;
+    document.getElementById('ts-tienda').value = 'Shein';
+    document.getElementById('ts-link').value = p.link || '';
+    document.getElementById('ts-precio-input').value = p.precio || '';
+    calcularTemuShein();
+    document.getElementById('ts-calc-box').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 function agregarPedidoTemuShein() {
@@ -358,6 +400,7 @@ function enterVip() {
   document.getElementById('welcome-modal').classList.remove('show');
   document.getElementById('vip-content').style.display = 'block';
   loadVipProducts();
+  loadGaleriaShein();
 }
 
 function loadVipProducts() {
