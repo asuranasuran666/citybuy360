@@ -179,6 +179,43 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
     <div class="vip-logo">✦ ACCESO 360 <span>SECCIÓN EXCLUSIVA</span></div>
     <button class="vip-back" onclick="window.location.href='index.html'">← Catálogo</button>
   </header>
+  <div class="vip-section-title">🛍️ PIDE DE TEMU O SHEIN</div>
+  <div id="ts-calc-box" style="background:#161616;border:1px solid #333;border-radius:14px;padding:18px;margin:0 0 24px;">
+    <div style="font-size:0.8rem;color:#aaa;margin-bottom:14px;">Pega el link, pon el precio y un peso aproximado. Vas a ver el total estimado al momento — se confirma el número exacto por WhatsApp cuando sepamos el peso real.</div>
+
+    <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Tienda</label>
+    <select id="ts-tienda" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;margin-bottom:12px;">
+      <option value="Temu">Temu</option>
+      <option value="Shein">Shein</option>
+    </select>
+
+    <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Link del producto</label>
+    <input type="text" id="ts-link" placeholder="https://..." style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;margin-bottom:12px;box-sizing:border-box;">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
+      <div>
+        <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Precio del producto (<span id="ts-moneda-lbl">USD</span>)</label>
+        <input type="number" id="ts-precio-input" step="0.01" placeholder="0.00" oninput="calcularTemuShein()" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Peso aprox. (<span id="ts-unidad-lbl">lb</span>)</label>
+        <input type="number" id="ts-peso-input" step="0.1" placeholder="0.0" oninput="calcularTemuShein()" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+    </div>
+    <div style="font-size:0.72rem;color:#888;margin-bottom:14px;">💡 Referencia: camiseta ~0.5, tenis ~2, mochila ~1.5 (en la unidad de arriba)</div>
+
+    <div id="ts-resultado" style="background:#0d0d0d;border:1px solid #333;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none;">
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:4px;"><span>Producto</span><span id="ts-r-producto">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:4px;"><span>Comisión</span><span id="ts-r-comision">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:8px;"><span>Envío estimado</span><span id="ts-r-envio">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:1.05rem;color:#ffd700;font-weight:900;border-top:1px solid #333;padding-top:8px;"><span>Total estimado</span><span id="ts-r-total">—</span></div>
+      <div style="font-size:0.68rem;color:#888;margin-top:8px;">* Sujeto a confirmación por WhatsApp cuando se sepa el peso real</div>
+    </div>
+
+    <button onclick="agregarPedidoTemuShein()" style="width:100%;background:#ffd700;color:#111;border:none;border-radius:8px;padding:12px;font-weight:900;font-size:0.9rem;cursor:pointer;">🛒 Agregar al carrito</button>
+    <div id="ts-status" style="font-size:0.78rem;text-align:center;margin-top:8px;color:#7fff7f;"></div>
+  </div>
+
   <div class="vip-section-title">PRODUCTOS EXCLUSIVOS</div>
   <div class="vip-grid" id="vip-grid">
     <div class="vip-empty"><span class="vip-empty-icon">✦</span>Cargando productos exclusivos…</div>
@@ -199,6 +236,64 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const WA = '5353255813'; // Número WhatsApp de la tienda
+
+// ===== CALCULADORA TEMU/SHEIN =====
+var tsConfig = { comisionMinima: 0, comisionPorcentaje: 0, precioLibra: 0, moneda: 'USD', unidadPeso: 'lb' };
+db.ref('config/temuShein').once('value', function(snap) {
+  var data = snap.val();
+  if (data) tsConfig = data;
+  var m = tsConfig.moneda || 'USD';
+  var u = tsConfig.unidadPeso === 'kg' ? 'kg' : 'lb';
+  document.getElementById('ts-moneda-lbl').textContent = m;
+  document.getElementById('ts-unidad-lbl').textContent = u;
+});
+
+function calcularTemuShein() {
+  var precio = parseFloat(document.getElementById('ts-precio-input').value) || 0;
+  var peso = parseFloat(document.getElementById('ts-peso-input').value) || 0;
+  var resultado = document.getElementById('ts-resultado');
+  if (precio <= 0) { resultado.style.display = 'none'; return; }
+  var comision = Math.max(tsConfig.comisionMinima || 0, precio * (tsConfig.comisionPorcentaje || 0) / 100);
+  var envio = peso * (tsConfig.precioLibra || 0);
+  var total = precio + comision + envio;
+  var m = tsConfig.moneda || 'USD';
+  document.getElementById('ts-r-producto').textContent = precio.toFixed(2) + ' ' + m;
+  document.getElementById('ts-r-comision').textContent = comision.toFixed(2) + ' ' + m;
+  document.getElementById('ts-r-envio').textContent = envio.toFixed(2) + ' ' + m + (peso <= 0 ? ' (pon el peso)' : '');
+  document.getElementById('ts-r-total').textContent = total.toFixed(2) + ' ' + m;
+  resultado.style.display = 'block';
+}
+
+function agregarPedidoTemuShein() {
+  var status = document.getElementById('ts-status');
+  var tienda = document.getElementById('ts-tienda').value;
+  var link = document.getElementById('ts-link').value.trim();
+  var precio = parseFloat(document.getElementById('ts-precio-input').value) || 0;
+  var peso = parseFloat(document.getElementById('ts-peso-input').value) || 0;
+  if (precio <= 0) { status.style.color = '#ff9999'; status.textContent = 'Pon el precio del producto primero'; return; }
+  var comision = Math.max(tsConfig.comisionMinima || 0, precio * (tsConfig.comisionPorcentaje || 0) / 100);
+  var envio = peso * (tsConfig.precioLibra || 0);
+  var total = precio + comision + envio;
+  var m = tsConfig.moneda || 'USD';
+
+  var CART_KEY = 'cb360_cart';
+  var cartItems = [];
+  try { cartItems = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e) { cartItems = []; }
+  var notas = (link ? 'Link: ' + link + ' — ' : '') + 'Precio: ' + precio.toFixed(2) + ' ' + m + ', comisión: ' + comision.toFixed(2) + ' ' + m + ', envío est.: ' + envio.toFixed(2) + ' ' + m + ' (peso aprox. ' + peso + (tsConfig.unidadPeso === 'kg' ? 'kg' : 'lb') + ')';
+  cartItems.push({
+    id: 'temu-' + Date.now(), nombre: '🛍️ Pedido ' + tienda, imagen: '',
+    precio: total.toFixed(2) + ' ' + m + ' (estimado)',
+    talla: '', colores: [], colorSeleccionado: '', cantidad: 1, notas: notas
+  });
+  try { localStorage.setItem(CART_KEY, JSON.stringify(cartItems)); } catch(e) {}
+
+  status.style.color = '#7fff7f';
+  status.textContent = '✅ Agregado al carrito — revísalo desde el catálogo';
+  document.getElementById('ts-link').value = '';
+  document.getElementById('ts-precio-input').value = '';
+  document.getElementById('ts-peso-input').value = '';
+  document.getElementById('ts-resultado').style.display = 'none';
+}
 
 // ===== ACCESO 360: verificación matemática offline — núcleo compartido en acceso360-core.js =====
 

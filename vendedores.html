@@ -168,6 +168,11 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">Teléfono del cliente (opcional)</label>
+      <input type="tel" id="f-cliente-telefono" class="input" placeholder="Ej: 53255813">
+    </div>
+
+    <div class="form-group">
       <label class="form-label">Notas (opcional)</label>
       <textarea id="f-notas" class="input" placeholder="Talla, color, observaciones…"></textarea>
     </div>
@@ -389,6 +394,7 @@
     var metodo = document.getElementById('f-metodo').value;
     var cliente = document.getElementById('f-cliente').value.trim();
     var clienteEmailRaw = document.getElementById('f-cliente-email').value.trim();
+    var clienteTelefono = document.getElementById('f-cliente-telefono').value.trim();
     var notas = document.getElementById('f-notas').value.trim();
 
     if (!producto || !precio) {
@@ -413,6 +419,7 @@
       metodoPago: metodo,
       cliente: cliente || null,
       clienteEmail: clienteEmailRaw ? clienteEmailRaw.toLowerCase() : null,
+      clienteTelefono: clienteTelefono || null,
       notas: notas || null,
       fecha: ahora.toISOString(),
       diaSemana: diasSemana[ahora.getDay()],
@@ -431,6 +438,18 @@
         }
       });
 
+      // Si dejó correo, enriquecer su ficha de cliente con nombre/teléfono
+      if (clienteEmailRaw) {
+        var key = normalizarEmailKey(clienteEmailRaw);
+        var datosUsuario = { email: clienteEmailRaw.toLowerCase(), ultimaVisita: Date.now() };
+        if (cliente) datosUsuario.nombre = cliente;
+        if (clienteTelefono) datosUsuario.telefono = clienteTelefono;
+        db.ref('usuarios/' + key).once('value', function(snap) {
+          if (!snap.exists()) datosUsuario.creado = Date.now();
+          db.ref('usuarios/' + key).update(datosUsuario);
+        });
+      }
+
       // Si venía de un pedido pendiente, marcarlo como confirmado
       if (pedidoEnProceso) {
         db.ref('pedidos/' + pedidoEnProceso).update({ estado: 'confirmado' });
@@ -448,6 +467,7 @@
       document.getElementById('f-precio').value = '';
       document.getElementById('f-cliente').value = '';
       document.getElementById('f-cliente-email').value = '';
+      document.getElementById('f-cliente-telefono').value = '';
       document.getElementById('f-notas').value = '';
 
       btn.disabled = false;
