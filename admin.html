@@ -296,15 +296,20 @@
           <input type="text" id="edit-nombre" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
         </div>
         <div>
-          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;" id="edit-precio-label">Precio (ej: 2,900 MN)</label>
-          <input type="text" id="edit-precio" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Precio</label>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="edit-precio" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+            <select id="edit-moneda" style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">
+              <option value="USD">USD</option>
+              <option value="MN">MN</option>
+            </select>
+          </div>
           <label style="display:block;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
-            Mostrar precio:
-            <select id="edit-precio-modo" onchange="actualizarLabelPrecio('edit')" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
+            Conversión a la otra moneda:
+            <select id="edit-precio-modo" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
               <option value="">Según configuración general</option>
-              <option value="soloMN">Solo MN (calculado, sin conversión)</option>
-              <option value="soloUSD">Solo USD (sin conversión)</option>
-              <option value="mnFijo">MN fijo (no cambia con la tasa)</option>
+              <option value="mostrar">Sí, mostrar conversión</option>
+              <option value="ocultar">No, solo esta moneda</option>
             </select>
           </label>
         </div>
@@ -428,18 +433,20 @@
             <input type="text" id="prod-name" placeholder="Nombre del producto">
           </div>
           <div class="form-group" style="margin:0;">
-            <label id="prod-price-label">Precio (USD)</label>
+            <label>Precio</label>
             <div style="display:flex;gap:4px;align-items:center;">
               <input type="number" id="prod-price" placeholder="29" step="0.01" style="width:90px !important;flex:none !important;min-width:90px;font-size:0.95rem;">
-              <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);" id="prod-price-unidad">USD</span>
+              <select id="prod-moneda" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">
+                <option value="USD">USD</option>
+                <option value="MN">MN</option>
+              </select>
             </div>
             <label style="display:block;margin-top:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
-              Mostrar precio:
-              <select id="prod-precio-modo" onchange="actualizarLabelPrecio('prod')" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
+              Conversión a la otra moneda:
+              <select id="prod-precio-modo" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
                 <option value="">Según configuración general</option>
-                <option value="soloMN">Solo MN (calculado, sin conversión)</option>
-                <option value="soloUSD">Solo USD (sin conversión)</option>
-                <option value="mnFijo">MN fijo (no cambia con la tasa)</option>
+                <option value="mostrar">Sí, mostrar conversión</option>
+                <option value="ocultar">No, solo esta moneda</option>
               </select>
             </label>
           </div>
@@ -459,7 +466,14 @@
             <label style="margin:0;">Variantes con precio propio (opcional)</label>
             <button type="button" onclick="agregarFilaVariante('prod')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;">+ Agregar</button>
           </div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Ej: color Negro a 12 USD, color Azul a 13.50 USD. Si agregas variantes aquí, la card muestra "Desde $X" y el cliente elige el precio exacto según lo que escoja.</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Ej: color Negro a 12 USD, color Azul a 13.50 USD (o largo/talla, según elijas abajo). Si agregas variantes aquí, la card muestra "Desde $X" y el cliente elige el precio exacto según lo que escoja.</div>
+          <label style="display:block;margin-bottom:8px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
+            Estas variantes son por:
+            <select id="prod-variantes-tipo" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
+              <option value="color">Color (ej: gorras, pulóveres)</option>
+              <option value="talla">Talla / Largo (ej: vendas)</option>
+            </select>
+          </label>
           <div id="prod-variantes-lista"></div>
         </div>
         <div class="form-row" style="margin:0;">
@@ -969,7 +983,7 @@
 
   <div id="tab-precios" class="tab-content">
     <div style="padding:12px 16px;color:var(--text-muted);font-size:0.85rem;">
-      Tasa actual: 1 USD = <span id="precios-tasa-info">—</span> MN. Cambia el precio en USD y el equivalente en MN se calcula solo, en tiempo real, sin entrar a cada producto.
+      Tasa actual: 1 USD = <span id="precios-tasa-info">—</span> MN. Cambia el precio y elige la moneda de cada producto aquí mismo, sin entrar al formulario completo.
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
@@ -985,7 +999,7 @@
     </div>
 
     <table class="sales-table">
-      <thead><tr><th>Producto</th><th>Precio (USD)</th><th>Equivalente (MN)</th><th></th></tr></thead>
+      <thead><tr><th>Producto</th><th>Precio / Moneda</th><th>Equivalente</th><th></th></tr></thead>
       <tbody id="precios-tbody"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
     </table>
   </div>
@@ -1340,7 +1354,13 @@ async function generarIndexEstatico() {
         : '<div class="details-block product-desc-larga"></div>';
       var tooltipHTML = (showDescripcion && p.descripcion) ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = '<div class="card-vendedor">'+(p.vendedor||'')+'</div>';
-      var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
+      var tieneVariantesConPrecio = Array.isArray(p.variantes) && p.variantes.length > 0;
+      var precioBaseEstatico = p.precio;
+      if (tieneVariantesConPrecio) {
+        var preciosVariantesEstatico = p.variantes.map(function(v){ return parseFloat(v.precio); }).filter(function(n){ return !isNaN(n); });
+        if (preciosVariantesEstatico.length) precioBaseEstatico = Math.min.apply(null, preciosVariantesEstatico);
+      }
+      var precioNum = precioBaseEstatico ? String(precioBaseEstatico).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
       var monedaProd = p.moneda || 'MN';
       var precioHTML = '';
       var mostrarConvMNEstatico = configEstatico.mostrarConversionMN !== false;
@@ -1356,6 +1376,22 @@ async function generarIndexEstatico() {
       } else if (showPrecio && precioNum && modoPrecio === 'soloUSD') {
         // Solo USD: se muestra el precio base tal cual, sin ninguna conversión
         precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div><div class="price-conversion"></div>';
+      } else if (showPrecio && precioNum && (modoPrecio === 'mostrar' || modoPrecio === 'ocultar')) {
+        // Sistema nuevo: moneda real elegida por el admin para este producto
+        var precioMostrarNuevo = precioNum;
+        if (monedaProd === 'MN') precioMostrarNuevo = Math.round(parseFloat(precioNum)).toLocaleString('es-ES');
+        precioHTML = '<div class="price product-price">'+precioMostrarNuevo+' '+monedaProd+'</div>';
+        var convNuevaHTML = '';
+        if (modoPrecio === 'mostrar' && tasaUsdMn > 0) {
+          if (monedaProd === 'MN') {
+            var usdIndiv = (parseFloat(precioNum) / tasaUsdMn).toFixed(2);
+            convNuevaHTML = '<div class="price-conversion">'+usdIndiv+' USD</div>';
+          } else if (monedaProd === 'USD') {
+            var mnIndiv = Math.round(parseFloat(precioNum) * tasaUsdMn).toLocaleString('es-ES');
+            convNuevaHTML = '<div class="price-conversion">'+mnIndiv+' MN</div>';
+          }
+        }
+        precioHTML += convNuevaHTML || '<div class="price-conversion"></div>';
       } else if (showPrecio && precioNum) {
         precioHTML = '<div class="price product-price">'+precioNum+' '+monedaProd+'</div>';
         if (monedaProd === 'MN' && tasaUsdMn > 0 && mostrarConvUSDEstatico) {
@@ -1370,6 +1406,7 @@ async function generarIndexEstatico() {
       } else {
         precioHTML = '<div class="price"></div><div class="price-conversion"></div>';
       }
+      if (tieneVariantesConPrecio) precioHTML = precioHTML.replace('product-price">', 'product-price">Desde ');
 
       // Badge inferior derecho de la imagen — misma lógica y prioridad que la card dinámica
       var stock = inventarioEstatico[p.id];
@@ -1401,7 +1438,8 @@ async function generarIndexEstatico() {
         badgeInline = '<div class="stock-badge-inline ' + et.cls + '">' + et.icon + ' ' + et.text + '</div>';
       }
 
-      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'">'+
+      var variantesAttrEstatico = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
         badgeInline+
@@ -1413,7 +1451,9 @@ async function generarIndexEstatico() {
         descLargaHTML+
         precioHTML+
         vendedorHTML+
-        '<a href="'+waLink+'" class="btn-lo-quiero">🛒 Lo quiero</a>'+
+        (tieneVariantesConPrecio
+            ? '<button class="btn-lo-quiero" onclick="openProductDetail(this.closest(\'.card\'))">🛒 Elegir opción</button>'
+            : '<a href="'+waLink+'" class="btn-lo-quiero">🛒 Lo quiero</a>')+
         '</div></div>';
     }
 
@@ -1972,13 +2012,20 @@ function loadPreciosTab() {
       tbody.innerHTML = ids.map(function(id) {
         var p = catalogo[id];
         var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i, '').trim() : '';
+        var monedaActual = p.moneda === 'MN' ? 'MN' : 'USD';
         return '<tr id="precio-row-' + id + '">' +
           '<td>' + (p.nombre || '(sin nombre)') + '</td>' +
-          '<td><input type="number" step="0.01" value="' + precioNum + '" ' +
+          '<td style="display:flex;gap:4px;align-items:center;">' +
+              '<input type="number" step="0.01" value="' + precioNum + '" ' +
               'oninput="preciosRecalcMN(\'' + id + '\', this.value)" ' +
               'onblur="guardarPrecioProducto(\'' + id + '\')" ' +
-              'style="width:90px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 8px;"></td>' +
-          '<td id="precio-mn-' + id + '">' + preciosCalcMN(precioNum) + '</td>' +
+              'style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 8px;">' +
+              '<select id="precio-moneda-' + id + '" onchange="guardarPrecioProducto(\'' + id + '\')" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;padding:6px 4px;font-size:0.8rem;">' +
+                '<option value="USD"' + (monedaActual === 'USD' ? ' selected' : '') + '>USD</option>' +
+                '<option value="MN"' + (monedaActual === 'MN' ? ' selected' : '') + '>MN</option>' +
+              '</select>' +
+          '</td>' +
+          '<td id="precio-mn-' + id + '">' + preciosCalcMN(precioNum, monedaActual) + '</td>' +
           '<td><span id="precio-status-' + id + '" style="font-size:0.78rem;"></span></td>' +
         '</tr>';
       }).join('');
@@ -1986,15 +2033,18 @@ function loadPreciosTab() {
   });
 }
 
-function preciosCalcMN(usdVal) {
-  var n = parseFloat(usdVal);
-  if (!n || preciosTasaUsdMn <= 0) return '—';
-  return Math.round(n * preciosTasaUsdMn).toLocaleString('es-ES') + ' MN';
+function preciosCalcMN(valor, moneda) {
+  var n = parseFloat(valor);
+  if (!n) return '—';
+  if (moneda === 'MN') return n.toLocaleString('es-ES') + ' MN (fijo)';
+  if (preciosTasaUsdMn <= 0) return '—';
+  return Math.round(n * preciosTasaUsdMn).toLocaleString('es-ES') + ' MN (equiv.)';
 }
 
-function preciosRecalcMN(id, usdVal) {
+function preciosRecalcMN(id, valor) {
   var el = document.getElementById('precio-mn-' + id);
-  if (el) el.textContent = preciosCalcMN(usdVal);
+  var monedaSel = document.getElementById('precio-moneda-' + id);
+  if (el) el.textContent = preciosCalcMN(valor, monedaSel ? monedaSel.value : 'USD');
 }
 
 var preciosSaveTimers = {};
@@ -2003,11 +2053,14 @@ function guardarPrecioProducto(id) {
   if (!row) return;
   var input = row.querySelector('input');
   var val = input.value.trim();
+  var monedaSel = document.getElementById('precio-moneda-' + id);
+  var moneda = monedaSel ? monedaSel.value : 'USD';
   var statusEl = document.getElementById('precio-status-' + id);
   if (!val) return;
+  preciosRecalcMN(id, val);
   clearTimeout(preciosSaveTimers[id]);
   preciosSaveTimers[id] = setTimeout(function() {
-    db.ref('catalogo/' + id).update({ precio: val, moneda: 'USD' }).then(function() {
+    db.ref('catalogo/' + id).update({ precio: val, moneda: moneda }).then(function() {
       if (statusEl) {
         statusEl.textContent = '✓ Guardado';
         statusEl.style.color = '#4ade80';
@@ -2256,14 +2309,18 @@ function editProduct(pid) {
     if (!p) { alert('Producto no encontrado en Firebase'); return; }
     document.getElementById('prod-name').value = p.nombre || '';
     document.getElementById('prod-price').value = p.precio || '';
+    document.getElementById('prod-moneda').value = (p.precioModo === 'mnFijo' || p.precioModo === 'soloMN') ? 'MN' : (p.moneda === 'MN' ? 'MN' : 'USD');
     if (document.getElementById('prod-precio-modo')) {
-      document.getElementById('prod-precio-modo').value = p.precioModo || (p.soloMN ? 'soloMN' : '');
-      actualizarLabelPrecio('prod');
+      var modoForm = '';
+      if (p.precioModo === 'mostrar') modoForm = 'mostrar';
+      else if (p.precioModo === 'ocultar' || p.precioModo === 'soloUSD' || p.precioModo === 'soloMN' || p.precioModo === 'mnFijo' || p.soloMN) modoForm = 'ocultar';
+      document.getElementById('prod-precio-modo').value = modoForm;
     }
     // Firebase guarda tallas/colores dentro de 'detalles' — intentar ambos campos
     document.getElementById('prod-tallas').value = p.tallas || '';
     document.getElementById('prod-colores').value = p.colores || '';
     cargarVariantes('prod', p.variantes || []);
+    if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = p.variantesTipo || 'color';
     document.getElementById('prod-tooltip').value = p.descripcion || '';
     document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
     var vendedorEl = document.getElementById('prod-vendedor');
@@ -2631,16 +2688,6 @@ function cargarVariantes(prefijo, variantes) {
   (variantes || []).forEach(function(v) { agregarFilaVariante(prefijo, v.nombre, v.precio); });
 }
 
-function actualizarLabelPrecio(prefijo) {
-  var modo = document.getElementById(prefijo + '-precio-modo').value;
-  if (prefijo === 'prod') {
-    document.getElementById('prod-price-label').textContent = modo === 'mnFijo' ? 'Precio en MN (fijo)' : 'Precio (USD)';
-    document.getElementById('prod-price-unidad').textContent = modo === 'mnFijo' ? 'MN' : 'USD';
-  } else {
-    document.getElementById('edit-precio-label').textContent = modo === 'mnFijo' ? 'Precio en MN (fijo, no cambia con la tasa)' : 'Precio (ej: 2,900 MN)';
-  }
-}
-
 function borrarDatosVentas() {
   if (!confirm('¿Borrar todos los datos de ventas (clics en "Lo quiero")? Esta acción no se puede deshacer.')) return;
   db.ref('sales').remove().then(() => {
@@ -2748,9 +2795,10 @@ async function doPublish() {
   const tooltip = document.getElementById('prod-tooltip').value.trim();
   const secId   = document.getElementById('prod-seccion').value;
   const genero  = getSelectedGenero();
-  const moneda   = 'USD';
+  const moneda   = document.getElementById('prod-moneda') ? document.getElementById('prod-moneda').value : 'USD';
   const precioModo = document.getElementById('prod-precio-modo') ? document.getElementById('prod-precio-modo').value : '';
   const variantes = leerVariantes('prod');
+  const variantesTipo = document.getElementById('prod-variantes-tipo') ? document.getElementById('prod-variantes-tipo').value : 'color';
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
@@ -2812,7 +2860,7 @@ async function doPublish() {
     log('💾 Guardando en Firebase…');
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
-      id, nombre: name, precio: price, moneda, precioModo, variantes, tallas, colores, vendedor, etiqueta,
+      id, nombre: name, precio: price, moneda, precioModo, variantes, variantesTipo, tallas, colores, vendedor, etiqueta,
       descripcion: tooltip,
       seccion: secId, genero, destacado,
       imagenes, activo: true,
@@ -2837,8 +2885,10 @@ async function doPublish() {
       var el = document.getElementById(fid); if(el) el.value = '';
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
-    if (document.getElementById('prod-precio-modo')) { document.getElementById('prod-precio-modo').value = ''; actualizarLabelPrecio('prod'); }
+    if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
+    if (document.getElementById('prod-moneda')) document.getElementById('prod-moneda').value = 'USD';
     document.getElementById('prod-variantes-lista').innerHTML = '';
+    if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = 'color';
   setSelectedEtiqueta('');
     btn.dataset.editPid = '';
     btn.textContent = '🚀 Publicar producto';
@@ -2919,9 +2969,11 @@ function cancelarFormulario() {
   document.getElementById('prod-tallas').value = '';
   document.getElementById('prod-colores').value = '';
   document.getElementById('prod-variantes-lista').innerHTML = '';
+    if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = 'color';
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
-  if (document.getElementById('prod-precio-modo')) { document.getElementById('prod-precio-modo').value = ''; actualizarLabelPrecio('prod'); }
+  if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
+    if (document.getElementById('prod-moneda')) document.getElementById('prod-moneda').value = 'USD';
   setSelectedEtiqueta('');
   document.getElementById('prod-seccion').value = '';
   document.querySelectorAll('.genero-chip').forEach(function(c){ c.classList.remove('selected'); });
@@ -3048,8 +3100,11 @@ function abrirModalEditar(pid) {
     document.getElementById('edit-pid').value = pid;
     document.getElementById('edit-nombre').value = p.nombre || '';
     document.getElementById('edit-precio').value = p.precio || '';
-    document.getElementById('edit-precio-modo').value = p.precioModo || (p.soloMN ? 'soloMN' : '');
-    actualizarLabelPrecio('edit');
+    document.getElementById('edit-moneda').value = (p.precioModo === 'mnFijo' || p.precioModo === 'soloMN') ? 'MN' : (p.moneda === 'MN' ? 'MN' : 'USD');
+    var modoFormEdit = '';
+    if (p.precioModo === 'mostrar') modoFormEdit = 'mostrar';
+    else if (p.precioModo === 'ocultar' || p.precioModo === 'soloUSD' || p.precioModo === 'soloMN' || p.precioModo === 'mnFijo' || p.soloMN) modoFormEdit = 'ocultar';
+    document.getElementById('edit-precio-modo').value = modoFormEdit;
     document.getElementById('edit-seccion').value = p.seccion || 'ropa-moda';
     document.getElementById('edit-genero').value = p.genero || 'unisex';
     document.getElementById('edit-descripcion').value = p.descripcion || '';
@@ -3088,6 +3143,7 @@ function guardarEdicionProducto() {
   var updates = {
     nombre: document.getElementById('edit-nombre').value.trim(),
     precio: document.getElementById('edit-precio').value.trim(),
+    moneda: document.getElementById('edit-moneda').value,
     precioModo: document.getElementById('edit-precio-modo').value,
     seccion: document.getElementById('edit-seccion').value,
     genero: document.getElementById('edit-genero').value,
