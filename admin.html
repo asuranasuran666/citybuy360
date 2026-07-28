@@ -1036,11 +1036,24 @@ window.addEventListener('error', function(e) {
 function checkPwd() {
   const val = document.getElementById('pwd-input').value;
   if (val === PASS) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-    localStorage.setItem('cb360_admin', 'true');
-    iniciarWatchdogCarga();
-    initAdmin().catch(e => console.error('initAdmin error:', e));
+    try {
+      window._cb360Etapa = 'checkPwd: mostrando panel';
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      localStorage.setItem('cb360_admin', 'true');
+      window._cb360Etapa = 'checkPwd: iniciando vigilante';
+      iniciarWatchdogCarga();
+      window._cb360Etapa = 'checkPwd: llamando initAdmin';
+      initAdmin().catch(e => {
+        console.error('initAdmin error:', e);
+        var c = document.getElementById('sections-container');
+        if (c) c.innerHTML = '<div class="empty-state">⚠️ Error real: <b>' + (e && e.message ? e.message : e) + '</b><br><span style="font-size:0.75rem;opacity:0.7;">(manda captura de esto)</span></div>';
+      });
+    } catch(e) {
+      console.error('Error en checkPwd:', e);
+      var c2 = document.getElementById('sections-container');
+      if (c2) c2.innerHTML = '<div class="empty-state">⚠️ Error real en login: <b>' + e.message + '</b><br><span style="font-size:0.75rem;opacity:0.7;">(manda captura de esto)</span></div>';
+    }
   } else {
     document.getElementById('login-error').textContent = 'Contraseña incorrecta';
     document.getElementById('pwd-input').value = '';
@@ -1066,11 +1079,25 @@ try {
 }
 
 // Si ya había una sesión iniciada (no se cerró con "Cerrar sesión"), saltar la pantalla de contraseña
-if (localStorage.getItem('cb360_admin') === 'true') {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-panel').style.display = 'block';
-  iniciarWatchdogCarga();
-  initAdmin().catch(e => console.error('initAdmin error:', e));
+try {
+  window._cb360Etapa = 'auto-login: comprobando localStorage';
+  if (localStorage.getItem('cb360_admin') === 'true') {
+    window._cb360Etapa = 'auto-login: mostrando panel';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    window._cb360Etapa = 'auto-login: iniciando vigilante';
+    iniciarWatchdogCarga();
+    window._cb360Etapa = 'auto-login: llamando initAdmin';
+    initAdmin().catch(e => {
+      console.error('initAdmin error:', e);
+      var c = document.getElementById('sections-container');
+      if (c) c.innerHTML = '<div class="empty-state">⚠️ Error real: <b>' + (e && e.message ? e.message : e) + '</b><br><span style="font-size:0.75rem;opacity:0.7;">(manda captura de esto)</span></div>';
+    });
+  }
+} catch(e) {
+  console.error('Error en auto-login:', e);
+  var c2 = document.getElementById('sections-container');
+  if (c2) c2.innerHTML = '<div class="empty-state">⚠️ Error real en auto-login: <b>' + e.message + '</b><br><span style="font-size:0.75rem;opacity:0.7;">(manda captura de esto)</span></div>';
 }
 
 // ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
@@ -1439,7 +1466,7 @@ async function generarIndexEstatico() {
       }
 
       var variantesAttrEstatico = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
-      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'">'+
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
         badgeInline+
