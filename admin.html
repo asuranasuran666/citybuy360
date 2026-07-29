@@ -932,11 +932,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;">
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Comisión mínima (<span id="ts-moneda-label-2">USD</span>)</label>
-          <input type="number" id="ts-comision-minima" step="0.5" placeholder="3" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+          <input type="number" id="ts-comision-minima" step="0.5" placeholder="3" oninput="calcularBeneficio()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
         </div>
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Comisión (%)</label>
-          <input type="number" id="ts-comision-porcentaje" step="1" placeholder="10" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
+          <input type="number" id="ts-comision-porcentaje" step="1" placeholder="10" oninput="calcularBeneficio()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;">
         </div>
       </div>
     </div>
@@ -948,12 +948,32 @@
       <input type="number" id="ts-precio-libra" step="0.5" placeholder="5" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;max-width:200px;">
     </div>
 
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">🛃 Arancel de aduana</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Cargo fijo por tipo de producto (ej: España cobra un fijo por cada tipo, sin importar cuántas unidades). Se reparte entre la cantidad si el cliente pide varias del mismo producto.</div>
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Arancel por tipo de producto (<span id="ts-moneda-label-4">USD</span>)</label>
+      <input type="number" id="ts-arancel" step="0.5" placeholder="3" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;max-width:200px;">
+    </div>
+
     <div style="padding:0 16px;">
       <button onclick="guardarConfigTemuShein()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;">Guardar configuración</button>
       <div id="ts-status" style="font-size:0.82rem;text-align:center;margin-top:8px;"></div>
     </div>
 
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:20px 16px 16px;">
+    <div style="background:var(--surface);border:2px solid #22c55e;border-radius:12px;padding:14px 16px;margin:20px 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">💰 Ver tu beneficio (privado, solo tú lo ves)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">Simula un pedido antes de cotizarlo al cliente, para revisar si el margen te sirve. Esto no lo ve nadie más.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input type="number" id="ben-precio" step="0.01" placeholder="Precio producto" oninput="calcularBeneficio()" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="number" id="ben-cantidad" step="1" min="1" value="1" placeholder="Cantidad" oninput="calcularBeneficio()" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <div id="ben-resultado" style="display:none;background:var(--bg);border-radius:8px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--text);margin-bottom:4px;"><span>Tu beneficio (comisión)</span><span id="ben-monto" style="font-weight:700;color:#22c55e;">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--text);"><span>% de margen</span><span id="ben-pct" style="font-weight:700;">—</span></div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
       <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🛍️ Catálogo curado de Shein (VIP)</div>
       <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Productos que subes tú a mano — se ven en la sección VIP con botón "Pedir este", que abre la calculadora ya rellenada. Solo tú actualizas precio/disponibilidad, no es automático.</div>
 
@@ -2587,8 +2607,27 @@ function loadToggleConversion() {
 function actualizarEtiquetasTemuShein() {
   var moneda = document.getElementById('ts-moneda').value;
   var unidad = document.getElementById('ts-unidad-peso').value === 'kg' ? 'kilogramo' : 'libra';
-  ['ts-moneda-label-1','ts-moneda-label-2','ts-moneda-label-3'].forEach(function(id){ document.getElementById(id).textContent = moneda; });
+  ['ts-moneda-label-1','ts-moneda-label-2','ts-moneda-label-3','ts-moneda-label-4'].forEach(function(id){ document.getElementById(id).textContent = moneda; });
   ['ts-unidad-label','ts-unidad-label-2'].forEach(function(id){ document.getElementById(id).textContent = unidad; });
+}
+
+function calcularBeneficio() {
+  var precio = parseFloat(document.getElementById('ben-precio').value) || 0;
+  var cantidad = parseInt(document.getElementById('ben-cantidad').value) || 1;
+  if (cantidad < 1) cantidad = 1;
+  var resultado = document.getElementById('ben-resultado');
+  if (precio <= 0) { resultado.style.display = 'none'; return; }
+  var comisionMinima = parseFloat(document.getElementById('ts-comision-minima').value) || 0;
+  var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
+  var moneda = document.getElementById('ts-moneda').value || 'USD';
+  var comisionUnidad = Math.max(comisionMinima, precio * comisionPorcentaje / 100);
+  var comisionTotal = comisionUnidad * cantidad;
+  var costoProducto = precio * cantidad;
+  var pct = costoProducto > 0 ? (comisionTotal / costoProducto * 100) : 0;
+  document.getElementById('ben-monto').textContent = '+' + comisionTotal.toFixed(2) + ' ' + moneda;
+  document.getElementById('ben-pct').textContent = pct.toFixed(1) + '%' + (pct < 30 ? ' ⚠️ bajo tu meta de 30%' : ' ✅');
+  document.getElementById('ben-pct').style.color = pct < 30 ? '#f87171' : '#22c55e';
+  resultado.style.display = 'block';
 }
 
 function agregarProductoShein() {
@@ -2650,10 +2689,29 @@ function borrarProductoShein(id) {
   db.ref('shein_productos/' + id).remove().then(loadProductosShein);
 }
 
+function calcularBeneficio() {
+  var precio = parseFloat(document.getElementById('ben-precio').value) || 0;
+  var cantidad = parseInt(document.getElementById('ben-cantidad').value) || 1;
+  if (cantidad < 1) cantidad = 1;
+  var resultado = document.getElementById('ben-resultado');
+  if (precio <= 0) { resultado.style.display = 'none'; return; }
+  var comisionMinima = parseFloat(document.getElementById('ts-comision-minima').value) || 0;
+  var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
+  var moneda = document.getElementById('ts-moneda').value || 'USD';
+  var comisionUnidad = Math.max(comisionMinima, precio * comisionPorcentaje / 100);
+  var comisionTotal = comisionUnidad * cantidad;
+  var pct = (comisionUnidad / precio) * 100;
+  document.getElementById('ben-monto').textContent = comisionTotal.toFixed(2) + ' ' + moneda;
+  document.getElementById('ben-pct').textContent = pct.toFixed(1) + '%' + (pct < 30 ? ' ⚠️ bajo tu meta de 30%' : ' ✅');
+  document.getElementById('ben-pct').style.color = pct < 30 ? '#f87171' : '#22c55e';
+  resultado.style.display = 'block';
+}
+
 function guardarConfigTemuShein() {
   var comisionMinima = parseFloat(document.getElementById('ts-comision-minima').value) || 0;
   var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
   var precioLibra = parseFloat(document.getElementById('ts-precio-libra').value) || 0;
+  var arancel = parseFloat(document.getElementById('ts-arancel').value) || 0;
   var moneda = document.getElementById('ts-moneda').value;
   var unidadPeso = document.getElementById('ts-unidad-peso').value;
   var status = document.getElementById('ts-status');
@@ -2662,6 +2720,7 @@ function guardarConfigTemuShein() {
     comisionMinima: comisionMinima,
     comisionPorcentaje: comisionPorcentaje,
     precioLibra: precioLibra,
+    arancel: arancel,
     moneda: moneda,
     unidadPeso: unidadPeso
   }).then(function() {
@@ -2680,6 +2739,7 @@ function loadConfigTemuShein() {
     document.getElementById('ts-comision-minima').value = data.comisionMinima || '';
     document.getElementById('ts-comision-porcentaje').value = data.comisionPorcentaje || '';
     document.getElementById('ts-precio-libra').value = data.precioLibra || '';
+    document.getElementById('ts-arancel').value = data.arancel || '';
     document.getElementById('ts-moneda').value = data.moneda || 'USD';
     document.getElementById('ts-unidad-peso').value = data.unidadPeso || 'lb';
     actualizarEtiquetasTemuShein();

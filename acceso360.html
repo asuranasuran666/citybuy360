@@ -212,16 +212,21 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
         <input type="number" id="ts-precio-input" step="0.01" placeholder="0.00" oninput="calcularTemuShein()" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;box-sizing:border-box;">
       </div>
       <div>
-        <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Peso aprox. (<span id="ts-unidad-lbl">lb</span>)</label>
-        <input type="number" id="ts-peso-input" step="0.1" placeholder="0.0" oninput="calcularTemuShein()" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+        <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Cantidad (mismo producto)</label>
+        <input type="number" id="ts-cantidad-input" step="1" min="1" placeholder="1" value="1" oninput="calcularTemuShein()" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;box-sizing:border-box;">
       </div>
     </div>
-    <div style="font-size:0.72rem;color:#888;margin-bottom:14px;">💡 Referencia: camiseta ~0.5, tenis ~2, mochila ~1.5 (en la unidad de arriba)</div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:0.78rem;color:#ccc;display:block;margin-bottom:4px;">Peso aprox. total (<span id="ts-unidad-lbl">lb</span>)</label>
+      <input type="number" id="ts-peso-input" step="0.1" placeholder="0.0" oninput="calcularTemuShein()" style="width:100%;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.9rem;box-sizing:border-box;">
+    </div>
+    <div style="font-size:0.72rem;color:#888;margin-bottom:14px;">💡 Referencia: camiseta ~0.5, tenis ~2, mochila ~1.5 (en la unidad de arriba, ya sumando todas las unidades)</div>
 
     <div id="ts-resultado" style="background:#0d0d0d;border:1px solid #333;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none;">
       <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:4px;"><span>Producto</span><span id="ts-r-producto">—</span></div>
       <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:4px;"><span>Comisión</span><span id="ts-r-comision">—</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:8px;"><span>Envío estimado</span><span id="ts-r-envio">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:4px;"><span>Envío estimado</span><span id="ts-r-envio">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#ccc;margin-bottom:8px;"><span id="ts-r-arancel-label">Arancel de aduana</span><span id="ts-r-arancel">—</span></div>
       <div style="display:flex;justify-content:space-between;font-size:1.05rem;color:#ffd700;font-weight:900;border-top:1px solid #333;padding-top:8px;"><span>Total estimado</span><span id="ts-r-total">—</span></div>
       <div style="font-size:0.68rem;color:#888;margin-top:8px;">* Sujeto a confirmación por WhatsApp cuando se sepa el peso real</div>
     </div>
@@ -269,16 +274,21 @@ db.ref('config/temuShein').once('value', function(snap) {
 
 function calcularTemuShein() {
   var precio = parseFloat(document.getElementById('ts-precio-input').value) || 0;
+  var cantidad = parseInt(document.getElementById('ts-cantidad-input').value) || 1;
+  if (cantidad < 1) cantidad = 1;
   var peso = parseFloat(document.getElementById('ts-peso-input').value) || 0;
   var resultado = document.getElementById('ts-resultado');
   if (precio <= 0) { resultado.style.display = 'none'; return; }
-  var comision = Math.max(tsConfig.comisionMinima || 0, precio * (tsConfig.comisionPorcentaje || 0) / 100);
+  var costoProducto = precio * cantidad;
+  var comision = Math.max(tsConfig.comisionMinima || 0, precio * (tsConfig.comisionPorcentaje || 0) / 100) * cantidad;
   var envio = peso * (tsConfig.precioLibra || 0);
-  var total = precio + comision + envio;
+  var arancel = tsConfig.arancel || 0; // fijo por tipo de producto, no se multiplica por cantidad
+  var total = costoProducto + comision + envio + arancel;
   var m = tsConfig.moneda || 'USD';
-  document.getElementById('ts-r-producto').textContent = precio.toFixed(2) + ' ' + m;
+  document.getElementById('ts-r-producto').textContent = costoProducto.toFixed(2) + ' ' + m + (cantidad > 1 ? ' (' + cantidad + ' uds.)' : '');
   document.getElementById('ts-r-comision').textContent = comision.toFixed(2) + ' ' + m;
   document.getElementById('ts-r-envio').textContent = envio.toFixed(2) + ' ' + m + (peso <= 0 ? ' (pon el peso)' : '');
+  document.getElementById('ts-r-arancel').textContent = arancel > 0 ? (arancel.toFixed(2) + ' ' + m + (cantidad > 1 ? ' (' + (arancel/cantidad).toFixed(2) + ' c/u)' : '')) : '—';
   document.getElementById('ts-r-total').textContent = total.toFixed(2) + ' ' + m;
   resultado.style.display = 'block';
 }
@@ -325,19 +335,23 @@ function agregarPedidoTemuShein() {
   var tienda = document.getElementById('ts-tienda').value;
   var link = document.getElementById('ts-link').value.trim();
   var precio = parseFloat(document.getElementById('ts-precio-input').value) || 0;
+  var cantidad = parseInt(document.getElementById('ts-cantidad-input').value) || 1;
+  if (cantidad < 1) cantidad = 1;
   var peso = parseFloat(document.getElementById('ts-peso-input').value) || 0;
   if (precio <= 0) { status.style.color = '#ff9999'; status.textContent = 'Pon el precio del producto primero'; return; }
-  var comision = Math.max(tsConfig.comisionMinima || 0, precio * (tsConfig.comisionPorcentaje || 0) / 100);
+  var costoProducto = precio * cantidad;
+  var comision = Math.max(tsConfig.comisionMinima || 0, precio * (tsConfig.comisionPorcentaje || 0) / 100) * cantidad;
   var envio = peso * (tsConfig.precioLibra || 0);
-  var total = precio + comision + envio;
+  var arancel = tsConfig.arancel || 0;
+  var total = costoProducto + comision + envio + arancel;
   var m = tsConfig.moneda || 'USD';
 
   var CART_KEY = 'cb360_cart';
   var cartItems = [];
   try { cartItems = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e) { cartItems = []; }
-  var notas = (link ? 'Link: ' + link + ' — ' : '') + 'Precio: ' + precio.toFixed(2) + ' ' + m + ', comisión: ' + comision.toFixed(2) + ' ' + m + ', envío est.: ' + envio.toFixed(2) + ' ' + m + ' (peso aprox. ' + peso + (tsConfig.unidadPeso === 'kg' ? 'kg' : 'lb') + ')';
+  var notas = (link ? 'Link: ' + link + ' — ' : '') + 'Precio unidad: ' + precio.toFixed(2) + ' ' + m + ' x' + cantidad + ', comisión: ' + comision.toFixed(2) + ' ' + m + ', envío est.: ' + envio.toFixed(2) + ' ' + m + ' (peso aprox. ' + peso + (tsConfig.unidadPeso === 'kg' ? 'kg' : 'lb') + ')' + (arancel > 0 ? ', arancel: ' + arancel.toFixed(2) + ' ' + m : '');
   cartItems.push({
-    id: 'temu-' + Date.now(), nombre: '🛍️ Pedido ' + tienda, imagen: '',
+    id: 'temu-' + Date.now(), nombre: '🛍️ Pedido ' + tienda + (cantidad > 1 ? ' (x' + cantidad + ')' : ''), imagen: '',
     precio: total.toFixed(2) + ' ' + m + ' (estimado)',
     talla: '', colores: [], colorSeleccionado: '', cantidad: 1, notas: notas
   });
@@ -347,6 +361,7 @@ function agregarPedidoTemuShein() {
   status.textContent = '✅ Agregado al carrito — revísalo desde el catálogo';
   document.getElementById('ts-link').value = '';
   document.getElementById('ts-precio-input').value = '';
+  document.getElementById('ts-cantidad-input').value = '1';
   document.getElementById('ts-peso-input').value = '';
   document.getElementById('ts-resultado').style.display = 'none';
 }
