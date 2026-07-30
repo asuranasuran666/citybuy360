@@ -541,6 +541,28 @@
       </div>
     </div>
 
+    <!-- PROMOCIONES (slider de cards) -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🎉 Promociones (slider de cards)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Tarjetas que se deslizan horizontal, arriba del catálogo. Cada una con imagen, título, subtítulo y botón con su propio link.</div>
+
+      <input type="text" id="promo-titulo" placeholder="Título (ej: Hasta 20% DESCUENTO)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <input type="text" id="promo-subtitulo" placeholder="Subtítulo (ej: Especial de Verano)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <input type="text" id="promo-imagen" placeholder="URL de imagen de fondo (opcional)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input type="text" id="promo-color1" placeholder="Color 1 (ej: #4fd1e8)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="text" id="promo-color2" placeholder="Color 2 (ej: #1a2e6e)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <input type="text" id="promo-boton-texto" placeholder="Texto del botón (ej: Envía ahora)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="text" id="promo-boton-link" placeholder="Link del botón (ej: #grid-servicios)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <button onclick="agregarPromoCard()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Agregar promoción</button>
+      <div id="promo-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
+
+      <div id="promo-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
     <!-- MODO ESTÁTICO CUBA -->
     <div style="background:var(--surface);border:2px solid #f5c518;border-radius:12px;overflow:hidden;margin-bottom:12px;">
       <div class="interfaz-row" style="background:rgba(245,197,24,0.08);">
@@ -953,6 +975,14 @@
       <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Cargo fijo por tipo de producto (ej: España cobra un fijo por cada tipo, sin importar cuántas unidades). Se reparte entre la cantidad si el cliente pide varias del mismo producto.</div>
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Arancel por tipo de producto (<span id="ts-moneda-label-4">USD</span>)</label>
       <input type="number" id="ts-arancel" step="0.5" placeholder="3" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;max-width:200px;">
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">🖼️ Imagen de las cards "Comprar en Temu/Shein" (VIP)</div>
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen card Temu (URL)</label>
+      <input type="text" id="ts-imagen-temu" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;">
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen card Shein (URL)</label>
+      <input type="text" id="ts-imagen-shein" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
     </div>
 
     <div style="padding:0 16px;">
@@ -1370,6 +1400,10 @@ async function generarIndexEstatico() {
     var configEstatico = configSnap.val() || {};
     var seccionesOrdenEstatico = configEstatico.seccionesOrden || {};
     var sectionsEstatico = configEstatico.sections || {};
+
+    // 1f. Leer promociones (slider de cards)
+    var promoSnap = await new Promise(function(res) { db.ref('promoCards').once('value', res); });
+    var promoDataEstatico = promoSnap.val() || {};
     var secDynSnap = await new Promise(function(res) { db.ref('config/secciones').once('value', res); });
     var secDynEstatico = secDynSnap.val() || {};
     Object.keys(secDynEstatico).forEach(function(secId) {
@@ -1742,6 +1776,33 @@ async function generarIndexEstatico() {
     }
     if (interfazEstatico.ribbon1) setTextInside('ribbon-1-text', interfazEstatico.ribbon1);
     if (interfazEstatico.ribbon2) setTextInside('ribbon-2-text', interfazEstatico.ribbon2);
+
+    // Promociones (slider de cards)
+    var promoListaEstatico = Object.entries(promoDataEstatico).filter(function(e){ return e[1].activo !== false; })
+        .sort(function(a,b){ return new Date(a[1].creado) - new Date(b[1].creado); });
+    if (promoListaEstatico.length) {
+      var promoHtmlEstatico = promoListaEstatico.map(function(e) {
+        var p = e[1];
+        var bg = p.imagen
+            ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(' + p.imagen + ');background-size:cover;background-position:center;'
+            : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
+        return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
+            '<div class="promo-card-titulo">' + p.titulo + '</div>' +
+            (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
+            '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
+            '</a>';
+      }).join('');
+      var promoIdx = indexHTML.indexOf('id="promo-slider"');
+      if (promoIdx !== -1) {
+        var promoOpenEnd = indexHTML.indexOf('>', promoIdx) + 1;
+        var promoCloseStart = indexHTML.indexOf('</div>', promoOpenEnd);
+        indexHTML = indexHTML.substring(0, promoOpenEnd) + promoHtmlEstatico + indexHTML.substring(promoCloseStart);
+        // Asegurar que no quede oculto (display:none) ya que sí hay promociones que mostrar
+        var promoTagStart = indexHTML.lastIndexOf('<', promoIdx);
+        var promoTagEnd = indexHTML.indexOf('>', promoTagStart);
+        indexHTML = indexHTML.substring(0, promoTagStart) + indexHTML.substring(promoTagStart, promoTagEnd).replace('display:none', 'display:flex') + indexHTML.substring(promoTagEnd);
+      }
+    }
     if (interfazEstatico.ribbon1active === false) ocultarPorId('ribbon-1');
     if (interfazEstatico.ribbon2active === false) ocultarPorId('ribbon-2');
     if (interfazEstatico.catbar === false) ocultarPorId('cat-bar');
@@ -2189,6 +2250,7 @@ async function initAdmin() {
   window._cb360Etapa = 'loadConfigTemuShein';
   loadConfigTemuShein();
   loadProductosShein();
+  loadPromoCards();
   window._cb360Etapa = 'vendedores preload';
   // Vendedores data preload
   db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
@@ -2630,6 +2692,67 @@ function calcularBeneficio() {
   resultado.style.display = 'block';
 }
 
+function agregarPromoCard() {
+  var titulo = document.getElementById('promo-titulo').value.trim();
+  var subtitulo = document.getElementById('promo-subtitulo').value.trim();
+  var imagen = document.getElementById('promo-imagen').value.trim();
+  var color1 = document.getElementById('promo-color1').value.trim() || '#4fd1e8';
+  var color2 = document.getElementById('promo-color2').value.trim() || '#1a2e6e';
+  var botonTexto = document.getElementById('promo-boton-texto').value.trim() || 'Ver más';
+  var botonLink = document.getElementById('promo-boton-link').value.trim() || '#';
+  var status = document.getElementById('promo-status');
+  if (!titulo) {
+    status.style.color = '#ff9999';
+    status.textContent = 'El título es obligatorio';
+    return;
+  }
+  status.style.color = '';
+  status.textContent = 'Guardando…';
+  db.ref('promoCards').push({
+    titulo: titulo, subtitulo: subtitulo, imagen: imagen, color1: color1, color2: color2,
+    botonTexto: botonTexto, botonLink: botonLink, activo: true, creado: new Date().toISOString()
+  }).then(function() {
+    status.style.color = '#7fff7f';
+    status.textContent = '✅ Agregada';
+    ['promo-titulo','promo-subtitulo','promo-imagen','promo-color1','promo-color2','promo-boton-texto','promo-boton-link'].forEach(function(id){
+      document.getElementById(id).value = '';
+    });
+    setTimeout(function(){ status.textContent = ''; }, 2000);
+    loadPromoCards();
+  }).catch(function(e) {
+    status.style.color = '#ff9999';
+    status.textContent = '❌ Error: ' + e.message;
+  });
+}
+
+function loadPromoCards() {
+  db.ref('promoCards').once('value', function(snap) {
+    var data = snap.val() || {};
+    var lista = Object.entries(data).sort(function(a, b) { return new Date(b[1].creado) - new Date(a[1].creado); });
+    var cont = document.getElementById('promo-lista');
+    if (!lista.length) { cont.innerHTML = '<div class="empty-state">Sin promociones todavía</div>'; return; }
+    cont.innerHTML = lista.map(function(e) {
+      var id = e[0], p = e[1];
+      return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">' +
+        '<div style="width:40px;height:40px;border-radius:6px;flex:none;background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');' + (p.imagen ? 'background-image:url(' + p.imagen + ');background-size:cover;background-position:center;' : '') + '"></div>' +
+        '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.titulo + '</div>' +
+        '<div style="font-size:0.78rem;color:var(--text-muted);">' + (p.subtitulo||'') + (p.activo === false ? ' · desactivada' : '') + '</div></div>' +
+        '<button onclick="togglePromoCard(\'' + id + '\',' + (p.activo !== false) + ')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">' + (p.activo !== false ? '👁️' : '🚫') + '</button>' +
+        '<button onclick="borrarPromoCard(\'' + id + '\')" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">🗑️</button>' +
+        '</div>';
+    }).join('');
+  });
+}
+
+function togglePromoCard(id, estaActivo) {
+  db.ref('promoCards/' + id).update({ activo: !estaActivo }).then(loadPromoCards);
+}
+
+function borrarPromoCard(id) {
+  if (!confirm('¿Borrar esta promoción?')) return;
+  db.ref('promoCards/' + id).remove().then(loadPromoCards);
+}
+
 function agregarProductoShein() {
   var nombre = document.getElementById('sh-nombre').value.trim();
   var precio = parseFloat(document.getElementById('sh-precio').value);
@@ -2712,6 +2835,8 @@ function guardarConfigTemuShein() {
   var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
   var precioLibra = parseFloat(document.getElementById('ts-precio-libra').value) || 0;
   var arancel = parseFloat(document.getElementById('ts-arancel').value) || 0;
+  var imagenTemu = document.getElementById('ts-imagen-temu').value.trim();
+  var imagenShein = document.getElementById('ts-imagen-shein').value.trim();
   var moneda = document.getElementById('ts-moneda').value;
   var unidadPeso = document.getElementById('ts-unidad-peso').value;
   var status = document.getElementById('ts-status');
@@ -2721,6 +2846,8 @@ function guardarConfigTemuShein() {
     comisionPorcentaje: comisionPorcentaje,
     precioLibra: precioLibra,
     arancel: arancel,
+    imagenTemu: imagenTemu,
+    imagenShein: imagenShein,
     moneda: moneda,
     unidadPeso: unidadPeso
   }).then(function() {
@@ -2740,6 +2867,8 @@ function loadConfigTemuShein() {
     document.getElementById('ts-comision-porcentaje').value = data.comisionPorcentaje || '';
     document.getElementById('ts-precio-libra').value = data.precioLibra || '';
     document.getElementById('ts-arancel').value = data.arancel || '';
+    document.getElementById('ts-imagen-temu').value = data.imagenTemu || '';
+    document.getElementById('ts-imagen-shein').value = data.imagenShein || '';
     document.getElementById('ts-moneda').value = data.moneda || 'USD';
     document.getElementById('ts-unidad-peso').value = data.unidadPeso || 'lb';
     actualizarEtiquetasTemuShein();
