@@ -2881,6 +2881,16 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
         if (!valid) { errEl.style.display = 'block'; return; }
         errEl.style.display = 'none';
 
+        // Guardar el correo en usuarios/ (best-effort, no bloquea el flujo si falla o no hay conexión)
+        try {
+            var keyUsuario = normalizarEmailKey(email);
+            db.ref('usuarios/' + keyUsuario).once('value', function(snapU) {
+                var datosU = { email: email, ultimaVisita: Date.now() };
+                if (!snapU.exists()) datosU.creado = Date.now();
+                db.ref('usuarios/' + keyUsuario).update(datosU);
+            });
+        } catch(e) { /* sin conexión: no pasa nada, el código sigue generándose igual */ }
+
         // Primer código gratis, siguientes requieren compra mínima — se marca en este navegador
         if (localStorage.getItem('cb360_acceso360_usado') === 'true') {
             var waTextRenovar = encodeURIComponent('Hola, ya usé mi código gratis de ACCESO 360 y quiero renovarlo. Mi correo: ' + email + '. Les mando mi comprobante de compra para activarlo.');
@@ -3299,12 +3309,6 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">1.77 USD</
     <div class="mensajes-header">
         <h3>📢 Mensajes de la tienda</h3>
         <button class="mensajes-close" onclick="toggleMensajesPanel()">✕</button>
-    </div>
-    <div id="mensajes-login" style="display:none;padding:14px 16px;border-bottom:1px solid #2a2a2a;">
-        <div style="color:#ccc;font-size:0.8rem;margin-bottom:8px;">Déjanos tu correo y vas a poder ver tus mensajes personalizados y ofertas para ti.</div>
-        <input type="email" id="mensajes-email-input" placeholder="tu@correo.com" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #333;background:#111;color:#fff;font-size:0.85rem;margin-bottom:8px;">
-        <button onclick="guardarUsuarioCB360()" style="width:100%;background:#ffd700;color:#111;border:none;border-radius:6px;padding:8px;font-weight:700;font-size:0.85rem;cursor:pointer;">Guardar</button>
-        <div id="mensajes-login-error" style="color:#ff6666;font-size:0.75rem;margin-top:6px;display:none;"></div>
     </div>
     <div class="mensajes-list" id="mensajes-list">
         <div class="mensajes-empty">Cargando mensajes…</div>
