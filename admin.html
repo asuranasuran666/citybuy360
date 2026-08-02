@@ -247,6 +247,7 @@
     <button class="tab-btn" onclick="showTab('mensajes',this)">👤 Clientes</button>
     <button class="tab-btn" onclick="showTab('vendedores',this)">🧑‍💼 Vendedores</button>
     <button class="tab-btn" onclick="showTab('temushein',this)">🛍️ Temu/Shein</button>
+    <button class="tab-btn" onclick="showTab('marketing',this)">📣 Marketing</button>
   </div>
 
   <!-- ── TAB: CONTROL ── -->
@@ -539,28 +540,6 @@
           <span class="token-status" id="token-status">Sin token</span>
         </div>
       </div>
-    </div>
-
-    <!-- PROMOCIONES (slider de cards) -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;">
-      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🎉 Promociones (slider de cards)</div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Tarjetas que se deslizan horizontal, arriba del catálogo. Cada una con imagen, título, subtítulo y botón con su propio link.</div>
-
-      <input type="text" id="promo-titulo" placeholder="Título (ej: Hasta 20% DESCUENTO)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
-      <input type="text" id="promo-subtitulo" placeholder="Subtítulo (ej: Especial de Verano)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
-      <input type="text" id="promo-imagen" placeholder="URL de imagen de fondo (opcional)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <input type="text" id="promo-color1" placeholder="Color 1 (ej: #4fd1e8)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
-        <input type="text" id="promo-color2" placeholder="Color 2 (ej: #1a2e6e)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <input type="text" id="promo-boton-texto" placeholder="Texto del botón (ej: Envía ahora)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
-        <input type="text" id="promo-boton-link" placeholder="Link del botón (ej: #grid-servicios)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
-      </div>
-      <button onclick="agregarPromoCard()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Agregar promoción</button>
-      <div id="promo-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
-
-      <div id="promo-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
     </div>
 
     <!-- MODO ESTÁTICO CUBA -->
@@ -1018,6 +997,59 @@
 
       <div id="sh-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
     </div>
+  </div>
+
+  <!-- ── TAB: MARKETING ── -->
+  <div id="tab-marketing" class="tab-content">
+
+    <div style="background:var(--surface);border:2px solid #f5c518;border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">📍 ¿Qué se muestra en el espacio de "Selección PREMIUM"?</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Ese lugar arriba del catálogo puede mostrar tus productos destacados de siempre, o el slider de promociones que armes abajo — tú eliges cuál.</div>
+      <select id="marketing-slot-premium" onchange="guardarSlotPremium()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;">
+        <option value="productos">Productos destacados (Selección PREMIUM)</option>
+        <option value="promociones">Promociones (slider de cards)</option>
+      </select>
+      <div id="marketing-slot-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🎉 Promociones (slider de cards)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Se ven en el espacio de arriba solo si elegiste "Promociones" en el menú de arriba.</div>
+
+      <input type="text" id="promo-titulo" placeholder="Título (ej: Hasta 20% DESCUENTO)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <input type="text" id="promo-subtitulo" placeholder="Subtítulo (ej: Especial de Verano)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen de fondo (opcional — si la pones, tapa los colores de abajo)</label>
+      <input type="text" id="promo-imagen" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;">
+
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Colores de fondo (si no pones imagen) — toca el cuadro para elegir</label>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+        <input type="color" id="promo-color1" value="#4fd1e8" oninput="actualizarPreviewPromo()" style="width:50px;height:38px;padding:2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+        <span style="color:var(--text-muted);font-size:0.8rem;">degradado hacia</span>
+        <input type="color" id="promo-color2" value="#1a2e6e" oninput="actualizarPreviewPromo()" style="width:50px;height:38px;padding:2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+        <div id="promo-preview" style="flex:1;height:38px;border-radius:6px;background:linear-gradient(135deg,#4fd1e8,#1a2e6e);"></div>
+      </div>
+
+      <input type="text" id="promo-boton-texto" placeholder="Texto del botón (ej: Envía ahora)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">¿A dónde lleva el botón?</label>
+      <select id="promo-boton-tipo" onchange="cambiarTipoLinkPromo()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:6px;">
+        <option value="#grid-destacado">Sección: Selección PREMIUM</option>
+        <option value="#grid-ropa-moda">Sección: Ropa y Moda</option>
+        <option value="#grid-ropa-interior">Sección: Ropa interior</option>
+        <option value="#grid-accesorios">Sección: Accesorios</option>
+        <option value="#grid-servicios">Sección: Servicios</option>
+        <option value="acceso360.html">Ir a la sección VIP</option>
+        <option value="custom">Otro link (WhatsApp, página externa, etc.)</option>
+      </select>
+      <input type="text" id="promo-boton-link" placeholder="https://wa.me/... o cualquier link" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;display:none;">
+
+      <button onclick="agregarPromoCard()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Agregar promoción</button>
+      <div id="promo-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
+
+      <div id="promo-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
   </div>
 
   <!-- ── TAB: VENTAS ── -->
@@ -1777,14 +1809,14 @@ async function generarIndexEstatico() {
     if (interfazEstatico.ribbon1) setTextInside('ribbon-1-text', interfazEstatico.ribbon1);
     if (interfazEstatico.ribbon2) setTextInside('ribbon-2-text', interfazEstatico.ribbon2);
 
-    // Promociones (slider de cards)
+    // Promociones (slider de cards) — solo si el admin eligió mostrarlas en el espacio premium
     var promoListaEstatico = Object.entries(promoDataEstatico).filter(function(e){ return e[1].activo !== false; })
         .sort(function(a,b){ return new Date(a[1].creado) - new Date(b[1].creado); });
-    if (promoListaEstatico.length) {
+    if (configEstatico.premiumSlot === 'promociones' && promoListaEstatico.length) {
       var promoHtmlEstatico = promoListaEstatico.map(function(e) {
         var p = e[1];
         var bg = p.imagen
-            ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(' + p.imagen + ');background-size:cover;background-position:center;'
+            ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + p.imagen + '\');background-size:cover;background-position:center;'
             : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
         return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
             '<div class="promo-card-titulo">' + p.titulo + '</div>' +
@@ -1802,6 +1834,9 @@ async function generarIndexEstatico() {
         var promoTagEnd = indexHTML.indexOf('>', promoTagStart);
         indexHTML = indexHTML.substring(0, promoTagStart) + indexHTML.substring(promoTagStart, promoTagEnd).replace('display:none', 'display:flex') + indexHTML.substring(promoTagEnd);
       }
+      // Ocultar Selección PREMIUM para que no se vea junto con el slider
+      ocultarPorId('sec-title-destacado');
+      ocultarPorId('grid-destacado');
     }
     if (interfazEstatico.ribbon1active === false) ocultarPorId('ribbon-1');
     if (interfazEstatico.ribbon2active === false) ocultarPorId('ribbon-2');
@@ -2251,6 +2286,7 @@ async function initAdmin() {
   loadConfigTemuShein();
   loadProductosShein();
   loadPromoCards();
+  loadSlotPremium();
   window._cb360Etapa = 'vendedores preload';
   // Vendedores data preload
   db.ref('vendedores').once('value', snap => { vendedoresData = snap.val() || {}; });
@@ -2692,14 +2728,47 @@ function calcularBeneficio() {
   resultado.style.display = 'block';
 }
 
+function guardarSlotPremium() {
+  var valor = document.getElementById('marketing-slot-premium').value;
+  var status = document.getElementById('marketing-slot-status');
+  status.textContent = 'Guardando…'; status.style.color = '';
+  db.ref('config/premiumSlot').set(valor).then(function() {
+    status.textContent = '✅ Guardado';
+    status.style.color = '#7fff7f';
+    setTimeout(function(){ status.textContent = ''; }, 2000);
+  }).catch(function(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    status.style.color = '#ff9999';
+  });
+}
+
+function loadSlotPremium() {
+  db.ref('config/premiumSlot').once('value', function(snap) {
+    document.getElementById('marketing-slot-premium').value = snap.val() || 'productos';
+  });
+}
+
+function cambiarTipoLinkPromo() {
+  var tipo = document.getElementById('promo-boton-tipo').value;
+  var customInput = document.getElementById('promo-boton-link');
+  customInput.style.display = tipo === 'custom' ? 'block' : 'none';
+}
+
+function actualizarPreviewPromo() {
+  var c1 = document.getElementById('promo-color1').value;
+  var c2 = document.getElementById('promo-color2').value;
+  document.getElementById('promo-preview').style.background = 'linear-gradient(135deg,' + c1 + ',' + c2 + ')';
+}
+
 function agregarPromoCard() {
   var titulo = document.getElementById('promo-titulo').value.trim();
   var subtitulo = document.getElementById('promo-subtitulo').value.trim();
   var imagen = document.getElementById('promo-imagen').value.trim();
-  var color1 = document.getElementById('promo-color1').value.trim() || '#4fd1e8';
-  var color2 = document.getElementById('promo-color2').value.trim() || '#1a2e6e';
+  var color1 = document.getElementById('promo-color1').value;
+  var color2 = document.getElementById('promo-color2').value;
   var botonTexto = document.getElementById('promo-boton-texto').value.trim() || 'Ver más';
-  var botonLink = document.getElementById('promo-boton-link').value.trim() || '#';
+  var tipoLink = document.getElementById('promo-boton-tipo').value;
+  var botonLink = tipoLink === 'custom' ? (document.getElementById('promo-boton-link').value.trim() || '#') : tipoLink;
   var status = document.getElementById('promo-status');
   if (!titulo) {
     status.style.color = '#ff9999';
@@ -2714,9 +2783,12 @@ function agregarPromoCard() {
   }).then(function() {
     status.style.color = '#7fff7f';
     status.textContent = '✅ Agregada';
-    ['promo-titulo','promo-subtitulo','promo-imagen','promo-color1','promo-color2','promo-boton-texto','promo-boton-link'].forEach(function(id){
+    ['promo-titulo','promo-subtitulo','promo-imagen','promo-boton-texto'].forEach(function(id){
       document.getElementById(id).value = '';
     });
+    document.getElementById('promo-boton-link').value = '';
+    document.getElementById('promo-boton-tipo').value = '#grid-destacado';
+    document.getElementById('promo-boton-link').style.display = 'none';
     setTimeout(function(){ status.textContent = ''; }, 2000);
     loadPromoCards();
   }).catch(function(e) {
@@ -2734,7 +2806,7 @@ function loadPromoCards() {
     cont.innerHTML = lista.map(function(e) {
       var id = e[0], p = e[1];
       return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">' +
-        '<div style="width:40px;height:40px;border-radius:6px;flex:none;background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');' + (p.imagen ? 'background-image:url(' + p.imagen + ');background-size:cover;background-position:center;' : '') + '"></div>' +
+        '<div style="width:40px;height:40px;border-radius:6px;flex:none;background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');' + (p.imagen ? 'background-image:url(\'' + p.imagen + '\');background-size:cover;background-position:center;' : '') + '"></div>' +
         '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.titulo + '</div>' +
         '<div style="font-size:0.78rem;color:var(--text-muted);">' + (p.subtitulo||'') + (p.activo === false ? ' · desactivada' : '') + '</div></div>' +
         '<button onclick="togglePromoCard(\'' + id + '\',' + (p.activo !== false) + ')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">' + (p.activo !== false ? '👁️' : '🚫') + '</button>' +

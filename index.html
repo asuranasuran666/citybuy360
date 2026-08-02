@@ -2070,24 +2070,40 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     });
 
     function loadPromoSlider() {
-        db.ref('promoCards').once('value', function(snap) {
-            var data = snap.val() || {};
-            var lista = Object.entries(data).filter(function(e){ return e[1].activo !== false; })
-                .sort(function(a,b){ return new Date(a[1].creado) - new Date(b[1].creado); });
+        db.ref('config/premiumSlot').once('value', function(slotSnap) {
+            var slot = slotSnap.val() || 'productos';
+            var tituloDestacado = document.getElementById('sec-title-destacado');
+            var gridDestacado = document.getElementById('grid-destacado');
             var cont = document.getElementById('promo-slider');
-            if (!lista.length) { cont.style.display = 'none'; return; }
-            cont.style.display = 'flex';
-            cont.innerHTML = lista.map(function(e) {
-                var p = e[1];
-                var bg = p.imagen
-                    ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(' + p.imagen + ');background-size:cover;background-position:center;'
-                    : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
-                return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
-                    '<div class="promo-card-titulo">' + p.titulo + '</div>' +
-                    (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
-                    '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
-                    '</a>';
-            }).join('');
+
+            if (slot !== 'promociones') {
+                cont.style.display = 'none';
+                // La visibilidad normal de "Selección PREMIUM" la maneja el resto del código como siempre
+                return;
+            }
+
+            db.ref('promoCards').once('value', function(snap) {
+                var data = snap.val() || {};
+                var lista = Object.entries(data).filter(function(e){ return e[1].activo !== false; })
+                    .sort(function(a,b){ return new Date(a[1].creado) - new Date(b[1].creado); });
+                if (!lista.length) { cont.style.display = 'none'; return; }
+
+                // Ocultar Selección PREMIUM y mostrar el slider en su lugar
+                if (tituloDestacado) tituloDestacado.style.display = 'none';
+                if (gridDestacado) gridDestacado.style.display = 'none';
+                cont.style.display = 'flex';
+                cont.innerHTML = lista.map(function(e) {
+                    var p = e[1];
+                    var bg = p.imagen
+                        ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + p.imagen + '\');background-size:cover;background-position:center;'
+                        : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
+                    return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
+                        '<div class="promo-card-titulo">' + p.titulo + '</div>' +
+                        (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
+                        '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
+                        '</a>';
+                }).join('');
+            });
         });
     }
 

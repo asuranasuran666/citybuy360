@@ -271,11 +271,11 @@ db.ref('config/temuShein').once('value', function(snap) {
   document.getElementById('ts-moneda-lbl').textContent = m;
   document.getElementById('ts-unidad-lbl').textContent = u;
   if (tsConfig.imagenTemu) {
-    document.getElementById('ts-card-temu').style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.35)), url(' + tsConfig.imagenTemu + ')';
+    document.getElementById('ts-card-temu').style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.35)), url(\'' + tsConfig.imagenTemu + '\')';
     document.getElementById('ts-card-temu-icono').style.display = 'none';
   }
   if (tsConfig.imagenShein) {
-    document.getElementById('ts-card-shein').style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.35)), url(' + tsConfig.imagenShein + ')';
+    document.getElementById('ts-card-shein').style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.35)), url(\'' + tsConfig.imagenShein + '\')';
     document.getElementById('ts-card-shein-icono').style.display = 'none';
   }
 });
