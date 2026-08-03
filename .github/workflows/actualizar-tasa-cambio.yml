@@ -1,0 +1,19 @@
+name: Actualizar tasa de cambio (elToque)
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  actualizar-tasa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Consultar elToque y actualizar Firebase
+        env:
+          ELTOQUE_TOKEN: ${{ secrets.ELTOQUE_TOKEN }}
+          FIREBASE_URL: https://citybuy360-default-rtdb.firebaseio.com
+        run: python3 scripts/actualizar_tasa.py
