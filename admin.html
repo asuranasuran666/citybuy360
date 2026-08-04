@@ -959,9 +959,19 @@
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
       <div style="font-weight:700;color:var(--text);margin-bottom:12px;">🖼️ Imagen de las cards "Comprar en Temu/Shein" (VIP)</div>
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen card Temu (URL)</label>
-      <input type="text" id="ts-imagen-temu" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <input type="text" id="ts-imagen-temu" placeholder="https://..." style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="file" id="ts-imagen-temu-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'ts-imagen-temu','temu')">
+        <button type="button" onclick="document.getElementById('ts-imagen-temu-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;">📤 Subir</button>
+      </div>
+      <div id="ts-imagen-temu-status" style="font-size:0.75rem;margin:-6px 0 8px;"></div>
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen card Shein (URL)</label>
-      <input type="text" id="ts-imagen-shein" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="ts-imagen-shein" placeholder="https://..." style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="file" id="ts-imagen-shein-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'ts-imagen-shein','shein')">
+        <button type="button" onclick="document.getElementById('ts-imagen-shein-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;">📤 Subir</button>
+      </div>
+      <div id="ts-imagen-shein-status" style="font-size:0.75rem;margin-top:4px;"></div>
     </div>
 
     <div style="padding:0 16px;">
@@ -1020,7 +1030,12 @@
       <input type="text" id="promo-subtitulo" placeholder="Subtítulo (ej: Especial de Verano)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
 
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen de fondo (opcional — si la pones, tapa los colores de abajo)</label>
-      <input type="text" id="promo-imagen" placeholder="https://..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;">
+      <div style="display:flex;gap:6px;margin-bottom:4px;">
+        <input type="text" id="promo-imagen" placeholder="https://..." style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="file" id="promo-imagen-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'promo-imagen','promos')">
+        <button type="button" onclick="document.getElementById('promo-imagen-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;">📤 Subir</button>
+      </div>
+      <div id="promo-imagen-status" style="font-size:0.75rem;margin-bottom:10px;"></div>
 
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Colores de fondo (si no pones imagen) — toca el cuadro para elegir</label>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
@@ -1382,6 +1397,34 @@ async function ghPut(path, content64, message, sha) {
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.message || res.status); }
   return res.json();
+}
+
+// Sube una sola imagen (Temu/Shein/promociones) a images/{carpeta}/ y llena el campo con la URL raw
+async function subirImagenSimple(fileInput, targetFieldId, carpeta) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById(targetFieldId + '-status');
+  const token = localStorage.getItem('gh_token');
+  if (!token) {
+    if (statusEl) { statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Falta el token de GitHub (pestaña Publicar)'; }
+    fileInput.value = '';
+    return;
+  }
+  if (statusEl) { statusEl.style.color = '#4fd1e8'; statusEl.textContent = 'Subiendo…'; }
+  try {
+    const result = await compressImage(file, 1000, 0.85);
+    const base64 = result.dataUrl.split(',')[1];
+    const nombre = carpeta + '-' + Date.now().toString(36) + '.jpg';
+    const path = 'images/' + carpeta + '/' + nombre;
+    await ghPut(path, base64, 'Chore: subir imagen ' + carpeta + ' desde admin');
+    const rawUrl = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + path;
+    document.getElementById(targetFieldId).value = rawUrl;
+    if (statusEl) { statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Subida'; }
+  } catch (e) {
+    if (statusEl) { statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Error: ' + e.message; }
+  } finally {
+    fileInput.value = '';
+  }
 }
 
 // ── PRECIOS ───────────────────────────────────────────────────────────────────
