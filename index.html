@@ -2127,11 +2127,11 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     var bg = p.imagen
                         ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + p.imagen + '\');background-size:cover;background-position:center;'
                         : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
-                    return '<div class="promo-card" style="' + bg + '">' +
+                    return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
                         '<div class="promo-card-titulo">' + p.titulo + '</div>' +
                         (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
-                        '<a href="' + (p.botonLink||'#') + '" class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</a>' +
-                        '</div>';
+                        '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
+                        '</a>';
                 }).join('');
 
                 // Autoavance cada 4s, igual que el resto de los sliders de la tienda
