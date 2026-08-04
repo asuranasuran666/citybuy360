@@ -426,9 +426,13 @@
         #promo-slider::-webkit-scrollbar { display: none; }
         .promo-card {
             display: inline-flex; flex-direction: column; justify-content: flex-end;
-            width: 240px; height: 130px; flex: none; border-radius: 14px;
+            width: 240px; height: 240px; flex: none; border-radius: 14px;
             padding: 14px; margin-right: 10px; white-space: normal;
             text-decoration: none; scroll-snap-align: start; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        @media (max-width: 700px) {
+            .promo-card { width: calc(50vw - 21px); height: calc(50vw - 21px); }
         }
         .promo-card-titulo { color: #fff; font-weight: 800; font-size: 1rem; line-height: 1.2; text-shadow: 0 1px 4px rgba(0,0,0,0.5); margin-bottom: 2px; }
         .promo-card-subtitulo { color: rgba(255,255,255,0.9); font-size: 0.75rem; margin-bottom: 8px; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
@@ -1089,6 +1093,12 @@
         <div id="pdp-footer">
             <div id="pdp-price"></div>
             <a id="pdp-lo-quiero" class="btn-lo-quiero" href="javascript:void(0)">🛒 Lo quiero</a>
+            <div id="pdp-lock-msg" style="display:none;font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:6px;">Los clientes Acceso 360 ya pueden reservarlo</div>
+            <div id="pdp-opciones-negocio" style="display:none;flex-direction:column;gap:8px;">
+                <a class="btn-lo-quiero" data-reserva="true" style="display:block;text-align:center;" href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20publicar%20mis%20productos%20con%20mi%20marca%20en%20CityBUY360">🏷️ Publicar mis productos con mi marca</a>
+                <a class="btn-lo-quiero" data-reserva="true" style="display:block;text-align:center;" href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20hacer%20un%20pedido%20grande%20para%20revender">📦 Pedido grande para revender</a>
+                <a class="btn-lo-quiero" data-reserva="true" style="display:block;text-align:center;" href="https://wa.me/+34611897656?text=Hola%2C%20me%20interesa%20una%20promoci%C3%B3n%20compartida">🤝 Promoción compartida</a>
+            </div>
         </div>
     </div>
 </div>
@@ -1799,9 +1809,31 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         }
 
         var variantesAttr = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
-        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" id="card-' + p.id + '">' +
+
+        // Producto en "próxima venta": visible pero bloqueado, reservable solo con Acceso 360
+        var esProximaVenta = p.activo === false && p.proximaVenta === true;
+        var tieneAcceso360 = sessionStorage.getItem('acceso360') === 'true';
+        var botonHTML;
+        if (esProximaVenta) {
+            badgeInline = '<div class="stock-badge-inline nuevo">🔒 Próxima venta</div>';
+            if (tieneAcceso360) {
+                var waTextReserva = encodeURIComponent('Hola, quiero reservar (Acceso 360): ' + p.nombre + (p.precio ? ' (' + p.precio + ')' : ''));
+                var waLinkReserva = 'https://wa.me/5353255813?text=' + waTextReserva;
+                botonHTML = '<a href="' + waLinkReserva + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">✦ 🔒 Reservar ahora</a>';
+            } else {
+                botonHTML = '<button class="btn-lo-quiero" disabled style="opacity:0.6;cursor:not-allowed;">🔔 Próxima venta</button>' +
+                    '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:4px;">Los clientes Acceso 360 ya pueden reservarlo</div>';
+            }
+        } else {
+            botonHTML = (stock === 0 && inventarioData[p.id] !== undefined
+                ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
+                : tieneVariantesConPrecio
+                    ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
+                    : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>');
+        }
+        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
-                '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'">' +
+                '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'"' + (esProximaVenta ? ' style="filter:grayscale(60%) brightness(0.7);"' : '') + '>' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
                 badgeInline +
             '</div>' +
@@ -1819,11 +1851,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                         + '</div><span class="stars-info">Sin votos</span></div>'
                     : '') +
                 '<div class="card-vendedor">' + (p.vendedor || '') + '</div>' +
-                (stock === 0 && inventarioData[p.id] !== undefined
-                    ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
-                    : tieneVariantesConPrecio
-                        ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
-                        : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>') +
+                botonHTML +
             '</div>' +
         '</div>';
     }
@@ -1843,7 +1871,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var destacados = [];
 
         Object.values(productos).forEach(function(p) {
-            if (p.activo === false) return;
+            if (p.activo === false && !p.proximaVenta) return;
             if (p.destacado) destacados.push(p);
             if (!porSeccion[p.seccion]) porSeccion[p.seccion] = [];
             porSeccion[p.seccion].push(p);
@@ -2099,12 +2127,26 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     var bg = p.imagen
                         ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + p.imagen + '\');background-size:cover;background-position:center;'
                         : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
-                    return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
+                    return '<div class="promo-card" style="' + bg + '">' +
                         '<div class="promo-card-titulo">' + p.titulo + '</div>' +
                         (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
-                        '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
-                        '</a>';
+                        '<a href="' + (p.botonLink||'#') + '" class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</a>' +
+                        '</div>';
                 }).join('');
+
+                // Autoavance cada 4s, igual que el resto de los sliders de la tienda
+                if (window._promoAutoTimer) clearInterval(window._promoAutoTimer);
+                var promoCardsEls = cont.querySelectorAll('.promo-card');
+                if (promoCardsEls.length > 1) {
+                    var promoIdx = 0;
+                    function promoAvanzar() {
+                        promoIdx = (promoIdx + 1) % promoCardsEls.length;
+                        cont.scrollTo({ left: promoCardsEls[promoIdx].offsetLeft - 12, behavior: 'smooth' });
+                    }
+                    window._promoAutoTimer = setInterval(promoAvanzar, 4000);
+                    cont.addEventListener('touchstart', function() { clearInterval(window._promoAutoTimer); }, { passive: true });
+                    cont.addEventListener('touchend', function() { window._promoAutoTimer = setInterval(promoAvanzar, 4000); }, { passive: true });
+                }
             });
         });
     }
@@ -2523,6 +2565,47 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpBasePrice = price;
         pdpCurrentId = card.getAttribute('data-product') || title;
 
+        var pdpNegocio = document.getElementById('pdp-opciones-negocio');
+        var esCardNegocio = pdpCurrentId === 'citybuy360familia';
+        pdpNegocio.style.display = esCardNegocio ? 'flex' : 'none';
+        pdpPrice.style.display = esCardNegocio ? 'none' : '';
+        pdpLoQuiero.style.display = esCardNegocio ? 'none' : '';
+
+        // Próxima venta: bloquear el botón de compra del panel, o convertirlo en reserva si hay Acceso 360
+        var esProximaVentaPdp = card.getAttribute('data-proxima-venta') === 'true';
+        var pdpLockMsg = document.getElementById('pdp-lock-msg');
+        if (esCardNegocio) {
+            if (pdpLockMsg) pdpLockMsg.style.display = 'none';
+        } else if (esProximaVentaPdp) {
+            var tieneAcceso360Pdp = sessionStorage.getItem('acceso360') === 'true';
+            if (tieneAcceso360Pdp) {
+                var waTextPdp = encodeURIComponent('Hola, quiero reservar (Acceso 360): ' + title + (price ? ' (' + price + ')' : ''));
+                pdpLoQuiero.href = 'https://wa.me/5353255813?text=' + waTextPdp;
+                pdpLoQuiero.setAttribute('data-reserva', 'true');
+                pdpLoQuiero.textContent = '✦ 🔒 Reservar ahora';
+                pdpLoQuiero.removeAttribute('disabled');
+                pdpLoQuiero.style.opacity = '';
+                pdpLoQuiero.style.cursor = '';
+                if (pdpLockMsg) pdpLockMsg.style.display = 'none';
+            } else {
+                pdpLoQuiero.href = 'javascript:void(0)';
+                pdpLoQuiero.removeAttribute('data-reserva');
+                pdpLoQuiero.textContent = '🔔 Próxima venta';
+                pdpLoQuiero.setAttribute('disabled', 'true');
+                pdpLoQuiero.style.opacity = '0.6';
+                pdpLoQuiero.style.cursor = 'not-allowed';
+                if (pdpLockMsg) pdpLockMsg.style.display = 'block';
+            }
+        } else {
+            pdpLoQuiero.href = 'javascript:void(0)';
+            pdpLoQuiero.removeAttribute('data-reserva');
+            pdpLoQuiero.textContent = '🛒 Lo quiero';
+            pdpLoQuiero.removeAttribute('disabled');
+            pdpLoQuiero.style.opacity = '';
+            pdpLoQuiero.style.cursor = '';
+            if (pdpLockMsg) pdpLockMsg.style.display = 'none';
+        }
+
         pdpTitle.textContent = title;
         pdpDesc.innerHTML = desc;
         pdpPrice.innerHTML = price + (conversion ? '<div class="pdp-price-conv">' + conversion + '</div>' : '');
@@ -2668,7 +2751,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     // Intercepta clics en "Lo quiero" (tanto en la card del grid como en el panel de detalle)
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.btn-lo-quiero');
-        if (!btn || btn.disabled) return;
+        if (!btn || btn.disabled || btn.hasAttribute('disabled')) return;
+        if (btn.hasAttribute('data-reserva')) return; // deja navegar al link de WhatsApp normalmente
         e.preventDefault();
         if (btn.id === 'pdp-lo-quiero') {
             if (pdpVariantes.length && !pdpSelVariantePrecio) {
