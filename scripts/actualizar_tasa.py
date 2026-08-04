@@ -9,8 +9,10 @@ Variables de entorno esperadas:
 """
 import json
 import os
+import re
 import sys
 import urllib.request
+from datetime import datetime, timezone
 
 
 def obtener_tasa_eltoque(token):
@@ -41,6 +43,40 @@ def buscar_usd(d):
         if "data" in d:
             return buscar_usd(d["data"])
     return None
+
+
+def leer_ticker(firebase_url):
+    req = urllib.request.Request(firebase_url + "/interfaz/ticker.json")
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def actualizar_fecha_ticker(firebase_url):
+    """Reemplaza (o agrega) la fecha DD.MM.AAAA al inicio del texto de la marquesina,
+    sin tocar el resto del texto (que sigue siendo manual)."""
+    actual = leer_ticker(firebase_url)
+    if not isinstance(actual, str) or not actual.strip():
+        print("La marquesina no tiene texto propio (está apagada o vacía) — no se toca.")
+        return
+
+    hoy = datetime.now(timezone.utc).strftime("%d.%m.%Y")
+    patron_fecha = r"^\d{2}\.\d{2}\.\d{4}\s*"
+    if re.match(patron_fecha, actual):
+        nuevo = re.sub(patron_fecha, hoy + " ", actual, count=1)
+    else:
+        nuevo = hoy + " " + actual
+
+    if nuevo == actual:
+        print("La fecha de la marquesina ya estaba actualizada:", hoy)
+        return
+
+    body = json.dumps({"ticker": nuevo}).encode("utf-8")
+    req = urllib.request.Request(
+        firebase_url + "/interfaz.json", data=body, method="PATCH",
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        print("Marquesina actualizada:", resp.read().decode("utf-8"))
 
 
 def actualizar_firebase(firebase_url, tasa_usd):
@@ -74,6 +110,11 @@ def main():
     print("Tasa USD detectada:", tasa_usd)
     actualizar_firebase(firebase_url, tasa_usd)
     print("✅ Listo. Tasa actualizada a", tasa_usd, "MN por USD.")
+
+    try:
+        actualizar_fecha_ticker(firebase_url)
+    except Exception as e:
+        print("⚠️ No se pudo actualizar la fecha de la marquesina:", e)
 
 
 if __name__ == "__main__":
