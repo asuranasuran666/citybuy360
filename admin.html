@@ -1032,11 +1032,11 @@
       <input type="text" id="promo-titulo" placeholder="Título (ej: Hasta 20% DESCUENTO)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
       <input type="text" id="promo-subtitulo" placeholder="Subtítulo (ej: Especial de Verano)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
 
-      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen de fondo (opcional — si la pones, tapa los colores de abajo)</label>
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen de fondo (opcional — puedes subir varias, rotan solas cada 3s; si las pones, tapan los colores de abajo)</label>
       <div style="display:flex;gap:6px;margin-bottom:4px;">
-        <input type="text" id="promo-imagen" placeholder="https://..." style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
-        <input type="file" id="promo-imagen-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'promo-imagen','promos')">
-        <button type="button" onclick="document.getElementById('promo-imagen-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;">📤 Subir</button>
+        <input type="text" id="promo-imagen" placeholder="https://... (separa varias con coma)" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="file" id="promo-imagen-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'promo-imagen','promos',true)">
+        <button type="button" onclick="document.getElementById('promo-imagen-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;">📤 Agregar foto</button>
       </div>
       <div id="promo-imagen-status" style="font-size:0.75rem;margin-bottom:10px;"></div>
 
@@ -1403,7 +1403,8 @@ async function ghPut(path, content64, message, sha) {
 }
 
 // Sube una sola imagen (Temu/Shein/promociones) a images/{carpeta}/ y llena el campo con la URL raw
-async function subirImagenSimple(fileInput, targetFieldId, carpeta) {
+// Si "agregar" es true, la nueva URL se suma a las existentes separadas por coma (para galerías, ej. promociones)
+async function subirImagenSimple(fileInput, targetFieldId, carpeta, agregar) {
   const file = fileInput.files[0];
   if (!file) return;
   const statusEl = document.getElementById(targetFieldId + '-status');
@@ -1421,7 +1422,12 @@ async function subirImagenSimple(fileInput, targetFieldId, carpeta) {
     const path = 'images/' + carpeta + '/' + nombre;
     await ghPut(path, base64, 'Chore: subir imagen ' + carpeta + ' desde admin');
     const rawUrl = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + path;
-    document.getElementById(targetFieldId).value = rawUrl;
+    const campo = document.getElementById(targetFieldId);
+    if (agregar && campo.value.trim()) {
+      campo.value = campo.value.trim().replace(/,\s*$/, '') + ',' + rawUrl;
+    } else {
+      campo.value = rawUrl;
+    }
     if (statusEl) { statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Subida'; }
   } catch (e) {
     if (statusEl) { statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Error: ' + e.message; }

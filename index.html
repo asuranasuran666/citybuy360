@@ -2099,6 +2099,18 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         if (snap.val() === false) hidePageLoader();
     });
 
+    function initPromoImageRotation(cont) {
+        cont.querySelectorAll('.promo-card').forEach(function(card) {
+            var imgs = (card.getAttribute('data-images') || '').split(',').filter(Boolean);
+            if (imgs.length <= 1) return;
+            var i = 0;
+            setInterval(function() {
+                i = (i + 1) % imgs.length;
+                card.style.backgroundImage = 'linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + imgs[i] + '\')';
+            }, 3000);
+        });
+    }
+
     function loadPromoSlider() {
         db.ref('config/premiumSlot').once('value', function(slotSnap) {
             var slot = slotSnap.val() || 'productos';
@@ -2123,16 +2135,21 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 if (gridDestacado) gridDestacado.style.display = 'none';
                 cont.style.display = 'flex';
                 cont.innerHTML = lista.map(function(e) {
+                    var id = e[0];
                     var p = e[1];
-                    var bg = p.imagen
-                        ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + p.imagen + '\');background-size:cover;background-position:center;'
+                    window._promoData = window._promoData || {};
+                    window._promoData[id] = p;
+                    var imgsList = (p.imagen || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+                    var bg = imgsList.length
+                        ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + imgsList[0] + '\');background-size:cover;background-position:center;'
                         : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
-                    return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
+                    return '<div class="promo-card" data-promo-id="' + id + '" data-images="' + imgsList.join(',') + '" style="' + bg + '" onclick="abrirPromoDetalle(\'' + id + '\')">' +
                         '<div class="promo-card-titulo">' + p.titulo + '</div>' +
                         (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
-                        '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
-                        '</a>';
+                        '</div>';
                 }).join('');
+
+                initPromoImageRotation(cont);
 
                 // Autoavance cada 4s, igual que el resto de los sliders de la tienda
                 if (window._promoAutoTimer) clearInterval(window._promoAutoTimer);
@@ -2564,6 +2581,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpBaseName = title;
         pdpBasePrice = price;
         pdpCurrentId = card.getAttribute('data-product') || title;
+        document.getElementById('pdp-meta').style.display = '';
 
         var pdpNegocio = document.getElementById('pdp-opciones-negocio');
         var esCardNegocio = pdpCurrentId === 'citybuy360familia';
@@ -2646,6 +2664,50 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         }
 
         // Galería
+        pdpDots.innerHTML = '';
+        pdpImgs.forEach(function(_, i) {
+            var d = document.createElement('span');
+            if (i === 0) d.classList.add('active');
+            pdpDots.appendChild(d);
+        });
+        var hasMultiple = pdpImgs.length > 1;
+        pdpPrev.style.display = hasMultiple ? '' : 'none';
+        pdpNext.style.display = hasMultiple ? '' : 'none';
+        pdpDots.style.display = hasMultiple ? '' : 'none';
+        pdpShowImg(0);
+
+        pdpOverlay.classList.add('active');
+        pdpModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function abrirPromoDetalle(id) {
+        var p = (window._promoData || {})[id];
+        if (!p) return;
+        pdpImgs = (p.imagen || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        if (!pdpImgs.length) pdpImgs = [''];
+        pdpIdx = 0;
+        pdpCurrentId = 'promo-' + id;
+
+        document.getElementById('pdp-opciones-negocio').style.display = 'none';
+        document.getElementById('pdp-lock-msg').style.display = 'none';
+        document.getElementById('pdp-meta').style.display = 'none';
+        pdpTallasWrap.classList.remove('show');
+        pdpColoresWrap.classList.remove('show');
+        pdpPrice.style.display = 'none';
+        pdpPrice.innerHTML = '';
+
+        pdpTitle.textContent = p.titulo || '';
+        pdpDesc.innerHTML = p.subtitulo || '';
+
+        pdpLoQuiero.style.display = '';
+        pdpLoQuiero.href = p.botonLink || '#';
+        pdpLoQuiero.textContent = p.botonTexto || 'Ver más';
+        pdpLoQuiero.setAttribute('data-reserva', 'true');
+        pdpLoQuiero.removeAttribute('disabled');
+        pdpLoQuiero.style.opacity = '';
+        pdpLoQuiero.style.cursor = '';
+
         pdpDots.innerHTML = '';
         pdpImgs.forEach(function(_, i) {
             var d = document.createElement('span');
