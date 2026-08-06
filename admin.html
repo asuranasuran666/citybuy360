@@ -1031,6 +1031,7 @@
 
       <input type="text" id="promo-titulo" placeholder="Título (ej: Hasta 20% DESCUENTO)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
       <input type="text" id="promo-subtitulo" placeholder="Subtítulo (ej: Especial de Verano)" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <textarea id="promo-descripcion" placeholder="Texto de la promoción (lo que se lee al abrir la card, ej: detalles de la oferta, qué incluye, condiciones...)" rows="4" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;resize:vertical;"></textarea>
 
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen de fondo (opcional — puedes subir varias, rotan solas cada 3s; si las pones, tapan los colores de abajo)</label>
       <div style="display:flex;gap:6px;margin-bottom:4px;">
@@ -1468,7 +1469,7 @@ async function generarIndexEstatico() {
     // 1. Leer productos de Firebase
     var snap = await new Promise(function(res) { db.ref('catalogo').once('value', res); });
     var catalogo = snap.val() || {};
-    var productos = Object.values(catalogo).filter(function(p){ return p.activo !== false; });
+    var productos = Object.values(catalogo).filter(function(p){ return p.activo !== false || p.proximaVenta === true; });
 
     // 1b. Leer tasa de cambio para el doble precio (USD + MN)
     var tasaSnap = await new Promise(function(res) { db.ref('config/tasasConversion').once('value', res); });
@@ -1607,10 +1608,23 @@ async function generarIndexEstatico() {
         badgeInline = '<div class="stock-badge-inline ' + et.cls + '">' + et.icon + ' ' + et.text + '</div>';
       }
 
+      // Producto en "próxima venta": card visible pero bloqueada por defecto. El botón de la CARA
+      // siempre sale bloqueado en el HTML horneado (no sabemos quién visita hasta que carga en su
+      // navegador); pero el panel de detalle (mismo JS de siempre, funciona 100% offline) sí revisa
+      // en el momento si el visitante tiene Acceso 360 y ahí le cambia a "Reservar ahora".
+      var esProximaVentaEstatico = p.activo === false && p.proximaVenta === true;
+      var botonEstaticoHTML = esProximaVentaEstatico
+        ? '<button class="btn-lo-quiero" disabled style="opacity:0.6;cursor:not-allowed;">🔔 Próxima venta</button>' +
+          '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:4px;">Los clientes Acceso 360 ya pueden reservarlo</div>'
+        : (tieneVariantesConPrecio
+            ? '<button class="btn-lo-quiero" onclick="openProductDetail(this.closest(\'.card\'))">🛒 Elegir opción</button>'
+            : '<a href="'+waLink+'" class="btn-lo-quiero">🛒 Lo quiero</a>');
+      if (esProximaVentaEstatico) badgeInline = '<div class="stock-badge-inline nuevo">🔒 Próxima venta</div>';
+
       var variantesAttrEstatico = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
-      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'">'+
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'" data-proxima-venta="'+(esProximaVentaEstatico?'true':'false')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
-        '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'">'+
+        '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'"'+(esProximaVentaEstatico?' style="filter:grayscale(60%) brightness(0.7);"':'')+'>'+
         badgeInline+
         tooltipHTML+
         '</div>'+
@@ -1620,9 +1634,7 @@ async function generarIndexEstatico() {
         descLargaHTML+
         precioHTML+
         vendedorHTML+
-        (tieneVariantesConPrecio
-            ? '<button class="btn-lo-quiero" onclick="openProductDetail(this.closest(\'.card\'))">🛒 Elegir opción</button>'
-            : '<a href="'+waLink+'" class="btn-lo-quiero">🛒 Lo quiero</a>')+
+        botonEstaticoHTML+
         '</div></div>';
     }
 
@@ -1869,16 +1881,19 @@ async function generarIndexEstatico() {
     var promoListaEstatico = Object.entries(promoDataEstatico).filter(function(e){ return e[1].activo !== false; })
         .sort(function(a,b){ return new Date(a[1].creado) - new Date(b[1].creado); });
     if (configEstatico.premiumSlot === 'promociones' && promoListaEstatico.length) {
+      var promoDataJsonEstatico = {};
       var promoHtmlEstatico = promoListaEstatico.map(function(e) {
+        var id = e[0];
         var p = e[1];
-        var bg = p.imagen
-            ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + p.imagen + '\');background-size:cover;background-position:center;'
+        promoDataJsonEstatico[id] = p;
+        var imgsListEstatico = (p.imagen || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        var bg = imgsListEstatico.length
+            ? 'background-image:linear-gradient(90deg,rgba(0,0,0,0.15),rgba(0,0,0,0)),url(\'' + imgsListEstatico[0] + '\');background-size:cover;background-position:center;'
             : 'background:linear-gradient(135deg,' + (p.color1||'#4fd1e8') + ',' + (p.color2||'#1a2e6e') + ');';
-        return '<a href="' + (p.botonLink||'#') + '" class="promo-card" style="' + bg + '">' +
+        return '<div class="promo-card" data-promo-id="' + id + '" data-images="' + imgsListEstatico.join(',') + '" style="' + bg + '" onclick="abrirPromoDetalle(\'' + id + '\')">' +
             '<div class="promo-card-titulo">' + p.titulo + '</div>' +
             (p.subtitulo ? '<div class="promo-card-subtitulo">' + p.subtitulo + '</div>' : '') +
-            '<span class="promo-card-btn">' + (p.botonTexto||'Ver más') + '</span>' +
-            '</a>';
+            '</div>';
       }).join('');
       var promoIdx = indexHTML.indexOf('id="promo-slider"');
       if (promoIdx !== -1) {
@@ -1890,6 +1905,11 @@ async function generarIndexEstatico() {
         var promoTagEnd = indexHTML.indexOf('>', promoTagStart);
         indexHTML = indexHTML.substring(0, promoTagStart) + indexHTML.substring(promoTagStart, promoTagEnd).replace('display:none', 'display:flex') + indexHTML.substring(promoTagEnd);
       }
+      // Hornear los datos de las promociones y activar la rotación de fotos + detalle,
+      // para que funcionen sin conexión (sin esto, abrir una promo o ver varias fotos requeriría Firebase)
+      var promoScriptEstatico = '<script>window._promoData = ' + JSON.stringify(promoDataJsonEstatico) +
+        ';document.addEventListener("DOMContentLoaded",function(){var c=document.getElementById("promo-slider");if(c&&typeof initPromoImageRotation==="function")initPromoImageRotation(c);});</' + 'script>';
+      indexHTML = indexHTML.replace('</body>', promoScriptEstatico + '\n</body>');
       // Ocultar Selección PREMIUM para que no se vea junto con el slider
       ocultarPorId('sec-title-destacado');
       ocultarPorId('grid-destacado');
@@ -2819,6 +2839,7 @@ function actualizarPreviewPromo() {
 function agregarPromoCard() {
   var titulo = document.getElementById('promo-titulo').value.trim();
   var subtitulo = document.getElementById('promo-subtitulo').value.trim();
+  var descripcion = document.getElementById('promo-descripcion').value.trim();
   var imagen = document.getElementById('promo-imagen').value.trim();
   var color1 = document.getElementById('promo-color1').value;
   var color2 = document.getElementById('promo-color2').value;
@@ -2835,7 +2856,7 @@ function agregarPromoCard() {
   status.style.color = '';
   status.textContent = 'Guardando…';
   var datos = {
-    titulo: titulo, subtitulo: subtitulo, imagen: imagen, color1: color1, color2: color2,
+    titulo: titulo, subtitulo: subtitulo, descripcion: descripcion, imagen: imagen, color1: color1, color2: color2,
     botonTexto: botonTexto, botonLink: botonLink
   };
   var promesa = editId
@@ -2844,7 +2865,7 @@ function agregarPromoCard() {
   promesa.then(function() {
     status.style.color = '#7fff7f';
     status.textContent = editId ? '✅ Actualizada' : '✅ Agregada';
-    ['promo-titulo','promo-subtitulo','promo-imagen','promo-boton-texto'].forEach(function(id){
+    ['promo-titulo','promo-subtitulo','promo-descripcion','promo-imagen','promo-boton-texto'].forEach(function(id){
       document.getElementById(id).value = '';
     });
     document.getElementById('promo-boton-link').value = '';
@@ -2869,6 +2890,7 @@ function editarPromoCard(id) {
     document.getElementById('promo-edit-id').value = id;
     document.getElementById('promo-titulo').value = p.titulo || '';
     document.getElementById('promo-subtitulo').value = p.subtitulo || '';
+    document.getElementById('promo-descripcion').value = p.descripcion || '';
     document.getElementById('promo-imagen').value = p.imagen || '';
     document.getElementById('promo-color1').value = p.color1 || '#4fd1e8';
     document.getElementById('promo-color2').value = p.color2 || '#1a2e6e';
