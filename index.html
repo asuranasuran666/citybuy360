@@ -1093,6 +1093,7 @@
         <div id="pdp-footer">
             <div id="pdp-price"></div>
             <a id="pdp-lo-quiero" class="btn-lo-quiero" href="javascript:void(0)">🛒 Lo quiero</a>
+            <button id="pdp-tryon-btn" class="btn-lo-quiero" style="background:linear-gradient(135deg,#7c3aed,#c026d3);margin-top:8px;display:none;" onclick="abrirProbadorVirtual()">✨ Pruébatelo con IA</button>
             <div id="pdp-lock-msg" style="display:none;font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:6px;">Los clientes Acceso 360 ya pueden reservarlo</div>
             <div id="pdp-opciones-negocio" style="display:none;flex-direction:column;gap:8px;">
                 <a class="btn-lo-quiero" data-reserva="true" style="display:block;text-align:center;" href="https://wa.me/+34611897656?text=Hola%2C%20quiero%20publicar%20mis%20productos%20con%20mi%20marca%20en%20CityBUY360">🏷️ Publicamos tus productos con tu marca</a>
@@ -1101,6 +1102,36 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- PROBADOR VIRTUAL CON IA -->
+<div id="tryon-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;"></div>
+<div id="tryon-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:401;background:#111;border:1px solid #333;border-radius:16px;width:min(420px,92vw);max-height:88vh;overflow-y:auto;padding:20px;box-sizing:border-box;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="color:#fff;font-weight:800;font-size:1rem;">✨ Pruébatelo con IA</div>
+        <button onclick="cerrarProbadorVirtual()" style="background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="color:#999;font-size:0.78rem;margin-bottom:14px;">Sube una foto tuya de cuerpo/medio cuerpo y te mostramos cómo te queda esta prenda. Puedes usarlo 1 vez cada 24 horas.</div>
+
+    <div id="tryon-paso-subir">
+        <input type="file" id="tryon-file-input" accept="image/*" style="display:none;" onchange="tryonFotoSeleccionada(this)">
+        <div id="tryon-preview-box" onclick="document.getElementById('tryon-file-input').click()" style="border:2px dashed #444;border-radius:12px;padding:24px 10px;text-align:center;cursor:pointer;color:#888;font-size:0.85rem;">
+            📷 Toca para subir tu foto
+        </div>
+        <button id="tryon-generar-btn" onclick="generarProbadorVirtual()" disabled style="width:100%;margin-top:14px;background:linear-gradient(135deg,#7c3aed,#c026d3);border:none;color:#fff;font-weight:800;border-radius:8px;padding:12px;cursor:pointer;opacity:0.5;">Generar</button>
+    </div>
+
+    <div id="tryon-cargando" style="display:none;text-align:center;padding:30px 0;color:#ccc;font-size:0.9rem;">
+        ⏳ Generando tu imagen, espera un momento…
+    </div>
+
+    <div id="tryon-resultado" style="display:none;text-align:center;">
+        <img id="tryon-resultado-img" style="width:100%;border-radius:12px;margin-bottom:12px;">
+        <button onclick="reiniciarProbadorVirtual()" style="width:100%;background:#222;border:1px solid #444;color:#fff;border-radius:8px;padding:10px;cursor:pointer;font-size:0.85rem;">Probar otra foto</button>
+    </div>
+
+    <div id="tryon-error" style="display:none;color:#ff9999;font-size:0.82rem;text-align:center;margin-top:10px;"></div>
+    <div id="tryon-bloqueado" style="display:none;color:#f5c518;font-size:0.85rem;text-align:center;padding:20px 0;"></div>
 </div>
 
 <!-- CARRITO -->
@@ -2593,6 +2624,10 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         // Próxima venta: bloquear el botón de compra del panel, o convertirlo en reserva si hay Acceso 360
         var esProximaVentaPdp = card.getAttribute('data-proxima-venta') === 'true';
         var pdpLockMsg = document.getElementById('pdp-lock-msg');
+        var pdpTryonBtn = document.getElementById('pdp-tryon-btn');
+        pdpTryonBtn.style.display = (!esCardNegocio && !esProximaVentaPdp && pdpImgs.length) ? '' : 'none';
+        pdpTryonBtn.setAttribute('data-garment-url', pdpImgs[0] || '');
+        pdpTryonBtn.setAttribute('data-garment-name', title || '');
         if (esCardNegocio) {
             if (pdpLockMsg) pdpLockMsg.style.display = 'none';
         } else if (esProximaVentaPdp) {
@@ -2695,6 +2730,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
 
         document.getElementById('pdp-opciones-negocio').style.display = 'none';
         document.getElementById('pdp-lock-msg').style.display = 'none';
+        document.getElementById('pdp-tryon-btn').style.display = 'none';
         document.getElementById('pdp-meta').style.display = 'none';
         pdpTallasWrap.classList.remove('show');
         pdpColoresWrap.classList.remove('show');
@@ -2730,6 +2766,125 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpOverlay.classList.add('active');
         pdpModal.classList.add('active');
         document.body.style.overflow = 'hidden';
+    }
+
+    // ===== PROBADOR VIRTUAL CON IA =====
+    var TRYON_WORKER_URL = 'https://citybuy360-tryon.asuranasuran666.workers.dev/';
+    var TRYON_LIMITE_MS = 24 * 60 * 60 * 1000;
+    var tryonGarmentUrl = '';
+    var tryonFotoBase64 = '';
+    var tryonFotoMime = '';
+
+    function abrirProbadorVirtual() {
+        var btn = document.getElementById('pdp-tryon-btn');
+        tryonGarmentUrl = btn.getAttribute('data-garment-url') || '';
+        reiniciarProbadorVirtual();
+        document.getElementById('tryon-overlay').style.display = 'block';
+        document.getElementById('tryon-modal').style.display = 'block';
+    }
+
+    function cerrarProbadorVirtual() {
+        document.getElementById('tryon-overlay').style.display = 'none';
+        document.getElementById('tryon-modal').style.display = 'none';
+    }
+
+    function reiniciarProbadorVirtual() {
+        tryonFotoBase64 = '';
+        tryonFotoMime = '';
+        document.getElementById('tryon-file-input').value = '';
+        document.getElementById('tryon-preview-box').innerHTML = '📷 Toca para subir tu foto';
+        document.getElementById('tryon-generar-btn').disabled = true;
+        document.getElementById('tryon-generar-btn').style.opacity = '0.5';
+        document.getElementById('tryon-paso-subir').style.display = 'block';
+        document.getElementById('tryon-cargando').style.display = 'none';
+        document.getElementById('tryon-resultado').style.display = 'none';
+        document.getElementById('tryon-error').style.display = 'none';
+        document.getElementById('tryon-bloqueado').style.display = 'none';
+    }
+
+    function tryonRedimensionarImagen(file, maxLado) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                var img = new Image();
+                img.onload = function() {
+                    var w = img.width, h = img.height;
+                    if (w > h && w > maxLado) { h = Math.round(h * maxLado / w); w = maxLado; }
+                    else if (h > maxLado) { w = Math.round(w * maxLado / h); h = maxLado; }
+                    var canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    resolve({ base64: dataUrl.split(',')[1], mime: 'image/jpeg' });
+                };
+                img.onerror = reject;
+                img.src = reader.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function tryonFotoSeleccionada(input) {
+        var file = input.files[0];
+        if (!file) return;
+        tryonRedimensionarImagen(file, 900).then(function(r) {
+            tryonFotoBase64 = r.base64;
+            tryonFotoMime = r.mime;
+            document.getElementById('tryon-preview-box').innerHTML =
+                '<img src="data:' + r.mime + ';base64,' + r.base64 + '" style="max-width:100%;max-height:220px;border-radius:8px;">';
+            var btn = document.getElementById('tryon-generar-btn');
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }).catch(function() {
+            document.getElementById('tryon-error').style.display = 'block';
+            document.getElementById('tryon-error').textContent = 'No se pudo leer esa foto, prueba con otra.';
+        });
+    }
+
+    function generarProbadorVirtual() {
+        var ultimoUso = parseInt(localStorage.getItem('cb360_tryon_last') || '0', 10);
+        var faltan = TRYON_LIMITE_MS - (Date.now() - ultimoUso);
+        if (faltan > 0) {
+            var horas = Math.ceil(faltan / 3600000);
+            document.getElementById('tryon-paso-subir').style.display = 'none';
+            var bloqueado = document.getElementById('tryon-bloqueado');
+            bloqueado.style.display = 'block';
+            bloqueado.textContent = '⏳ Ya usaste tu prueba de hoy. Puedes volver a intentarlo en ~' + horas + ' hora(s).';
+            return;
+        }
+        if (!tryonFotoBase64 || !tryonGarmentUrl) return;
+
+        document.getElementById('tryon-paso-subir').style.display = 'none';
+        document.getElementById('tryon-cargando').style.display = 'block';
+        document.getElementById('tryon-error').style.display = 'none';
+
+        fetch(TRYON_WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fotoBase64: tryonFotoBase64, fotoMime: tryonFotoMime, prendaUrl: tryonGarmentUrl })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+        .then(function(r) {
+            document.getElementById('tryon-cargando').style.display = 'none';
+            if (!r.ok || !r.data.imagenBase64) {
+                document.getElementById('tryon-paso-subir').style.display = 'block';
+                var err = document.getElementById('tryon-error');
+                err.style.display = 'block';
+                err.textContent = (r.data && r.data.error) ? r.data.error : 'No se pudo generar la imagen, intenta de nuevo.';
+                return;
+            }
+            localStorage.setItem('cb360_tryon_last', String(Date.now()));
+            document.getElementById('tryon-resultado-img').src = 'data:' + r.data.mimeType + ';base64,' + r.data.imagenBase64;
+            document.getElementById('tryon-resultado').style.display = 'block';
+        })
+        .catch(function() {
+            document.getElementById('tryon-cargando').style.display = 'none';
+            document.getElementById('tryon-paso-subir').style.display = 'block';
+            var err = document.getElementById('tryon-error');
+            err.style.display = 'block';
+            err.textContent = 'Error de conexión. Revisa tu internet e intenta de nuevo.';
+        });
     }
 
     function closeProductDetail() {
