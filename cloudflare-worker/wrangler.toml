@@ -1,0 +1,4 @@
+name = "citybuy360-tryon"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+account_id = "3c1975975c9022c0b2143391120c5c07"
