@@ -348,7 +348,10 @@
           <label class="toggle"><input type="checkbox" id="edit-activo" checked onchange="guardarCampoProducto('activo',this.checked)"><span class="toggle-slider"></span></label>
           <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">🔒 Próxima venta</label>
           <label class="toggle"><input type="checkbox" id="edit-proxima-venta" onchange="guardarCampoProducto('proximaVenta',this.checked)"><span class="toggle-slider"></span></label>
+          <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">✨ Probador virtual (IA)</label>
+          <label class="toggle"><input type="checkbox" id="edit-tryon" checked onchange="guardarCampoProducto('tryonHabilitado',this.checked)"><span class="toggle-slider"></span></label>
         </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:-6px;">El probador virtual solo tiene sentido en ropa y accesorios. Desactívalo en productos como electrónica o electrodomésticos.</div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:-6px;">Con "Próxima venta" activo y "Activo" apagado: el producto se ve en la tienda con aviso de próxima venta, bloqueado para todos, pero los clientes con Acceso 360 pueden reservarlo.</div>
         <button onclick="guardarEdicionProducto()" style="background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;margin-top:4px;">💾 Guardar cambios</button>
       </div>
@@ -413,6 +416,12 @@
           <div class="checkbox-row">
             <input type="checkbox" id="prod-destacado">
             <label for="prod-destacado" style="text-transform:none;letter-spacing:0;font-size:0.88rem;color:var(--text);margin:0">Incluir también en ⭐ Selección PREMIUM</label>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <div class="checkbox-row">
+            <input type="checkbox" id="prod-tryon" checked>
+            <label for="prod-tryon" style="text-transform:none;letter-spacing:0;font-size:0.88rem;color:var(--text);margin:0">✨ Habilitar probador virtual (IA) — solo ropa y accesorios</label>
           </div>
         </div>
         <div class="form-group" style="margin:0;">
@@ -1035,10 +1044,11 @@
 
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen de fondo (opcional — puedes subir varias, rotan solas cada 3s; si las pones, tapan los colores de abajo)</label>
       <div style="display:flex;gap:6px;margin-bottom:4px;">
-        <input type="text" id="promo-imagen" placeholder="https://... (separa varias con coma)" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="text" id="promo-imagen" placeholder="https://... (separa varias con coma)" oninput="actualizarPreviewImagenesPromo()" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
         <input type="file" id="promo-imagen-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'promo-imagen','promos',true)">
         <button type="button" onclick="document.getElementById('promo-imagen-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;">📤 Agregar foto</button>
       </div>
+      <div id="promo-imagen-preview" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;"></div>
       <div id="promo-imagen-status" style="font-size:0.75rem;margin-bottom:10px;"></div>
 
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Colores de fondo (si no pones imagen) — toca el cuadro para elegir</label>
@@ -1450,6 +1460,7 @@ async function subirImagenSimple(fileInput, targetFieldId, carpeta, agregar) {
       campo.value = rawUrl;
     }
     if (statusEl) { statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Subida'; }
+    if (targetFieldId === 'promo-imagen' && typeof actualizarPreviewImagenesPromo === 'function') actualizarPreviewImagenesPromo();
   } catch (e) {
     if (statusEl) { statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Error: ' + e.message; }
   } finally {
@@ -1482,18 +1493,44 @@ async function generarIndexEstatico() {
   var token = localStorage.getItem('gh_token');
   if (!token) { logEl.textContent = '❌ Necesitas el token de GitHub'; return; }
 
+  // Lee un nodo de Firebase con manejo de error y timeout: si falla o tarda demasiado
+  // (ej. permisos faltantes en las reglas), no cuelga el proceso — sigue con "sin datos".
+  function leerFirebaseSeguro(path, timeoutMs) {
+    return new Promise(function(resolve) {
+      var resuelto = false;
+      var timer = setTimeout(function() {
+        if (resuelto) return;
+        resuelto = true;
+        console.warn('Firebase tardó demasiado en "' + path + '", sigo sin esos datos.');
+        resolve(null);
+      }, timeoutMs || 15000);
+      db.ref(path).once('value', function(snap) {
+        if (resuelto) return;
+        resuelto = true;
+        clearTimeout(timer);
+        resolve(snap);
+      }, function(err) {
+        if (resuelto) return;
+        resuelto = true;
+        clearTimeout(timer);
+        console.warn('Error leyendo "' + path + '" de Firebase (revisa las reglas):', err.message);
+        resolve(null);
+      });
+    });
+  }
+
   btn.disabled = true;
   logEl.textContent = '⏳ Leyendo catálogo desde Firebase...';
 
   try {
     // 1. Leer productos de Firebase
-    var snap = await new Promise(function(res) { db.ref('catalogo').once('value', res); });
-    var catalogo = snap.val() || {};
+    var snap = await leerFirebaseSeguro('catalogo');
+    var catalogo = (snap && snap.val()) || {};
     var productos = Object.values(catalogo).filter(function(p){ return p.activo !== false || p.proximaVenta === true; });
 
     // 1c. Leer "Compromiso de servicio" para hornearlo (si no, no se ve sin conexión)
-    var compromisoSnap = await new Promise(function(res) { db.ref('compromisos').once('value', res); });
-    var compromisoData = compromisoSnap.val() || {};
+    var compromisoSnap = await leerFirebaseSeguro('compromisos');
+    var compromisoData = (compromisoSnap && compromisoSnap.val()) || {};
     var compromisoListaEstatico = Object.values(compromisoData).filter(function(c){ return c.activo !== false; });
     var compromisoHTMLEstatico = compromisoListaEstatico.map(function(c) {
       return '<div class="pdp-compromiso-item">' +
@@ -1504,29 +1541,29 @@ async function generarIndexEstatico() {
     }).join('');
 
     // 1b. Leer tasa de cambio para el doble precio (USD + MN)
-    var tasaSnap = await new Promise(function(res) { db.ref('config/tasasConversion').once('value', res); });
-    var tasaUsdMn = (tasaSnap.val() || {}).usd || 0;
+    var tasaSnap = await leerFirebaseSeguro('config/tasasConversion');
+    var tasaUsdMn = ((tasaSnap && tasaSnap.val()) || {}).usd || 0;
 
     // 1c. Leer inventario para los badges de stock (Agotado / Últimas unidades)
-    var invSnap = await new Promise(function(res) { db.ref('inventario').once('value', res); });
-    var inventarioEstatico = invSnap.val() || {};
+    var invSnap = await leerFirebaseSeguro('inventario');
+    var inventarioEstatico = (invSnap && invSnap.val()) || {};
 
     // 1d. Leer interfaz (ribbons, ticker, tienda cerrada, toggles de la card)
-    var interfazSnap = await new Promise(function(res) { db.ref('interfaz').once('value', res); });
-    var interfazEstatico = interfazSnap.val() || {};
+    var interfazSnap = await leerFirebaseSeguro('interfaz');
+    var interfazEstatico = (interfazSnap && interfazSnap.val()) || {};
     var cardCfgEstatico = interfazEstatico.card || {};
 
     // 1e. Leer config de secciones (orden, activo/oculto) — ambos formatos (inglés y español)
-    var configSnap = await new Promise(function(res) { db.ref('config').once('value', res); });
-    var configEstatico = configSnap.val() || {};
+    var configSnap = await leerFirebaseSeguro('config');
+    var configEstatico = (configSnap && configSnap.val()) || {};
     var seccionesOrdenEstatico = configEstatico.seccionesOrden || {};
     var sectionsEstatico = configEstatico.sections || {};
 
     // 1f. Leer promociones (slider de cards)
-    var promoSnap = await new Promise(function(res) { db.ref('promoCards').once('value', res); });
-    var promoDataEstatico = promoSnap.val() || {};
-    var secDynSnap = await new Promise(function(res) { db.ref('config/secciones').once('value', res); });
-    var secDynEstatico = secDynSnap.val() || {};
+    var promoSnap = await leerFirebaseSeguro('promoCards');
+    var promoDataEstatico = (promoSnap && promoSnap.val()) || {};
+    var secDynSnap = await leerFirebaseSeguro('config/secciones');
+    var secDynEstatico = (secDynSnap && secDynSnap.val()) || {};
     Object.keys(secDynEstatico).forEach(function(secId) {
       if (!sectionsEstatico[secId]) sectionsEstatico[secId] = {};
       if (secDynEstatico[secId].activo === false) sectionsEstatico[secId].active = false;
@@ -1534,8 +1571,8 @@ async function generarIndexEstatico() {
     });
 
     // 1f. Leer slides del slider configurable
-    var sliderSnap = await new Promise(function(res) { db.ref('config/slider').once('value', res); });
-    var sliderSlidesEstatico = (sliderSnap.val() || {}).slides || null;
+    var sliderSnap = await leerFirebaseSeguro('config/slider');
+    var sliderSlidesEstatico = ((sliderSnap && sliderSnap.val()) || {}).slides || null;
 
     // 2. Leer index.html actual de GitHub
     logEl.textContent = '⏳ Leyendo index.html de GitHub...';
@@ -1654,7 +1691,7 @@ async function generarIndexEstatico() {
       if (esProximaVentaEstatico) badgeInline = '<div class="stock-badge-inline nuevo">🔒 Próxima venta</div>';
 
       var variantesAttrEstatico = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
-      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'" data-proxima-venta="'+(esProximaVentaEstatico?'true':'false')+'">'+
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'" data-proxima-venta="'+(esProximaVentaEstatico?'true':'false')+'" data-tryon="'+(p.tryonHabilitado===false?'false':'true')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'"'+(esProximaVentaEstatico?' style="filter:grayscale(60%) brightness(0.7);"':'')+'>'+
         badgeInline+
@@ -2586,6 +2623,7 @@ function editProduct(pid) {
     if (vendedorEl) vendedorEl.value = p.vendedor || '';
     setSelectedEtiqueta(p.etiqueta || '');
     setSelectedGenero(p.genero || '');
+    if (document.getElementById('prod-tryon')) document.getElementById('prod-tryon').checked = p.tryonHabilitado !== false;
     if (p.imagenes) {
       uploadedPhotos = p.imagenes.split(',').filter(Boolean).map(function(name) {
         return { name: name.trim(), base64: null, dataUrl: name.trim(), ext: name.split('.').pop() };
@@ -2874,6 +2912,15 @@ function actualizarPreviewPromo() {
   document.getElementById('promo-preview').style.background = 'linear-gradient(135deg,' + c1 + ',' + c2 + ')';
 }
 
+function actualizarPreviewImagenesPromo() {
+  var cont = document.getElementById('promo-imagen-preview');
+  if (!cont) return;
+  var urls = (document.getElementById('promo-imagen').value || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  cont.innerHTML = urls.map(function(u) {
+    return '<img src="' + u + '" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" onerror="this.style.opacity=0.3;this.title=\'No carga esta imagen\';">';
+  }).join('');
+}
+
 function agregarPromoCard() {
   var titulo = document.getElementById('promo-titulo').value.trim();
   var subtitulo = document.getElementById('promo-subtitulo').value.trim();
@@ -2912,6 +2959,7 @@ function agregarPromoCard() {
     document.getElementById('promo-color1').value = '#4fd1e8';
     document.getElementById('promo-color2').value = '#1a2e6e';
     actualizarPreviewPromo();
+    actualizarPreviewImagenesPromo();
     cancelarEdicionPromo();
     setTimeout(function(){ status.textContent = ''; }, 2000);
     loadPromoCards();
@@ -2944,6 +2992,7 @@ function editarPromoCard(id) {
       document.getElementById('promo-boton-link').style.display = 'block';
     }
     actualizarPreviewPromo();
+    actualizarPreviewImagenesPromo();
     document.getElementById('promo-submit-btn').textContent = '💾 Guardar cambios';
     document.getElementById('promo-cancel-btn').style.display = 'block';
     document.getElementById('promo-submit-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3330,6 +3379,7 @@ async function doPublish() {
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
+  const tryonHabilitado = document.getElementById('prod-tryon') ? document.getElementById('prod-tryon').checked : true;
 
   if (!name) {
     log('❌ El nombre del producto es obligatorio', 'log-err'); return;
@@ -3390,7 +3440,7 @@ async function doPublish() {
     const producto = {
       id, nombre: name, precio: price, moneda, precioModo, variantes, variantesTipo, tallas, colores, vendedor, etiqueta,
       descripcion: tooltip,
-      seccion: secId, genero, destacado,
+      seccion: secId, genero, destacado, tryonHabilitado,
       imagenes, activo: true,
       orden: Date.now()
     };
@@ -3413,6 +3463,7 @@ async function doPublish() {
       var el = document.getElementById(fid); if(el) el.value = '';
     });
     if (document.getElementById('prod-destacado')) document.getElementById('prod-destacado').checked = false;
+    if (document.getElementById('prod-tryon')) document.getElementById('prod-tryon').checked = true;
     if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
     if (document.getElementById('prod-moneda')) document.getElementById('prod-moneda').value = 'USD';
     document.getElementById('prod-variantes-lista').innerHTML = '';
@@ -3500,6 +3551,7 @@ function cancelarFormulario() {
     if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = 'color';
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
+  if (document.getElementById('prod-tryon')) document.getElementById('prod-tryon').checked = true;
   if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
     if (document.getElementById('prod-moneda')) document.getElementById('prod-moneda').value = 'USD';
   setSelectedEtiqueta('');
@@ -3639,6 +3691,7 @@ function abrirModalEditar(pid) {
     document.getElementById('edit-destacado').checked = !!p.destacado;
     document.getElementById('edit-activo').checked = p.activo !== false;
     document.getElementById('edit-proxima-venta').checked = !!p.proximaVenta;
+    document.getElementById('edit-tryon').checked = p.tryonHabilitado !== false;
     document.getElementById('modal-editar-producto').style.display = 'flex';
   }
   if (catalogoAdminData[pid]) {
@@ -3680,6 +3733,7 @@ function guardarEdicionProducto() {
     destacado: document.getElementById('edit-destacado').checked,
     activo: document.getElementById('edit-activo').checked,
     proximaVenta: document.getElementById('edit-proxima-venta').checked,
+    tryonHabilitado: document.getElementById('edit-tryon').checked,
   };
   if (catalogoAdminData[pid]) Object.assign(catalogoAdminData[pid], updates);
   db.ref('catalogo/' + pid).update(updates).then(function() {

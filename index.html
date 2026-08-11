@@ -1873,7 +1873,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
                     : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>');
         }
-        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" id="card-' + p.id + '">' +
+        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'"' + (esProximaVenta ? ' style="filter:grayscale(60%) brightness(0.7);"' : '') + '>' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
@@ -2655,6 +2655,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpCurrentId = card.getAttribute('data-product') || title;
         document.getElementById('pdp-meta').style.display = '';
         pdpImg.style.maxHeight = '';
+        pdpImg.style.height = '';
+        pdpImg.style.width = '';
 
         var pdpNegocio = document.getElementById('pdp-opciones-negocio');
         var esCardNegocio = pdpCurrentId === 'citybuy360familia';
@@ -2667,7 +2669,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var esProximaVentaPdp = card.getAttribute('data-proxima-venta') === 'true';
         var pdpLockMsg = document.getElementById('pdp-lock-msg');
         var pdpTryonBtn = document.getElementById('pdp-tryon-btn');
-        pdpTryonBtn.style.display = (!esCardNegocio && !esProximaVentaPdp && pdpImgs.length) ? '' : 'none';
+        var tryonHabilitadoPdp = card.getAttribute('data-tryon') !== 'false';
+        pdpTryonBtn.style.display = (!esCardNegocio && !esProximaVentaPdp && pdpImgs.length && tryonHabilitadoPdp) ? '' : 'none';
         pdpTryonBtn.setAttribute('data-garment-url', pdpImgs[0] || '');
         pdpTryonBtn.setAttribute('data-garment-name', title || '');
         if (esCardNegocio) {
@@ -2769,7 +2772,9 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         if (!pdpImgs.length) pdpImgs = [''];
         pdpIdx = 0;
         pdpCurrentId = 'promo-' + id;
-        pdpImg.style.maxHeight = '70vh';
+        pdpImg.style.height = window.innerWidth <= 700 ? '38vh' : '55vh';
+        pdpImg.style.maxHeight = '';
+        pdpImg.style.width = '100%';
 
         document.getElementById('pdp-opciones-negocio').style.display = 'none';
         document.getElementById('pdp-lock-msg').style.display = 'none';
