@@ -724,6 +724,13 @@
           <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:5px;">Referencia (nombre / producto comprado)</label>
           <input type="text" id="gen-ref" placeholder="Ej: María - Blumer azul" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.9rem;">
         </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:5px;">Validez</label>
+          <select id="gen-dias" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.9rem;">
+            <option value="30" selected>30 días (normal, para clientes)</option>
+            <option value="3650">Sin vencimiento real — 10 años (para pruebas tuyas)</option>
+          </select>
+        </div>
         <button onclick="generarCodigo()" style="background:linear-gradient(135deg,#f5c518,#ffe566);color:#1a0a00;font-weight:900;border:none;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;">⚡ Generar código</button>
         <div id="email-preview-wrap" style="display:none;">
           <div style="background:#0d0d0d;border:1px solid #b8860b44;border-radius:10px;padding:16px;">
@@ -2193,7 +2200,8 @@ function generarCodigo() {
   const email = document.getElementById('gen-email').value.trim();
   const ref = document.getElementById('gen-ref').value.trim();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Introduce un correo válido'); return; }
-  const gen = acceso360Generar(30); // 30 días — código de compra/desbloqueo (el automático del cliente es de 7 días)
+  const dias = parseInt(document.getElementById('gen-dias').value, 10) || 30;
+  const gen = acceso360Generar(dias); // 30 días para clientes; el admin puede elegir 10 años para pruebas propias
   const code = gen.code;
   const expira = new Date(gen.expiraDiaEpoch * 86400000);
   const expiraStr = expira.toLocaleDateString('es-ES');
