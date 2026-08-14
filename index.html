@@ -2669,8 +2669,9 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var esProximaVentaPdp = card.getAttribute('data-proxima-venta') === 'true';
         var pdpLockMsg = document.getElementById('pdp-lock-msg');
         var pdpTryonBtn = document.getElementById('pdp-tryon-btn');
+        var TRYON_GLOBAL_ON = false; // apagado temporal: activar billing en Gemini antes de poner true
         var tryonHabilitadoPdp = card.getAttribute('data-tryon') !== 'false';
-        pdpTryonBtn.style.display = (!esCardNegocio && !esProximaVentaPdp && pdpImgs.length && tryonHabilitadoPdp) ? '' : 'none';
+        pdpTryonBtn.style.display = (TRYON_GLOBAL_ON && !esCardNegocio && !esProximaVentaPdp && pdpImgs.length && tryonHabilitadoPdp) ? '' : 'none';
         pdpTryonBtn.setAttribute('data-garment-url', pdpImgs[0] ? new URL(pdpImgs[0], window.location.href).href : '');
         pdpTryonBtn.setAttribute('data-garment-name', title || '');
         if (esCardNegocio) {
