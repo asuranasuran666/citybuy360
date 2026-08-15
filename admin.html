@@ -348,10 +348,10 @@
           <label class="toggle"><input type="checkbox" id="edit-activo" checked onchange="guardarCampoProducto('activo',this.checked)"><span class="toggle-slider"></span></label>
           <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">🔒 Próxima venta</label>
           <label class="toggle"><input type="checkbox" id="edit-proxima-venta" onchange="guardarCampoProducto('proximaVenta',this.checked)"><span class="toggle-slider"></span></label>
-          <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;">✨ Probador virtual (IA)</label>
-          <label class="toggle"><input type="checkbox" id="edit-tryon" checked onchange="guardarCampoProducto('tryonHabilitado',this.checked)"><span class="toggle-slider"></span></label>
+          <label style="font-size:0.8rem;color:var(--text-muted);margin-left:16px;display:none;">✨ Probador virtual (IA)</label>
+          <label class="toggle" style="display:none;"><input type="checkbox" id="edit-tryon" checked onchange="guardarCampoProducto('tryonHabilitado',this.checked)"><span class="toggle-slider"></span></label>
         </div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:-6px;">El probador virtual solo tiene sentido en ropa y accesorios. Desactívalo en productos como electrónica o electrodomésticos.</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:-6px;display:none;">El probador virtual solo tiene sentido en ropa y accesorios. Desactívalo en productos como electrónica o electrodomésticos.</div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:-6px;">Con "Próxima venta" activo y "Activo" apagado: el producto se ve en la tienda con aviso de próxima venta, bloqueado para todos, pero los clientes con Acceso 360 pueden reservarlo.</div>
         <button onclick="guardarEdicionProducto()" style="background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:12px;cursor:pointer;font-size:0.95rem;margin-top:4px;">💾 Guardar cambios</button>
       </div>
@@ -418,7 +418,7 @@
             <label for="prod-destacado" style="text-transform:none;letter-spacing:0;font-size:0.88rem;color:var(--text);margin:0">Incluir también en ⭐ Selección PREMIUM</label>
           </div>
         </div>
-        <div class="form-group" style="margin:0;">
+        <div class="form-group" style="margin:0;display:none;">
           <div class="checkbox-row">
             <input type="checkbox" id="prod-tryon" checked>
             <label for="prod-tryon" style="text-transform:none;letter-spacing:0;font-size:0.88rem;color:var(--text);margin:0">✨ Habilitar probador virtual (IA) — solo ropa y accesorios</label>
@@ -482,12 +482,18 @@
           <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Ej: color Negro a 12 USD, color Azul a 13.50 USD (o largo/talla, según elijas abajo). Si agregas variantes aquí, la card muestra "Desde $X" y el cliente elige el precio exacto según lo que escoja.</div>
           <label style="display:block;margin-bottom:8px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
             Estas variantes son por:
-            <select id="prod-variantes-tipo" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
+            <select id="prod-variantes-tipo" onchange="actualizarVistaVariantesTipo('prod')" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
               <option value="color">Color (ej: gorras, pulóveres)</option>
               <option value="talla">Talla / Largo (ej: vendas)</option>
+              <option value="matriz">Color + Talla combinados (con stock)</option>
             </select>
           </label>
           <div id="prod-variantes-lista"></div>
+          <div id="prod-variantes-matriz-wrap" style="display:none;">
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">Cada color tiene sus propias tallas, con precio y stock (referencia visual, no descuenta solo). Deja el stock vacío si no quieres mostrarlo.</div>
+            <div id="prod-variantes-matriz-lista"></div>
+            <button type="button" onclick="agregarColorMatriz('prod')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 10px;font-size:0.78rem;cursor:pointer;margin-top:4px;">+ Agregar color</button>
+          </div>
         </div>
         <div class="form-row" style="margin:0;">
           <div class="form-group" style="margin:0;">
@@ -1600,9 +1606,14 @@ async function generarIndexEstatico() {
         : '<div class="details-block product-desc-larga"></div>';
       var tooltipHTML = (showDescripcion && p.descripcion) ? '<div class="hover-tooltip">'+p.descripcion+'</div>' : '';
       var vendedorHTML = '<div class="card-vendedor">'+(p.vendedor||'')+'</div>';
-      var tieneVariantesConPrecio = Array.isArray(p.variantes) && p.variantes.length > 0;
+      var tieneVariantesMatriz = p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
+      var tieneVariantesConPrecio = (Array.isArray(p.variantes) && p.variantes.length > 0) || tieneVariantesMatriz;
       var precioBaseEstatico = p.precio;
-      if (tieneVariantesConPrecio) {
+      if (tieneVariantesMatriz) {
+        var preciosMatrizEstatico = [];
+        p.variantesMatriz.forEach(function(c){ (c.tallas||[]).forEach(function(t){ var pr=parseFloat(t.precio); if(!isNaN(pr)) preciosMatrizEstatico.push(pr); }); });
+        if (preciosMatrizEstatico.length) precioBaseEstatico = Math.min.apply(null, preciosMatrizEstatico);
+      } else if (Array.isArray(p.variantes) && p.variantes.length > 0) {
         var preciosVariantesEstatico = p.variantes.map(function(v){ return parseFloat(v.precio); }).filter(function(n){ return !isNaN(n); });
         if (preciosVariantesEstatico.length) precioBaseEstatico = Math.min.apply(null, preciosVariantesEstatico);
       }
@@ -1697,8 +1708,9 @@ async function generarIndexEstatico() {
             : '<a href="'+waLink+'" class="btn-lo-quiero">🛒 Lo quiero</a>');
       if (esProximaVentaEstatico) badgeInline = '<div class="stock-badge-inline nuevo">🔒 Próxima venta</div>';
 
-      var variantesAttrEstatico = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
-      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'" data-proxima-venta="'+(esProximaVentaEstatico?'true':'false')+'" data-tryon="'+(p.tryonHabilitado===false?'false':'true')+'">'+
+      var variantesAttrEstatico = (Array.isArray(p.variantes) && p.variantes.length > 0) ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
+      var variantesMatrizAttrEstatico = tieneVariantesMatriz ? JSON.stringify(p.variantesMatriz).replace(/"/g, '&quot;') : '';
+      return '<div class="card" data-product="'+p.id+'" data-genero="'+(p.genero||'')+'" data-colores="'+(p.colores||'')+'" data-tallas="'+(p.tallas||'')+'" data-variantes="'+variantesAttrEstatico+'" data-variantes-matriz="'+variantesMatrizAttrEstatico+'" data-variantes-tipo="'+(p.variantesTipo||'color')+'" data-moneda="'+monedaProd+'" data-precio-modo="'+(modoPrecio||'')+'" data-proxima-venta="'+(esProximaVentaEstatico?'true':'false')+'" data-tryon="'+(p.tryonHabilitado===false?'false':'true')+'">'+
         '<div class="card-img-container" data-images="'+(p.imagenes||p.id+'.jpg')+'" data-count="'+imgs.length+'" style="position:relative;">'+
         '<img src="'+imgs[0]+'" class="card-img" alt="'+p.nombre+'" loading="lazy" onerror="this.style.display=\'none\'"'+(esProximaVentaEstatico?' style="filter:grayscale(60%) brightness(0.7);"':'')+'>'+
         badgeInline+
@@ -2624,7 +2636,9 @@ function editProduct(pid) {
     document.getElementById('prod-tallas').value = p.tallas || '';
     document.getElementById('prod-colores').value = p.colores || '';
     cargarVariantes('prod', p.variantes || []);
+    cargarVariantesMatriz('prod', p.variantesMatriz || []);
     if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = p.variantesTipo || 'color';
+    actualizarVistaVariantesTipo('prod');
     document.getElementById('prod-tooltip').value = p.descripcion || '';
     document.getElementById('prod-seccion').value = p.seccion || 'ropa-moda';
     var vendedorEl = document.getElementById('prod-vendedor');
@@ -3273,6 +3287,73 @@ function cargarVariantes(prefijo, variantes) {
   (variantes || []).forEach(function(v) { agregarFilaVariante(prefijo, v.nombre, v.precio); });
 }
 
+function actualizarVistaVariantesTipo(prefijo) {
+  var tipo = document.getElementById(prefijo + '-variantes-tipo').value;
+  var esMatriz = tipo === 'matriz';
+  document.getElementById(prefijo + '-variantes-lista').style.display = esMatriz ? 'none' : '';
+  document.getElementById(prefijo + '-variantes-matriz-wrap').style.display = esMatriz ? '' : 'none';
+}
+
+function agregarColorMatriz(prefijo, colorNombre, tallas) {
+  var lista = document.getElementById(prefijo + '-variantes-matriz-lista');
+  var bloque = document.createElement('div');
+  bloque.className = 'variante-color-bloque';
+  bloque.style.cssText = 'border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;';
+  bloque.innerHTML =
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">' +
+      '<input type="text" placeholder="Color (ej: Negro)" value="' + (colorNombre ? String(colorNombre).replace(/"/g,'') : '') + '" class="variante-color-nombre" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+      '<button type="button" onclick="this.closest(\'.variante-color-bloque\').remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>' +
+    '</div>' +
+    '<div class="variante-tallas-lista" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px;"></div>' +
+    '<button type="button" onclick="agregarTallaMatriz(this)" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;">+ Agregar talla a este color</button>';
+  lista.appendChild(bloque);
+  var tallasList = bloque.querySelector('.variante-tallas-lista');
+  (tallas || []).forEach(function(t) { agregarTallaMatrizEnLista(tallasList, t.talla, t.precio, t.stock); });
+}
+
+function agregarTallaMatriz(btn) {
+  var bloque = btn.closest('.variante-color-bloque');
+  var tallasList = bloque.querySelector('.variante-tallas-lista');
+  agregarTallaMatrizEnLista(tallasList);
+}
+
+function agregarTallaMatrizEnLista(tallasList, talla, precio, stock) {
+  var fila = document.createElement('div');
+  fila.className = 'variante-talla-row';
+  fila.style.cssText = 'display:flex;gap:5px;align-items:center;';
+  fila.innerHTML =
+    '<input type="text" placeholder="Talla (ej: M)" value="' + (talla ? String(talla).replace(/"/g,'') : '') + '" class="variante-talla-nombre" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
+    '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" class="variante-talla-precio" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
+    '<input type="number" placeholder="Stock" step="1" value="' + (stock != null ? stock : '') + '" class="variante-talla-stock" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
+    '<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#ff4444;font-size:1rem;cursor:pointer;padding:2px 5px;flex:none;">✕</button>';
+  tallasList.appendChild(fila);
+}
+
+function leerVariantesMatriz(prefijo) {
+  var bloques = document.querySelectorAll('#' + prefijo + '-variantes-matriz-lista .variante-color-bloque');
+  var matriz = [];
+  bloques.forEach(function(bloque) {
+    var color = bloque.querySelector('.variante-color-nombre').value.trim();
+    if (!color) return;
+    var tallas = [];
+    bloque.querySelectorAll('.variante-talla-row').forEach(function(fila) {
+      var talla = fila.querySelector('.variante-talla-nombre').value.trim();
+      var precio = parseFloat(fila.querySelector('.variante-talla-precio').value);
+      var stockRaw = fila.querySelector('.variante-talla-stock').value.trim();
+      var stock = stockRaw === '' ? null : parseInt(stockRaw, 10);
+      if (talla && !isNaN(precio)) tallas.push({ talla: talla, precio: precio, stock: (stock !== null && !isNaN(stock)) ? stock : null });
+    });
+    if (tallas.length) matriz.push({ color: color, tallas: tallas });
+  });
+  return matriz;
+}
+
+function cargarVariantesMatriz(prefijo, matriz) {
+  var lista = document.getElementById(prefijo + '-variantes-matriz-lista');
+  lista.innerHTML = '';
+  (matriz || []).forEach(function(c) { agregarColorMatriz(prefijo, c.color, c.tallas); });
+}
+
 function borrarDatosVentas() {
   if (!confirm('¿Borrar todos los datos de ventas (clics en "Lo quiero")? Esta acción no se puede deshacer.')) return;
   db.ref('sales').remove().then(() => {
@@ -3382,8 +3463,9 @@ async function doPublish() {
   const genero  = getSelectedGenero();
   const moneda   = document.getElementById('prod-moneda') ? document.getElementById('prod-moneda').value : 'USD';
   const precioModo = document.getElementById('prod-precio-modo') ? document.getElementById('prod-precio-modo').value : '';
-  const variantes = leerVariantes('prod');
   const variantesTipo = document.getElementById('prod-variantes-tipo') ? document.getElementById('prod-variantes-tipo').value : 'color';
+  const variantes = variantesTipo === 'matriz' ? [] : leerVariantes('prod');
+  const variantesMatriz = variantesTipo === 'matriz' ? leerVariantesMatriz('prod') : null;
   const vendedor = ((document.getElementById('prod-vendedor') || {}).value || '').trim();
   const etiqueta = getSelectedEtiqueta();
   const destacado = document.getElementById('prod-destacado') ? document.getElementById('prod-destacado').checked : false;
@@ -3446,7 +3528,7 @@ async function doPublish() {
     log('💾 Guardando en Firebase…');
     const imagenes = uploadedPhotos.map(p => p.name).join(',');
     const producto = {
-      id, nombre: name, precio: price, moneda, precioModo, variantes, variantesTipo, tallas, colores, vendedor, etiqueta,
+      id, nombre: name, precio: price, moneda, precioModo, variantes, variantesTipo, variantesMatriz, tallas, colores, vendedor, etiqueta,
       descripcion: tooltip,
       seccion: secId, genero, destacado, tryonHabilitado,
       imagenes, activo: true,
@@ -3475,7 +3557,9 @@ async function doPublish() {
     if (document.getElementById('prod-precio-modo')) document.getElementById('prod-precio-modo').value = '';
     if (document.getElementById('prod-moneda')) document.getElementById('prod-moneda').value = 'USD';
     document.getElementById('prod-variantes-lista').innerHTML = '';
+    document.getElementById('prod-variantes-matriz-lista').innerHTML = '';
     if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = 'color';
+    actualizarVistaVariantesTipo('prod');
   setSelectedEtiqueta('');
     btn.dataset.editPid = '';
     btn.textContent = '🚀 Publicar producto';
@@ -3557,6 +3641,8 @@ function cancelarFormulario() {
   document.getElementById('prod-colores').value = '';
   document.getElementById('prod-variantes-lista').innerHTML = '';
     if (document.getElementById('prod-variantes-tipo')) document.getElementById('prod-variantes-tipo').value = 'color';
+  document.getElementById('prod-variantes-matriz-lista').innerHTML = '';
+  actualizarVistaVariantesTipo('prod');
   document.getElementById('prod-tooltip').value = '';
   document.getElementById('prod-destacado').checked = false;
   if (document.getElementById('prod-tryon')) document.getElementById('prod-tryon').checked = true;
