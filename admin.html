@@ -217,6 +217,10 @@
 </head>
 <body>
 
+<div id="banner-token-faltante" style="display:none;position:sticky;top:0;z-index:9999;background:#7a1f1f;color:#fff;padding:10px 14px;font-size:0.82rem;text-align:center;font-weight:600;">
+  ⚠️ Este dispositivo no tiene el token de GitHub guardado — las fotos y publicaciones NO se subirán. Ve a la pestaña "🔑 Publicar" y pégalo.
+</div>
+
 <!-- ══════════════════════ LOGIN ══════════════════════ -->
 <div id="login-screen">
   <div class="login-logo">CityBUY360</div>
@@ -1308,11 +1312,15 @@ function saveToken(val) {
   } else {
     st.textContent = 'Sin token'; st.className = 'token-status empty';
   }
+  var banner = document.getElementById('banner-token-faltante');
+  if (banner) banner.style.display = val ? 'none' : '';
 }
 
 function loadToken() {
   const t = localStorage.getItem('gh_token') || '';
   if (t) { document.getElementById('gh-token').value = t; saveToken(t); }
+  var banner = document.getElementById('banner-token-faltante');
+  if (banner) banner.style.display = t ? 'none' : '';
 }
 
 // ID único de sesión de carga — evita colisión de nombres entre productos distintos
@@ -1454,6 +1462,7 @@ async function subirImagenSimple(fileInput, targetFieldId, carpeta, agregar) {
   const statusEl = document.getElementById(targetFieldId + '-status');
   const token = localStorage.getItem('gh_token');
   if (!token) {
+    alert('❌ Este dispositivo no tiene el token de GitHub guardado.\n\nLa foto NO se subió — sin el token no llega a GitHub ni a ningún lado.\n\nVe a la pestaña "🔑 Publicar" y pega el token de GitHub, luego intenta subir la foto de nuevo.');
     if (statusEl) { statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Falta el token de GitHub (pestaña Publicar)'; }
     fileInput.value = '';
     return;
@@ -3499,6 +3508,7 @@ async function doPublish() {
     const fotosNuevas = uploadedPhotos.filter(p => p.base64 && p.base64.length > 0);
     if (fotosNuevas.length > 0) {
       if (!token) {
+        alert('❌ Este dispositivo no tiene el token de GitHub guardado.\n\nHay fotos nuevas por subir pero no se puede sin el token. Nada se guardó todavía.\n\nVe a la pestaña "🔑 Publicar" y pega el token de GitHub, luego intenta de nuevo.');
         log('❌ No se puede publicar: hay fotos nuevas por subir pero no tienes el token de GitHub cargado. Pégalo arriba, en "Token de GitHub", y vuelve a intentar. Nada se guardó todavía.', 'log-err');
         btn.disabled = false;
         return;
