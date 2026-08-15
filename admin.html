@@ -250,6 +250,7 @@
     <button class="tab-btn" onclick="showTab('acceso360',this)">✦ Acceso 360</button>
     <button class="tab-btn" onclick="showTab('mensajes',this)">👤 Clientes</button>
     <button class="tab-btn" onclick="showTab('vendedores',this)">🧑‍💼 Vendedores</button>
+    <button class="tab-btn" onclick="showTab('inventario',this)">📦 Inventario</button>
     <button class="tab-btn" onclick="showTab('temushein',this)">🛍️ Temu/Shein</button>
     <button class="tab-btn" onclick="showTab('marketing',this)">📣 Marketing</button>
   </div>
@@ -927,6 +928,17 @@
       <div id="vendedores-list"><div class="empty-state">Cargando…</div></div>
     </div>
 
+  </div>
+
+  <!-- ── TAB: INVENTARIO (color + talla + stock) ── -->
+  <div id="tab-inventario" class="tab-content">
+    <div style="padding:12px 16px;color:var(--text-muted);font-size:0.85rem;">
+      Solo aparecen aquí los productos con variantes en modo "Color + Talla combinados". Toca <b>−1</b> cuando cierres una venta por WhatsApp para descontar stock. El número también se puede editar directo.
+    </div>
+    <div id="inventario-matriz-filtro" style="padding:0 16px 10px;">
+      <input type="text" id="inventario-matriz-buscar" placeholder="Buscar producto..." oninput="renderInventarioMatriz()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+    </div>
+    <div id="inventario-matriz-list" style="padding:0 16px 16px;"><div class="empty-state">Cargando…</div></div>
   </div>
 
   <!-- ── TAB: TEMU/SHEIN (pedidos externos VIP) ── -->
@@ -1953,6 +1965,21 @@ async function generarIndexEstatico() {
       var closeStart = indexHTML.indexOf('<', openEnd);
       indexHTML = indexHTML.substring(0, openEnd) + texto + indexHTML.substring(closeStart);
     }
+    function encontrarCierreDivCorrespondiente(html, desdeIdx) {
+      var profundidad = 1;
+      var re = /<div\b|<\/div>/gi;
+      re.lastIndex = desdeIdx;
+      var m;
+      while ((m = re.exec(html)) !== null) {
+        if (m[0].toLowerCase() === '</div>') {
+          profundidad--;
+          if (profundidad === 0) return m.index;
+        } else {
+          profundidad++;
+        }
+      }
+      return -1; // no se encontró cierre válido, mejor no tocar nada
+    }
     function ocultarPorId(id) {
       var idx = indexHTML.indexOf('id="' + id + '"');
       if (idx === -1) return;
@@ -1995,8 +2022,10 @@ async function generarIndexEstatico() {
       var promoIdx = indexHTML.indexOf('id="promo-slider"');
       if (promoIdx !== -1) {
         var promoOpenEnd = indexHTML.indexOf('>', promoIdx) + 1;
-        var promoCloseStart = indexHTML.indexOf('</div>', promoOpenEnd);
-        indexHTML = indexHTML.substring(0, promoOpenEnd) + promoHtmlEstatico + indexHTML.substring(promoCloseStart);
+        var promoCloseStart = encontrarCierreDivCorrespondiente(indexHTML, promoOpenEnd);
+        if (promoCloseStart !== -1) {
+          indexHTML = indexHTML.substring(0, promoOpenEnd) + promoHtmlEstatico + indexHTML.substring(promoCloseStart);
+        }
         // Asegurar que no quede oculto (display:none) ya que sí hay promociones que mostrar
         var promoTagStart = indexHTML.lastIndexOf('<', promoIdx);
         var promoTagEnd = indexHTML.indexOf('>', promoTagStart);
@@ -2305,6 +2334,7 @@ function showTab(id, btn) {
   if (id === 'mensajes') { loadMensajesAdmin(); loadClientesAdmin(); }
   if (id === 'interfaz') loadRibbonsAdmin();
   if (id === 'vendedores') { loadVendedores(); loadVentasVendedores(); loadInventarioAdmin(); }
+  if (id === 'inventario') renderInventarioMatriz();
   if (id === 'precios') loadPreciosTab();
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -3692,7 +3722,81 @@ function loadCustomGeneros() {
 
 
 // ── GESTIÓN CATÁLOGO ADMIN ────────────────────────────────────────────────────
-var catalogoAdminData = {};
+// ── PESTAÑA INVENTARIO (color + talla + stock) ──────────────────────────────
+function renderInventarioMatriz() {
+  var cont = document.getElementById('inventario-matriz-list');
+  if (!cont) return;
+  var buscarEl = document.getElementById('inventario-matriz-buscar');
+  var buscar = buscarEl ? buscarEl.value.trim().toLowerCase() : '';
+
+  var productos = Object.values(catalogoAdminData).filter(function(p) {
+    return p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
+  });
+  if (buscar) productos = productos.filter(function(p) { return (p.nombre || '').toLowerCase().indexOf(buscar) !== -1; });
+  productos.sort(function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); });
+
+  if (!productos.length) {
+    cont.innerHTML = '<div class="empty-state">Ningún producto usa "Color + Talla combinados" todavía. Edita un producto y cambia el tipo de variantes para que aparezca aquí.</div>';
+    return;
+  }
+
+  cont.innerHTML = productos.map(function(p) {
+    var filas = p.variantesMatriz.map(function(c, ci) {
+      var tallasHtml = (c.tallas || []).map(function(t, ti) {
+        var stock = (t.stock === null || t.stock === undefined) ? '' : t.stock;
+        var agotado = (t.stock === 0);
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border);">' +
+          '<div style="flex:1;font-size:0.82rem;' + (agotado ? 'color:#ff6666;' : '') + '">' + esc(t.talla) + (agotado ? ' — Agotado' : '') + '</div>' +
+          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">−</button>' +
+          '<input type="number" value="' + stock + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',this.value)" style="width:56px;text-align:center;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">' +
+          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">+</button>' +
+        '</div>';
+      }).join('');
+      return '<div style="margin-top:8px;">' +
+        '<div style="font-size:0.85rem;font-weight:700;color:var(--text);">🎨 ' + esc(c.color) + '</div>' +
+        tallasHtml +
+      '</div>';
+    }).join('');
+    return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">' +
+      '<div style="font-weight:800;font-size:0.92rem;margin-bottom:4px;">' + esc(p.nombre || p.id) + '</div>' +
+      filas +
+    '</div>';
+  }).join('');
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function ajustarStockMatriz(pid, colorIdx, tallaIdx, delta) {
+  var p = catalogoAdminData[pid];
+  if (!p || !p.variantesMatriz || !p.variantesMatriz[colorIdx] || !p.variantesMatriz[colorIdx].tallas[tallaIdx]) return;
+  var t = p.variantesMatriz[colorIdx].tallas[tallaIdx];
+  var actual = (t.stock === null || t.stock === undefined) ? 0 : t.stock;
+  var nuevo = actual + delta;
+  if (nuevo < 0) nuevo = 0;
+  t.stock = nuevo;
+  guardarVariantesMatrizProducto(pid);
+}
+
+function setStockMatriz(pid, colorIdx, tallaIdx, valor) {
+  var p = catalogoAdminData[pid];
+  if (!p || !p.variantesMatriz || !p.variantesMatriz[colorIdx] || !p.variantesMatriz[colorIdx].tallas[tallaIdx]) return;
+  var t = p.variantesMatriz[colorIdx].tallas[tallaIdx];
+  var n = valor.trim() === '' ? null : parseInt(valor, 10);
+  t.stock = (n !== null && !isNaN(n) && n >= 0) ? n : null;
+  guardarVariantesMatrizProducto(pid);
+}
+
+function guardarVariantesMatrizProducto(pid) {
+  var p = catalogoAdminData[pid];
+  if (!p) return;
+  db.ref('catalogo/' + pid + '/variantesMatriz').set(p.variantesMatriz).then(function() {
+    renderInventarioMatriz();
+  }).catch(function(err) {
+    alert('❌ No se pudo guardar el stock: ' + err.message);
+  });
+}
 
 function renderCatalogoAdmin() {
   var list = document.getElementById('catalogo-admin-list');
