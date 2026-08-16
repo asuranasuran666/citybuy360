@@ -3758,7 +3758,10 @@ function renderInventarioMatriz() {
       '</div>';
     }).join('');
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">' +
-      '<div style="font-weight:800;font-size:0.92rem;margin-bottom:4px;">' + esc(p.nombre || p.id) + '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+        (p.imagen ? '<img src="' + esc(p.imagen.split(',')[0].trim()) + '" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex:none;background:#111;" onerror="this.style.display=\'none\'">' : '') +
+        '<div style="font-weight:800;font-size:0.92rem;">' + esc(p.nombre || p.id) + '</div>' +
+      '</div>' +
       filas +
     '</div>';
   }).join('');
