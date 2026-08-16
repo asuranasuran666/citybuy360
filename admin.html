@@ -938,6 +938,13 @@
     <div id="inventario-matriz-filtro" style="padding:0 16px 10px;">
       <input type="text" id="inventario-matriz-buscar" placeholder="Buscar producto..." oninput="renderInventarioMatriz()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
     </div>
+    <div style="padding:0 16px 14px;">
+      <div onclick="toggleHistorialVentas()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
+        <span style="font-size:0.85rem;font-weight:700;">🧾 Historial reciente</span>
+        <span id="historial-ventas-toggle-icon" style="color:var(--text-muted);">▾</span>
+      </div>
+      <div id="historial-ventas-list" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto;"></div>
+    </div>
     <div id="inventario-matriz-list" style="padding:0 16px 16px;"><div class="empty-state">Cargando…</div></div>
   </div>
 
@@ -3722,6 +3729,43 @@ function loadCustomGeneros() {
 
 
 // ── GESTIÓN CATÁLOGO ADMIN ────────────────────────────────────────────────────
+var historialVentasCargado = false;
+function toggleHistorialVentas() {
+  var list = document.getElementById('historial-ventas-list');
+  var icon = document.getElementById('historial-ventas-toggle-icon');
+  var abrir = list.style.display === 'none';
+  list.style.display = abrir ? 'block' : 'none';
+  icon.textContent = abrir ? '▴' : '▾';
+  if (abrir && !historialVentasCargado) cargarHistorialVentas();
+}
+
+function cargarHistorialVentas() {
+  var list = document.getElementById('historial-ventas-list');
+  list.innerHTML = '<div class="empty-state">Cargando…</div>';
+  db.ref('historialVentas').orderByChild('fecha').limitToLast(20).once('value', function(snap) {
+    historialVentasCargado = true;
+    var items = [];
+    snap.forEach(function(child) { items.push(child.val()); });
+    items.reverse(); // más reciente primero
+    if (!items.length) {
+      list.innerHTML = '<div class="empty-state">Sin movimientos todavía. Aparecen aquí cuando uses +/− en Inventario.</div>';
+      return;
+    }
+    list.innerHTML = items.map(function(m) {
+      var esVenta = m.tipo === 'venta';
+      var fecha = new Date(m.fecha);
+      var fechaTxt = fecha.toLocaleDateString('es', {day:'2-digit',month:'2-digit'}) + ' ' + fecha.toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:0.8rem;">' +
+        '<span>' + (esVenta ? '🔻' : '🔺') + '</span>' +
+        '<div style="flex:1;">' +
+          '<div>' + esc(m.productoNombre) + ' — ' + esc(m.color) + ' / ' + esc(m.talla) + '</div>' +
+          '<div style="color:var(--text-muted);font-size:0.72rem;">' + (esVenta ? '-' : '+') + m.cantidad + ' · ' + fechaTxt + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  });
+}
+
 // ── PESTAÑA INVENTARIO (color + talla + stock) ──────────────────────────────
 function renderInventarioMatriz() {
   var cont = document.getElementById('inventario-matriz-list');
@@ -3779,15 +3823,35 @@ function ajustarStockMatriz(pid, colorIdx, tallaIdx, delta) {
   var nuevo = actual + delta;
   if (nuevo < 0) nuevo = 0;
   t.stock = nuevo;
+  registrarMovimientoHistorial(p, p.variantesMatriz[colorIdx].color, t.talla, delta);
   guardarVariantesMatrizProducto(pid);
+}
+
+function registrarMovimientoHistorial(p, color, talla, delta) {
+  if (!delta) return;
+  db.ref('historialVentas').push({
+    productoId: p.id,
+    productoNombre: p.nombre || p.id,
+    color: color,
+    talla: talla,
+    cantidad: Math.abs(delta),
+    tipo: delta < 0 ? 'venta' : 'reposicion',
+    fecha: Date.now()
+  }).then(function() {
+    var list = document.getElementById('historial-ventas-list');
+    if (list && list.style.display !== 'none') cargarHistorialVentas();
+  });
 }
 
 function setStockMatriz(pid, colorIdx, tallaIdx, valor) {
   var p = catalogoAdminData[pid];
   if (!p || !p.variantesMatriz || !p.variantesMatriz[colorIdx] || !p.variantesMatriz[colorIdx].tallas[tallaIdx]) return;
   var t = p.variantesMatriz[colorIdx].tallas[tallaIdx];
+  var anterior = (t.stock === null || t.stock === undefined) ? 0 : t.stock;
   var n = valor.trim() === '' ? null : parseInt(valor, 10);
   t.stock = (n !== null && !isNaN(n) && n >= 0) ? n : null;
+  var nuevo = (t.stock === null) ? anterior : t.stock;
+  if (nuevo !== anterior) registrarMovimientoHistorial(p, p.variantesMatriz[colorIdx].color, t.talla, nuevo - anterior);
   guardarVariantesMatrizProducto(pid);
 }
 
