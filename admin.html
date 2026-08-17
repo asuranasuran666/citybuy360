@@ -671,12 +671,24 @@
     <!-- Ticker/Marquesina -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:12px;">
       <div class="interfaz-row" style="border-bottom:1px solid var(--border);">
-        <div style="flex:1"><div class="interfaz-name">📢 Marquesina (ticker)</div><div class="interfaz-desc">Texto que se desplaza debajo del slider</div></div>
+        <div style="flex:1"><div class="interfaz-name">📢 Marquesina — tasa de cambio</div><div class="interfaz-desc">Se actualiza sola a diario (El Toque). Este texto es el primer mensaje del carrusel de arriba, debajo del header.</div></div>
         <label class="toggle"><input type="checkbox" id="if-ticker" checked onchange="saveTickerActive(this)"><span class="toggle-slider"></span></label>
       </div>
       <div style="padding:12px 16px;display:flex;gap:8px;">
         <textarea id="ticker-text" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:0.82rem;resize:vertical;min-height:50px;" placeholder="Texto de la marquesina…"></textarea>
         <button onclick="saveTickerText()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">💾</button>
+      </div>
+    </div>
+
+    <!-- Mensajes rotativos de la marquesina -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:12px;">
+      <div class="interfaz-row" style="border-bottom:1px solid var(--border);">
+        <div style="flex:1"><div class="interfaz-name">🔄 Marquesina — mensajes rotativos</div><div class="interfaz-desc">Hasta 3 mensajes extra que rotan junto con la tasa de cambio, cada 5 seg.</div></div>
+      </div>
+      <div id="marquesina-mensajes-list" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="padding:0 16px 12px;">
+        <button onclick="guardarMarquesinaMensajes()" style="background:var(--primary);border:none;color:#90caf9;font-weight:700;border-radius:6px;padding:8px 18px;cursor:pointer;font-size:0.85rem;">💾 Guardar mensajes</button>
+        <span id="marquesina-mensajes-chip" class="save-chip">✓ Guardado</span>
       </div>
     </div>
 
@@ -2339,7 +2351,7 @@ function logout() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(id, btn) {
   if (id === 'mensajes') { loadMensajesAdmin(); loadClientesAdmin(); }
-  if (id === 'interfaz') loadRibbonsAdmin();
+  if (id === 'interfaz') { loadRibbonsAdmin(); loadMarquesinaMensajesAdmin(); }
   if (id === 'vendedores') { loadVendedores(); loadVentasVendedores(); loadInventarioAdmin(); }
   if (id === 'inventario') renderInventarioMatriz();
   if (id === 'precios') loadPreciosTab();
@@ -4674,6 +4686,46 @@ function loadSliderAdmin() {
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+var marquesinaTiposLabel = { confianza: '✓ Confianza (verde)', promo: '🔥 Promoción (dorado)', acceso360: '✨ Acceso360 (shimmer)' };
+
+function loadMarquesinaMensajesAdmin() {
+  db.ref('interfaz/marquesinaMensajes').once('value', function(snap) {
+    var data = snap.val() || [
+      { texto: '✓ Precios actualizados a diario · Sin sobrecostos ocultos', tipo: 'confianza', activo: true },
+      { texto: '', tipo: 'promo', activo: false },
+      { texto: '¿Ya eres cliente Acceso360? Reserva antes que nadie', tipo: 'acceso360', activo: true }
+    ];
+    var container = document.getElementById('marquesina-mensajes-list');
+    if (!container) return;
+    container.innerHTML = [0,1,2].map(function(i) {
+      var m = data[i] || { texto: '', tipo: 'confianza', activo: false };
+      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<div style="font-size:0.75rem;color:var(--text-muted);font-weight:700;">MENSAJE ' + (i+1) + '</div>' +
+          '<label class="toggle"><input type="checkbox" data-mmsg="'+i+'" data-field="activo" ' + (m.activo !== false ? 'checked' : '') + '><span class="toggle-slider"></span></label>' +
+        '</div>' +
+        '<textarea data-mmsg="'+i+'" data-field="texto" placeholder="Texto del mensaje…" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:6px 8px;font-size:0.82rem;resize:vertical;min-height:40px;">' + escHtml(m.texto||'') + '</textarea>' +
+        '<select data-mmsg="'+i+'" data-field="tipo" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.8rem;">' +
+          Object.keys(marquesinaTiposLabel).map(function(k) { return '<option value="'+k+'"' + (m.tipo===k?' selected':'') + '>' + marquesinaTiposLabel[k] + '</option>'; }).join('') +
+        '</select>' +
+      '</div>';
+    }).join('');
+  });
+}
+
+function guardarMarquesinaMensajes() {
+  var mensajes = [0,1,2].map(function(i) {
+    var texto = document.querySelector('[data-mmsg="'+i+'"][data-field="texto"]').value;
+    var tipo = document.querySelector('[data-mmsg="'+i+'"][data-field="tipo"]').value;
+    var activo = document.querySelector('[data-mmsg="'+i+'"][data-field="activo"]').checked;
+    return { texto: texto, tipo: tipo, activo: activo };
+  });
+  db.ref('interfaz/marquesinaMensajes').set(mensajes).then(function() {
+    var chip = document.getElementById('marquesina-mensajes-chip');
+    if (chip) { chip.classList.add('show'); setTimeout(function(){ chip.classList.remove('show'); }, 2500); }
+  });
+}
 
 function saveSliderConfig() {
   var inputs = document.querySelectorAll('#slider-admin-list [data-slide]');
