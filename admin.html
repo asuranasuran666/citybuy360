@@ -2252,7 +2252,7 @@ function renderClientes(clientes) {
 }
 
 function revocarCodigoAcceso(code) {
-  if (!confirm('¿Eliminar el acceso de "' + code + '"? Se guarda en la papelera por si te equivocas — puedes restaurarlo después. Nota: si el cliente no tiene internet en el momento de usarlo, el código seguirá funcionando hasta que expire solo — esto solo lo bloquea cuando hay conexión.')) return;
+  if (!confirm('⚠️ Vas a ELIMINAR el código "' + code + '" (se puede restaurar después desde la papelera).\n\nAparte: si el cliente ya lo tiene guardado y usa la tienda sin internet, el código seguirá funcionando en su teléfono hasta la fecha de expiración — esto solo bloquea la verificación cuando SÍ hay conexión.\n\n¿Confirmas eliminar?')) return;
   db.ref('acceso360/clientes/' + code).once('value', function(snap) {
     var datos = snap.val();
     if (datos) {
