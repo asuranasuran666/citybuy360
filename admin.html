@@ -1253,6 +1253,11 @@ const firebaseConfig = {
   appId: "1:701999748308:web:85c320687f6eb10471d741"
 };
 let db;
+// ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
+let SECTIONS = [];
+let PRODUCT_NAMES = {};
+let pendingDestacados = {};
+
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
@@ -1282,11 +1287,6 @@ try {
   var c2 = document.getElementById('sections-container');
   if (c2) c2.innerHTML = '<div class="empty-state">⚠️ Error real en auto-login: <b>' + e.message + '</b><br><span style="font-size:0.75rem;opacity:0.7;">(manda captura de esto)</span></div>';
 }
-
-// ── Datos del catálogo — cargados dinámicamente desde index.html ──────────────
-let SECTIONS = [];
-let PRODUCT_NAMES = {};
-let pendingDestacados = {};
 
 async function loadStructureFromIndex() {
   SECTIONS = [
