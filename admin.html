@@ -779,6 +779,14 @@
       <div id="clientes-list"><div class="empty-state">Sin clientes activos aún</div></div>
     </div>
 
+    <div id="papelera-acceso360-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+        <span class="gold-label" style="color:#ff9999;">🗑️ Papelera — códigos eliminados</span>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">Se guardan aquí por si eliminaste alguno sin querer. Toca "Restaurar" para recuperarlo.</div>
+      </div>
+      <div id="papelera-acceso360-list"></div>
+    </div>
+
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <div style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="toggleEmailjsConfig()">
         <span style="color:var(--text-muted);font-size:0.85rem;">⚙️ Configuración EmailJS <span id="emailjs-config-arrow">▼</span></span>
@@ -2200,6 +2208,7 @@ function loadAcceso360Admin() {
     if (toggle) toggle.checked = data.seccionActiva === true;
     renderSolicitudes(data.solicitudes || {});
     renderClientes(data.clientes || {});
+    renderPapeleraAcceso360(data.clientesEliminados || {});
   });
   loadEmailjsConfig();
 }
@@ -2243,10 +2252,45 @@ function renderClientes(clientes) {
 }
 
 function revocarCodigoAcceso(code) {
-  if (!confirm('¿Eliminar el acceso de "' + code + '"? Nota: si el cliente no tiene internet en el momento de usarlo, el código seguirá funcionando hasta que expire solo — esto solo lo bloquea cuando hay conexión.')) return;
-  db.ref('acceso360/revocados/' + code).set(true);
-  db.ref('acceso360/clientes/' + code).remove();
-  loadAcceso360Admin();
+  if (!confirm('¿Eliminar el acceso de "' + code + '"? Se guarda en la papelera por si te equivocas — puedes restaurarlo después. Nota: si el cliente no tiene internet en el momento de usarlo, el código seguirá funcionando hasta que expire solo — esto solo lo bloquea cuando hay conexión.')) return;
+  db.ref('acceso360/clientes/' + code).once('value', function(snap) {
+    var datos = snap.val();
+    if (datos) {
+      db.ref('acceso360/clientesEliminados/' + code).set(Object.assign({}, datos, { eliminado_fecha: new Date().toISOString() }));
+    }
+    db.ref('acceso360/revocados/' + code).set(true);
+    db.ref('acceso360/clientes/' + code).remove();
+    loadAcceso360Admin();
+  });
+}
+
+function renderPapeleraAcceso360(eliminados) {
+  var wrap = document.getElementById('papelera-acceso360-wrap');
+  var list = document.getElementById('papelera-acceso360-list');
+  if (!wrap || !list) return;
+  var entries = Object.entries(eliminados || {});
+  if (!entries.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  list.innerHTML = entries.map(([code, c]) => `
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:0.82rem;color:#ffd700;font-weight:700;letter-spacing:1px;">${code}</div>
+        <div style="font-size:0.75rem;color:#aaa;">${c.correo||'—'} · eliminado ${c.eliminado_fecha ? new Date(c.eliminado_fecha).toLocaleDateString('es-ES') : ''}</div>
+      </div>
+      <button onclick="restaurarCodigoAcceso('${code}')" style="background:#0a2a0a;border:1px solid #336633;color:#88ff88;border-radius:6px;padding:5px 10px;font-size:0.75rem;cursor:pointer;">↩️ Restaurar</button>
+    </div>`).join('');
+}
+
+function restaurarCodigoAcceso(code) {
+  db.ref('acceso360/clientesEliminados/' + code).once('value', function(snap) {
+    var datos = snap.val();
+    if (!datos) return;
+    delete datos.eliminado_fecha;
+    db.ref('acceso360/clientes/' + code).set(datos);
+    db.ref('acceso360/revocados/' + code).remove();
+    db.ref('acceso360/clientesEliminados/' + code).remove();
+    loadAcceso360Admin();
+  });
 }
 
 function usarSolicitud(correo, id) {
