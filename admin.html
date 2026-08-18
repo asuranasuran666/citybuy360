@@ -3778,6 +3778,15 @@ function cargarHistorialVentas() {
   });
 }
 
+function toggleColorMatriz(key) {
+  var body = document.getElementById('color-matriz-body-' + key);
+  var icon = document.getElementById('color-matriz-icon-' + key);
+  if (!body) return;
+  var abrir = body.style.display === 'none';
+  body.style.display = abrir ? 'block' : 'none';
+  if (icon) icon.textContent = abrir ? '▴' : '▾';
+}
+
 // ── PESTAÑA INVENTARIO (color + talla + stock) ──────────────────────────────
 function renderInventarioMatriz() {
   var cont = document.getElementById('inventario-matriz-list');
@@ -3798,6 +3807,7 @@ function renderInventarioMatriz() {
 
   cont.innerHTML = productos.map(function(p) {
     var filas = p.variantesMatriz.map(function(c, ci) {
+      var stockTotalColor = (c.tallas || []).reduce(function(sum, t) { return sum + (t.stock || 0); }, 0);
       var tallasHtml = (c.tallas || []).map(function(t, ti) {
         var stock = (t.stock === null || t.stock === undefined) ? '' : t.stock;
         var agotado = (t.stock === 0);
@@ -3808,9 +3818,13 @@ function renderInventarioMatriz() {
           '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">+</button>' +
         '</div>';
       }).join('');
-      return '<div style="margin-top:8px;">' +
-        '<div style="font-size:0.85rem;font-weight:700;color:var(--text);">🎨 ' + esc(c.color) + '</div>' +
-        tallasHtml +
+      var colorKey = p.id + '-' + ci;
+      return '<div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">' +
+        '<div onclick="toggleColorMatriz(\'' + colorKey + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;background:var(--bg);">' +
+          '<span style="font-size:0.85rem;font-weight:700;color:var(--text);">🎨 ' + esc(c.color) + '</span>' +
+          '<span style="font-size:0.75rem;color:var(--text-muted);">' + stockTotalColor + ' en total <span id="color-matriz-icon-' + colorKey + '">▾</span></span>' +
+        '</div>' +
+        '<div id="color-matriz-body-' + colorKey + '" style="display:none;padding:0 10px 6px;">' + tallasHtml + '</div>' +
       '</div>';
     }).join('');
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">' +
