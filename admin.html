@@ -1900,6 +1900,22 @@ async function generarIndexEstatico() {
       indexHTML = indexHTML.substring(0, gmTagStart) + indexHTML.substring(gmBlockEnd);
     }
 
+    // Sacar ribbon-2 de su posición actual ANTES de reconstruir las secciones — así nunca
+    // interfiere como ancla, y lo reinsertamos después justo antes de Servicios, sin importar
+    // cómo haya quedado ordenado el resto de las categorías en esta generación.
+    var ribbon2BlockExtraido = '';
+    if (indexHTML.indexOf('id="ribbon-2"') !== -1) {
+      var r2Idx = indexHTML.indexOf('id="ribbon-2"');
+      var r2TagStart = indexHTML.lastIndexOf('<', r2Idx);
+      var r2OpenEnd = indexHTML.indexOf('>', r2Idx) + 1;
+      var r2Close = findMatchingCloseDiv(indexHTML, r2OpenEnd);
+      if (r2Close !== -1) {
+        var r2BlockEnd = r2Close + '</div>'.length;
+        ribbon2BlockExtraido = indexHTML.substring(r2TagStart, r2BlockEnd);
+        indexHTML = indexHTML.substring(0, r2TagStart) + indexHTML.substring(r2BlockEnd);
+      }
+    }
+
     // Ordenar el resto de secciones según seccionesOrden (fijas + dinámicas juntas)
     var idsTodas = seccionesFijas.concat(seccionesDinamicasDetectadas);
     idsTodas.sort(function(a, b) {
@@ -1982,6 +1998,24 @@ async function generarIndexEstatico() {
     if (zonaFin < zonaInicio) throw new Error('Estructura de secciones inesperada — abortado para no corromper el archivo.');
 
     indexHTML = indexHTML.substring(0, zonaInicio) + bloquesHTML + '\n' + indexHTML.substring(zonaFin);
+
+    // Reinsertar ribbon-2 justo antes de Servicios, sin importar cómo haya quedado ordenado
+    // el resto — así su posición sobrevive a cualquier regeneración futura.
+    if (ribbon2BlockExtraido) {
+      var servIdx = indexHTML.indexOf('id="sec-title-servicios"');
+      if (servIdx !== -1) {
+        var servTagStart = indexHTML.lastIndexOf('<', servIdx);
+        indexHTML = indexHTML.substring(0, servTagStart) + ribbon2BlockExtraido + '\n\n' + indexHTML.substring(servTagStart);
+      } else {
+        // Si por algún motivo no se encuentra Servicios, no se pierde: se deja al final, antes de cerrar products-container.
+        var contIdxFallback = indexHTML.indexOf('id="products-container"');
+        var contOpenFallback = indexHTML.indexOf('>', contIdxFallback) + 1;
+        var contCloseFallback = findMatchingCloseDiv(indexHTML, contOpenFallback);
+        if (contCloseFallback !== -1) {
+          indexHTML = indexHTML.substring(0, contCloseFallback) + ribbon2BlockExtraido + '\n\n' + indexHTML.substring(contCloseFallback);
+        }
+      }
+    }
 
     // 4b. Ribbons: texto y visibilidad
     function setTextInside(id, texto) {
