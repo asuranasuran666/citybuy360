@@ -1887,6 +1887,10 @@ async function generarIndexEstatico() {
       indexHTML = indexHTML.substring(0, dOpen) + '\n' + prodsDestacado.map(buildStaticCard).join('\n') + '\n' + indexHTML.substring(dClose);
     }
 
+    // Auto-reparación: si una generación anterior dejó el <div de grid-mix roto
+    // (huérfano, sin su apertura), lo arreglamos antes de seguir para no arrastrar el daño.
+    indexHTML = indexHTML.replace(/\n{2,}class="grid" id="grid-mix">/g, '\n<div class="grid" id="grid-mix">');
+
     // Sacar el grid-mix existente de su posición (si ya había uno de una generación anterior);
     // se vuelve a insertar más abajo, siempre presente aunque esté vacío/oculto.
     var gridMixExtraido = '';
@@ -1894,6 +1898,9 @@ async function generarIndexEstatico() {
       var gmIdx = indexHTML.indexOf('id="grid-mix"');
       var gmTagStart = indexHTML.lastIndexOf('<', gmIdx);
       var gmOpenEnd = indexHTML.indexOf('>', gmIdx) + 1;
+      if (indexHTML.substring(gmTagStart, gmTagStart + 4) !== '<div') {
+        throw new Error('No se encontró el inicio real de la etiqueta de "grid-mix" (posible corrupción previa) — abortado para no dañar más el archivo. Avisa a Claude con este mensaje.');
+      }
       var gmClose = findMatchingCloseDiv(indexHTML, gmOpenEnd);
       if (gmClose === -1) throw new Error('No se pudo encontrar el cierre real de "grid-mix" — abortado para no corromper el archivo.');
       var gmBlockEnd = gmClose + '</div>'.length;
@@ -1908,6 +1915,9 @@ async function generarIndexEstatico() {
       var r2Idx = indexHTML.indexOf('id="ribbon-2"');
       var r2TagStart = indexHTML.lastIndexOf('<', r2Idx);
       var r2OpenEnd = indexHTML.indexOf('>', r2Idx) + 1;
+      if (indexHTML.substring(r2TagStart, r2TagStart + 4) !== '<div') {
+        throw new Error('No se encontró el inicio real de la etiqueta de "ribbon-2" (posible corrupción previa) — abortado para no dañar más el archivo. Avisa a Claude con este mensaje.');
+      }
       var r2Close = findMatchingCloseDiv(indexHTML, r2OpenEnd);
       if (r2Close !== -1) {
         var r2BlockEnd = r2Close + '</div>'.length;
