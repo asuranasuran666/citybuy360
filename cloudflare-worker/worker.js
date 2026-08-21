@@ -11,6 +11,11 @@ export default {
       return new Response(null, { headers: cabecerasCors() });
     }
 
+    const url = new URL(request.url);
+    if (url.pathname === '/shein-info') {
+      return manejarSheinInfo(request);
+    }
+
     if (request.method !== 'POST') {
       return jsonError('Método no permitido', 405);
     }
@@ -94,9 +99,63 @@ export default {
 function cabecerasCors() {
   return {
     'Access-Control-Allow-Origin': ORIGEN_PERMITIDO,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
+}
+
+// Lee un link de Shein (típicamente el link corto onelink.shein.com que se comparte
+// desde la app) y extrae el nombre y la imagen del producto vía meta tags Open Graph.
+// Nota: la página completa de producto en shein.com está protegida por un captcha
+// anti-bot, así que ahí no siempre se puede leer; el precio siempre se ingresa a mano.
+async function manejarSheinInfo(request) {
+  const url = new URL(request.url);
+  const link = url.searchParams.get('url');
+  if (!link) return jsonError('Falta el parámetro url', 400);
+
+  let html;
+  try {
+    const resp = await fetch(link, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'es-ES,es;q=0.9',
+      },
+      redirect: 'follow',
+    });
+    html = await resp.text();
+  } catch (e) {
+    return jsonError('Error leyendo el link: ' + e.message, 500);
+  }
+
+  const nombre = extraerMeta(html, 'og:title') || extraerTitulo(html);
+  const imagen = extraerMeta(html, 'og:image');
+
+  if (!nombre && !imagen) {
+    return jsonError('No se pudo leer ese link (puede que Shein esté bloqueando la lectura automática). Copia nombre e imagen a mano.', 502);
+  }
+
+  return new Response(JSON.stringify({ nombre: limpiarHtml(nombre || ''), imagen: imagen || '' }), {
+    headers: { 'Content-Type': 'application/json', ...cabecerasCors() },
+  });
+}
+
+function extraerMeta(html, prop) {
+  var re = new RegExp('<meta[^>]+(?:property|name)=["\']' + prop + '["\'][^>]+content=["\']([^"\']*)["\']', 'i');
+  var m = html.match(re);
+  if (m) return m[1];
+  var re2 = new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' + prop + '["\']', 'i');
+  var m2 = html.match(re2);
+  return m2 ? m2[1] : null;
+}
+
+function extraerTitulo(html) {
+  var m = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return m ? m[1] : null;
+}
+
+function limpiarHtml(str) {
+  return str.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
 }
 
 function jsonError(mensaje, status) {
