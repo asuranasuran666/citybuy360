@@ -1062,14 +1062,20 @@
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
       <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🛍️ Catálogo curado de Shein (VIP)</div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Productos que subes tú a mano — se ven en la sección VIP con botón "Pedir este", que abre la calculadora ya rellenada. Solo tú actualizas precio/disponibilidad, no es automático.</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Pega el link que compartes desde la app de Shein — el nombre y la imagen se llenan solos. El precio lo escribes tú (cambia seguido). Luego "Agregar a la galería".</div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="text" id="sh-link" placeholder="Pega aquí el link del producto en Shein" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <button type="button" onclick="autocompletarDesdeShein()" id="sh-autocompletar-btn" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;font-size:0.8rem;">🔎 Leer link</button>
+      </div>
+      <div id="sh-autocompletar-status" style="font-size:0.75rem;margin-bottom:10px;"></div>
 
       <input type="text" id="sh-nombre" placeholder="Nombre del producto" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <input type="number" id="sh-precio" step="0.01" placeholder="Precio (USD)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
         <input type="text" id="sh-imagen" placeholder="URL de la imagen" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
       </div>
-      <input type="text" id="sh-link" placeholder="Link del producto en Shein" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:10px;box-sizing:border-box;">
+      <div id="sh-imagen-preview" style="margin-bottom:10px;"></div>
       <button onclick="agregarProductoShein()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Agregar a la galería</button>
       <div id="sh-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
 
@@ -3282,6 +3288,43 @@ function borrarCompromiso(id) {
   db.ref('compromisos/' + id).remove().then(loadCompromisosAdmin);
 }
 
+function autocompletarDesdeShein() {
+  var link = document.getElementById('sh-link').value.trim();
+  var status = document.getElementById('sh-autocompletar-status');
+  var btn = document.getElementById('sh-autocompletar-btn');
+  if (!link) {
+    status.style.color = '#ff9999';
+    status.textContent = 'Pega primero el link de Shein';
+    return;
+  }
+  btn.disabled = true;
+  status.style.color = '';
+  status.textContent = 'Leyendo el link…';
+  fetch('https://citybuy360-tryon.asuranasuran666.workers.dev/shein-info?url=' + encodeURIComponent(link))
+    .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+    .then(function(res) {
+      btn.disabled = false;
+      if (!res.ok) {
+        status.style.color = '#ff9999';
+        status.textContent = '❌ ' + (res.data.error || 'No se pudo leer el link');
+        return;
+      }
+      if (res.data.nombre) document.getElementById('sh-nombre').value = res.data.nombre;
+      if (res.data.imagen) {
+        document.getElementById('sh-imagen').value = res.data.imagen;
+        document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + res.data.imagen + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
+      }
+      status.style.color = '#7fff7f';
+      status.textContent = '✅ Nombre e imagen listos — solo falta el precio';
+      document.getElementById('sh-precio').focus();
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      status.style.color = '#ff9999';
+      status.textContent = '❌ Error de conexión: ' + e.message;
+    });
+}
+
 function agregarProductoShein() {
   var nombre = document.getElementById('sh-nombre').value.trim();
   var precio = parseFloat(document.getElementById('sh-precio').value);
@@ -3305,6 +3348,7 @@ function agregarProductoShein() {
     document.getElementById('sh-precio').value = '';
     document.getElementById('sh-imagen').value = '';
     document.getElementById('sh-link').value = '';
+    document.getElementById('sh-imagen-preview').innerHTML = '';
     setTimeout(function(){ status.textContent = ''; }, 2000);
     loadProductosShein();
   }).catch(function(e) {
