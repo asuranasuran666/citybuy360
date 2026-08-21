@@ -1818,9 +1818,14 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         }
 
         // Conversión a MN si el precio está en USD/EUR y el toggle está activo
-        var tieneVariantesConPrecio = Array.isArray(p.variantes) && p.variantes.length > 0;
+        var tieneVariantesMatriz = p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
+        var tieneVariantesConPrecio = (Array.isArray(p.variantes) && p.variantes.length > 0) || tieneVariantesMatriz;
         var precioBase = p.precio;
-        if (tieneVariantesConPrecio) {
+        if (tieneVariantesMatriz) {
+            var preciosMatriz = [];
+            p.variantesMatriz.forEach(function(c){ (c.tallas||[]).forEach(function(t){ var pr = parseFloat(t.precio); if (!isNaN(pr)) preciosMatriz.push(pr); }); });
+            if (preciosMatriz.length) precioBase = Math.min.apply(null, preciosMatriz);
+        } else if (tieneVariantesConPrecio) {
             var preciosVariantes = p.variantes.map(function(v){ return parseFloat(v.precio); }).filter(function(n){ return !isNaN(n); });
             if (preciosVariantes.length) precioBase = Math.min.apply(null, preciosVariantes);
         }
@@ -1877,7 +1882,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         }
         }
 
-        var variantesAttr = tieneVariantesConPrecio ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
+        var variantesAttr = (Array.isArray(p.variantes) && p.variantes.length > 0) ? JSON.stringify(p.variantes).replace(/"/g, '&quot;') : '';
+        var variantesMatrizAttr = tieneVariantesMatriz ? JSON.stringify(p.variantesMatriz).replace(/"/g, '&quot;') : '';
 
         // Producto en "próxima venta": visible pero bloqueado, reservable solo con Acceso 360
         var esProximaVenta = p.activo === false && p.proximaVenta === true;
@@ -1900,7 +1906,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
                     : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>');
         }
-        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" id="card-' + p.id + '">' +
+        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-matriz="' + variantesMatrizAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'"' + (esProximaVenta ? ' style="filter:grayscale(60%) brightness(0.7);"' : '') + '>' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
@@ -2581,6 +2587,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     var pdpCurrentId = '';
     var pdpBasePrice = '';
     var pdpVariantes = [];
+    var pdpVariantesMatriz = [];
+    var pdpVariantesTipo = 'color';
     var pdpMoneda = 'USD';
     var pdpPrecioModo = '';
     var pdpSelVariantePrecio = '';
@@ -2633,6 +2641,60 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 }
             });
             container.appendChild(btn);
+        });
+    }
+
+    // Selector en cascada Color → Talla (sistema de matriz de variantes).
+    // Usa el wrap de "tallas" para el paso 1 (Color) y el wrap de "colores" para el paso 2 (Talla)
+    // así el orden visual queda Color arriba, Talla abajo, que es el flujo natural de elección.
+    function pdpBuildMatrizColores() {
+        document.querySelector('#pdp-tallas-wrap .pdp-option-label').textContent = 'Color';
+        document.querySelector('#pdp-colores-wrap .pdp-option-label').textContent = 'Talla';
+        pdpTallasWrap.classList.toggle('show', pdpVariantesMatriz.length > 0);
+        pdpTallasOptions.innerHTML = '';
+        pdpColoresWrap.classList.remove('show');
+        pdpColoresOptions.innerHTML = '';
+        pdpVariantesMatriz.forEach(function(c) {
+            var hayStockColor = (c.tallas || []).some(function(t){ return t.stock === null || t.stock === undefined || t.stock > 0; });
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pdp-option-btn';
+            btn.textContent = c.color;
+            if (!hayStockColor) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.textDecoration = 'line-through'; }
+            btn.addEventListener('click', function() {
+                if (btn.disabled) return;
+                pdpTallasOptions.querySelectorAll('.pdp-option-btn').forEach(function(b){ b.classList.remove('selected'); });
+                btn.classList.add('selected');
+                pdpSelColor = c.color;
+                pdpSelTalla = '';
+                pdpSelVariantePrecio = '';
+                pdpBuildMatrizTallas(c);
+            });
+            pdpTallasOptions.appendChild(btn);
+        });
+    }
+
+    function pdpBuildMatrizTallas(colorObj) {
+        pdpColoresWrap.classList.add('show');
+        pdpColoresOptions.innerHTML = '';
+        (colorObj.tallas || []).forEach(function(t) {
+            var sinStock = (t.stock !== null && t.stock !== undefined && t.stock <= 0);
+            var etiquetaStock = sinStock ? ' (Agotado)' : ((t.stock !== null && t.stock !== undefined && t.stock <= 3) ? ' (¡Últ. ' + t.stock + '!)' : '');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pdp-option-btn';
+            btn.textContent = t.talla + etiquetaStock;
+            if (sinStock) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
+            btn.addEventListener('click', function() {
+                if (btn.disabled) return;
+                pdpColoresOptions.querySelectorAll('.pdp-option-btn').forEach(function(b){ b.classList.remove('selected'); });
+                btn.classList.add('selected');
+                pdpSelTalla = t.talla;
+                var htmlPrecio = pdpFormatearPrecio(parseFloat(t.precio));
+                pdpPrice.innerHTML = htmlPrecio;
+                pdpSelVariantePrecio = htmlPrecio.split('<')[0].trim();
+            });
+            pdpColoresOptions.appendChild(btn);
         });
     }
 
@@ -2692,7 +2754,12 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         if (variantesRaw) {
             try { pdpVariantes = JSON.parse(variantesRaw); } catch(e) { pdpVariantes = []; }
         }
-        var pdpVariantesTipo = card.getAttribute('data-variantes-tipo') || 'color';
+        pdpVariantesTipo = card.getAttribute('data-variantes-tipo') || 'color';
+        var variantesMatrizRaw = card.getAttribute('data-variantes-matriz') || '';
+        pdpVariantesMatriz = [];
+        if (variantesMatrizRaw) {
+            try { pdpVariantesMatriz = JSON.parse(variantesMatrizRaw); } catch(e) { pdpVariantesMatriz = []; }
+        }
         pdpMoneda = card.getAttribute('data-moneda') || 'USD';
         pdpPrecioModo = card.getAttribute('data-precio-modo') || '';
         pdpSelVariantePrecio = '';
@@ -2779,23 +2846,43 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             starsWrap.innerHTML = '';
         }
 
-        // Tallas: solo se muestra el selector si hay 2 o más opciones; con 1 sola se toma fija
-        var tallasArr = tallasRaw ? tallasRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
-        if (pdpVariantes.length && pdpVariantesTipo === 'talla') tallasArr = pdpVariantes.map(function(v){ return v.nombre; });
-        pdpSelTalla = tallasArr.length === 1 ? tallasArr[0] : '';
-        pdpBuildOptions(pdpTallasOptions, pdpTallasWrap, tallasArr.length > 1 ? tallasArr : [], false, pdpVariantesTipo === 'talla');
-        document.querySelector('#pdp-tallas-wrap .pdp-option-label').textContent = (pdpVariantes.length && pdpVariantesTipo === 'talla') ? 'Elige una opción' : 'Talla';
+        if (pdpVariantesTipo === 'matriz' && pdpVariantesMatriz.length) {
+            // Matriz color+talla: selección en cascada
+            pdpSelColor = '';
+            pdpSelTalla = '';
+            pdpSelVariantePrecio = '';
+            if (pdpVariantesMatriz.length === 1 && pdpVariantesMatriz[0].tallas && pdpVariantesMatriz[0].tallas.length === 1) {
+                // Único color y única talla: no hace falta que el cliente elija nada
+                var unico = pdpVariantesMatriz[0];
+                pdpTallasWrap.classList.remove('show');
+                pdpColoresWrap.classList.remove('show');
+                pdpSelColor = unico.color;
+                pdpSelTalla = unico.tallas[0].talla;
+                var htmlPrecioUnico2 = pdpFormatearPrecio(parseFloat(unico.tallas[0].precio));
+                pdpPrice.innerHTML = htmlPrecioUnico2;
+                pdpSelVariantePrecio = htmlPrecioUnico2.split('<')[0].trim();
+            } else {
+                pdpBuildMatrizColores();
+            }
+        } else {
+            // Tallas: solo se muestra el selector si hay 2 o más opciones; con 1 sola se toma fija
+            var tallasArr = tallasRaw ? tallasRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+            if (pdpVariantes.length && pdpVariantesTipo === 'talla') tallasArr = pdpVariantes.map(function(v){ return v.nombre; });
+            pdpSelTalla = tallasArr.length === 1 ? tallasArr[0] : '';
+            pdpBuildOptions(pdpTallasOptions, pdpTallasWrap, tallasArr.length > 1 ? tallasArr : [], false, pdpVariantesTipo === 'talla');
+            document.querySelector('#pdp-tallas-wrap .pdp-option-label').textContent = (pdpVariantes.length && pdpVariantesTipo === 'talla') ? 'Elige una opción' : 'Talla';
 
-        var coloresArr = coloresRaw ? coloresRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
-        if (pdpVariantes.length && pdpVariantesTipo === 'color') coloresArr = pdpVariantes.map(function(v){ return v.nombre; });
-        pdpSelColor = coloresArr.length === 1 ? coloresArr[0] : '';
-        pdpBuildOptions(pdpColoresOptions, pdpColoresWrap, coloresArr.length > 1 ? coloresArr : [], true, pdpVariantesTipo === 'color');
-        document.querySelector('#pdp-colores-wrap .pdp-option-label').textContent = (pdpVariantes.length && pdpVariantesTipo === 'color') ? 'Elige una opción' : 'Color';
-        if (pdpVariantes.length === 1) {
-            var htmlPrecioUnico = pdpFormatearPrecio(parseFloat(pdpVariantes[0].precio));
-            pdpPrice.innerHTML = htmlPrecioUnico;
-            pdpSelVariantePrecio = htmlPrecioUnico.split('<')[0].trim();
-            if (pdpVariantesTipo === 'talla') pdpSelTalla = pdpVariantes[0].nombre; else pdpSelColor = pdpVariantes[0].nombre;
+            var coloresArr = coloresRaw ? coloresRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+            if (pdpVariantes.length && pdpVariantesTipo === 'color') coloresArr = pdpVariantes.map(function(v){ return v.nombre; });
+            pdpSelColor = coloresArr.length === 1 ? coloresArr[0] : '';
+            pdpBuildOptions(pdpColoresOptions, pdpColoresWrap, coloresArr.length > 1 ? coloresArr : [], true, pdpVariantesTipo === 'color');
+            document.querySelector('#pdp-colores-wrap .pdp-option-label').textContent = (pdpVariantes.length && pdpVariantesTipo === 'color') ? 'Elige una opción' : 'Color';
+            if (pdpVariantes.length === 1) {
+                var htmlPrecioUnico = pdpFormatearPrecio(parseFloat(pdpVariantes[0].precio));
+                pdpPrice.innerHTML = htmlPrecioUnico;
+                pdpSelVariantePrecio = htmlPrecioUnico.split('<')[0].trim();
+                if (pdpVariantesTipo === 'talla') pdpSelTalla = pdpVariantes[0].nombre; else pdpSelColor = pdpVariantes[0].nombre;
+            }
         }
 
         // Galería
@@ -3086,7 +3173,12 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         if (btn.hasAttribute('data-reserva')) return; // deja navegar al link de WhatsApp normalmente
         e.preventDefault();
         if (btn.id === 'pdp-lo-quiero') {
-            if (pdpVariantes.length && !pdpSelVariantePrecio) {
+            if (pdpVariantesTipo === 'matriz' && pdpVariantesMatriz.length) {
+                if (!pdpSelColor || !pdpSelTalla) {
+                    alert('Elige color y talla antes de continuar.');
+                    return;
+                }
+            } else if (pdpVariantes.length && !pdpSelVariantePrecio) {
                 alert('Elige una opción antes de continuar (el precio cambia según cuál elijas).');
                 return;
             }
