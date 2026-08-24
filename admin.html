@@ -1081,6 +1081,28 @@
 
       <div id="sh-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
     </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🛍️ Ofertas Shein (públicas en la tienda)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Estas SÍ se ven para cualquier cliente, en la pestaña "🛍️ Shein" de la tienda — no requieren código VIP. El botón "Lo quiero" manda un WhatsApp directo con el link; tú gestionas la compra real.</div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="text" id="so-link" placeholder="Pega aquí el link del producto en Shein" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <button type="button" onclick="autocompletarOfertaShein()" id="so-autocompletar-btn" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;font-size:0.8rem;">🔎 Leer link</button>
+      </div>
+      <div id="so-autocompletar-status" style="font-size:0.75rem;margin-bottom:10px;"></div>
+
+      <input type="text" id="so-nombre" placeholder="Nombre del producto" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input type="number" id="so-precio" step="0.01" placeholder="Precio (USD)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="text" id="so-imagen" placeholder="URL de la imagen" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <div id="so-imagen-preview" style="margin-bottom:10px;"></div>
+      <button onclick="agregarOfertaShein()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Publicar en la tienda</button>
+      <div id="so-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
+
+      <div id="so-lista" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
   </div>
 
   <!-- ── TAB: MARKETING ── -->
@@ -1673,6 +1695,10 @@ async function generarIndexEstatico() {
       }
       var precioNum = precioBaseEstatico ? String(precioBaseEstatico).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
       var monedaProd = p.moneda || 'MN';
+      if (monedaProd === 'USD' && precioNum !== '') {
+        var precioNumEstaticoFmt = parseFloat(precioNum);
+        if (!isNaN(precioNumEstaticoFmt)) precioNum = precioNumEstaticoFmt.toFixed(2);
+      }
       var precioHTML = '';
       var mostrarConvMNEstatico = configEstatico.mostrarConversionMN !== false;
       var mostrarConvUSDEstatico = configEstatico.mostrarConversionUSD !== false;
@@ -2607,6 +2633,7 @@ async function initAdmin() {
   window._cb360Etapa = 'loadConfigTemuShein';
   loadConfigTemuShein();
   loadProductosShein();
+  loadOfertasSheinAdmin();
   loadPromoCards();
   loadCompromisosAdmin();
   loadSlotPremium();
@@ -3323,6 +3350,103 @@ function autocompletarDesdeShein() {
       status.style.color = '#ff9999';
       status.textContent = '❌ Error de conexión: ' + e.message;
     });
+}
+
+function autocompletarOfertaShein() {
+  var link = document.getElementById('so-link').value.trim();
+  var status = document.getElementById('so-autocompletar-status');
+  var btn = document.getElementById('so-autocompletar-btn');
+  if (!link) {
+    status.style.color = '#ff9999';
+    status.textContent = 'Pega primero el link de Shein';
+    return;
+  }
+  btn.disabled = true;
+  status.style.color = '';
+  status.textContent = 'Leyendo el link…';
+  fetch('https://citybuy360-tryon.asuranasuran666.workers.dev/shein-info?url=' + encodeURIComponent(link))
+    .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+    .then(function(res) {
+      btn.disabled = false;
+      if (!res.ok) {
+        status.style.color = '#ff9999';
+        status.textContent = '❌ ' + (res.data.error || 'No se pudo leer el link');
+        return;
+      }
+      if (res.data.nombre) document.getElementById('so-nombre').value = res.data.nombre;
+      if (res.data.imagen) {
+        document.getElementById('so-imagen').value = res.data.imagen;
+        document.getElementById('so-imagen-preview').innerHTML = '<img src="' + res.data.imagen + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
+      }
+      status.style.color = '#7fff7f';
+      status.textContent = '✅ Nombre e imagen listos — solo falta el precio';
+      document.getElementById('so-precio').focus();
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      status.style.color = '#ff9999';
+      status.textContent = '❌ Error de conexión: ' + e.message;
+    });
+}
+
+function agregarOfertaShein() {
+  var nombre = document.getElementById('so-nombre').value.trim();
+  var precio = parseFloat(document.getElementById('so-precio').value);
+  var imagen = document.getElementById('so-imagen').value.trim();
+  var link = document.getElementById('so-link').value.trim();
+  var status = document.getElementById('so-status');
+  if (!nombre || isNaN(precio) || !link) {
+    status.style.color = '#ff9999';
+    status.textContent = 'Faltan datos: nombre, precio y link son obligatorios';
+    return;
+  }
+  status.style.color = '';
+  status.textContent = 'Guardando…';
+  db.ref('shein_ofertas').push({
+    nombre: nombre, precio: precio, imagen: imagen, link: link,
+    activo: true, creado: new Date().toISOString()
+  }).then(function() {
+    status.style.color = '#7fff7f';
+    status.textContent = '✅ Publicado en la tienda';
+    document.getElementById('so-nombre').value = '';
+    document.getElementById('so-precio').value = '';
+    document.getElementById('so-imagen').value = '';
+    document.getElementById('so-link').value = '';
+    document.getElementById('so-imagen-preview').innerHTML = '';
+    setTimeout(function(){ status.textContent = ''; }, 2000);
+    loadOfertasSheinAdmin();
+  }).catch(function(e) {
+    status.style.color = '#ff9999';
+    status.textContent = '❌ Error: ' + e.message;
+  });
+}
+
+function loadOfertasSheinAdmin() {
+  db.ref('shein_ofertas').once('value', function(snap) {
+    var data = snap.val() || {};
+    var lista = Object.entries(data).sort(function(a, b) { return new Date(b[1].creado) - new Date(a[1].creado); });
+    var cont = document.getElementById('so-lista');
+    if (!lista.length) { cont.innerHTML = '<div class="empty-state">Sin ofertas todavía</div>'; return; }
+    cont.innerHTML = lista.map(function(e) {
+      var id = e[0], p = e[1];
+      return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">' +
+        (p.imagen ? '<img src="' + p.imagen + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex:none;" onerror="this.style.display=\'none\'">' : '') +
+        '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nombre + '</div>' +
+        '<div style="font-size:0.78rem;color:var(--text-muted);">' + p.precio + ' USD' + (p.activo === false ? ' · desactivado' : '') + '</div></div>' +
+        '<button onclick="toggleOfertaShein(\'' + id + '\',' + (p.activo !== false) + ')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">' + (p.activo !== false ? '👁️' : '🚫') + '</button>' +
+        '<button onclick="borrarOfertaShein(\'' + id + '\')" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">🗑️</button>' +
+        '</div>';
+    }).join('');
+  });
+}
+
+function toggleOfertaShein(id, estaActivo) {
+  db.ref('shein_ofertas/' + id + '/activo').set(!estaActivo).then(function() { loadOfertasSheinAdmin(); });
+}
+
+function borrarOfertaShein(id) {
+  if (!confirm('¿Borrar esta oferta?')) return;
+  db.ref('shein_ofertas/' + id).remove().then(function() { loadOfertasSheinAdmin(); });
 }
 
 function agregarProductoShein() {
