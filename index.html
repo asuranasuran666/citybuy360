@@ -824,7 +824,12 @@
         .pdp-option-btn {
             border: 1px solid #ccc; background: #fff; padding: 7px 16px; border-radius: 8px;
             font-size: 0.85rem; cursor: pointer; color: #333; transition: all 0.15s;
+            display: flex; flex-direction: column; align-items: center; line-height: 1.25;
         }
+        .pdp-option-btn .pdp-option-stock {
+            font-size: 0.68rem; font-weight: 600; color: #e67700; margin-top: 1px;
+        }
+        .pdp-option-btn.selected .pdp-option-stock { color: #ffe0b3; }
         .pdp-option-btn.selected { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
         #pdp-lo-quiero {
             display: block; text-align: center; background: var(--brand-blue);
@@ -1898,6 +1903,10 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         }
         var precioMostrar = precioBase ? String(precioBase).replace(/\s*(MN|USD|EUR)$/i,'').trim() : '';
         var monedaProd = p.moneda || 'MN';
+        if (monedaProd === 'USD' && precioMostrar !== '') {
+            var precioNumCard = parseFloat(precioMostrar);
+            if (!isNaN(precioNumCard)) precioMostrar = precioNumCard.toFixed(2);
+        }
         var bajadaPrecioHTML = '';
         if (p.precioBajo === true && p.precioBajoFecha && (Date.now() - p.precioBajoFecha) < (7*24*60*60*1000)) {
             bajadaPrecioHTML = '<span class="price-down-arrow">▼</span>';
@@ -2747,11 +2756,11 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpColoresOptions.innerHTML = '';
         (colorObj.tallas || []).forEach(function(t) {
             var sinStock = (t.stock !== null && t.stock !== undefined && t.stock <= 0);
-            var etiquetaStock = sinStock ? ' (Agotado)' : ((t.stock !== null && t.stock !== undefined && t.stock <= 3) ? ' (¡Últ. ' + t.stock + '!)' : '');
+            var etiquetaStock = sinStock ? 'Agotado' : ((t.stock !== null && t.stock !== undefined && t.stock <= 3) ? '¡Últ. ' + t.stock + '!' : '');
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'pdp-option-btn';
-            btn.textContent = t.talla + etiquetaStock;
+            btn.innerHTML = '<span>' + t.talla + '</span>' + (etiquetaStock ? '<span class="pdp-option-stock">' + etiquetaStock + '</span>' : '');
             if (sinStock) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
             btn.addEventListener('click', function() {
                 if (btn.disabled) return;
