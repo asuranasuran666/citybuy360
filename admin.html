@@ -4062,7 +4062,25 @@ function renderInventarioMatriz() {
   }
 
   cont.innerHTML = productos.map(function(p) {
-    var filas = p.variantesMatriz.map(function(c, ci) {
+    var compactas = [];
+    var acordeon = [];
+    p.variantesMatriz.forEach(function(c, ci) {
+      var unicaTalla = (c.tallas || []).length === 1;
+
+      if (unicaTalla) {
+        // Color sin variación real de talla (ej: gorras) → línea compacta, agrupada en grid de 2 columnas
+        var t0 = c.tallas[0];
+        var stock0 = (t0.stock === null || t0.stock === undefined) ? '' : t0.stock;
+        var agotado0 = (t0.stock === 0);
+        compactas.push('<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;' + (agotado0 ? 'opacity:0.7;' : '') + '">' +
+          '<span style="flex:1;font-size:0.8rem;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎨 ' + esc(c.color) + (agotado0 ? ' <span style="color:#ff6666;font-weight:400;">·Agot.</span>' : '') + '</span>' +
+          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">−</button>' +
+          '<input type="number" value="' + stock0 + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',0,this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
+          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">+</button>' +
+        '</div>');
+        return;
+      }
+
       var stockTotalColor = (c.tallas || []).reduce(function(sum, t) { return sum + (t.stock || 0); }, 0);
       var tallasHtml = (c.tallas || []).map(function(t, ti) {
         var stock = (t.stock === null || t.stock === undefined) ? '' : t.stock;
@@ -4075,14 +4093,15 @@ function renderInventarioMatriz() {
         '</div>';
       }).join('');
       var colorKey = p.id + '-' + ci;
-      return '<div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">' +
+      acordeon.push('<div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">' +
         '<div onclick="toggleColorMatriz(\'' + colorKey + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;background:var(--bg);">' +
           '<span style="font-size:0.85rem;font-weight:700;color:var(--text);">🎨 ' + esc(c.color) + '</span>' +
           '<span style="font-size:0.75rem;color:var(--text-muted);">' + stockTotalColor + ' en total <span id="color-matriz-icon-' + colorKey + '">▾</span></span>' +
         '</div>' +
         '<div id="color-matriz-body-' + colorKey + '" style="display:none;padding:0 10px 6px;">' + tallasHtml + '</div>' +
-      '</div>';
-    }).join('');
+      '</div>');
+    });
+    var filas = (compactas.length ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">' + compactas.join('') + '</div>' : '') + acordeon.join('');
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
         (p.imagen ? '<img src="' + esc(p.imagen.split(',')[0].trim()) + '" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex:none;background:#111;" onerror="this.style.display=\'none\'">' : '') +
