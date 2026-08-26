@@ -1576,9 +1576,9 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     function loadOfertasShein() {
         var grid = document.getElementById('grid-shein');
         if (!grid) return;
-        db.ref('shein_ofertas').once('value', function(snap) {
+        db.ref('shein_productos').once('value', function(snap) {
             var data = snap.val() || {};
-            var lista = Object.entries(data).filter(function(e) { return e[1].activo !== false; })
+            var lista = Object.entries(data).filter(function(e) { return e[1].activo !== false && e[1].publicoTienda === true; })
                 .sort(function(a, b) { return new Date(b[1].creado || 0) - new Date(a[1].creado || 0); });
             if (!lista.length) { grid.innerHTML = ''; return; }
             grid.innerHTML = lista.map(function(e) {
