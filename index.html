@@ -819,7 +819,8 @@
         .pdp-compromiso-titulo { font-weight: 700; font-size: 0.85rem; color: #222; }
         .pdp-compromiso-subtitulo { font-size: 0.78rem; color: #888; margin-top: 2px; }
         .pdp-option-wrap.show { display: block; }
-        .pdp-option-label { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 8px; }
+        .pdp-option-label { font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .pdp-option-label-stock { font-size: 0.72rem; font-weight: 700; color: #e67700; }
         .pdp-options { display: flex; flex-wrap: wrap; gap: 8px; }
         .pdp-option-btn {
             border: 1px solid #ccc; background: #fff; padding: 7px 16px; border-radius: 8px;
@@ -831,6 +832,7 @@
         }
         .pdp-option-btn.selected .pdp-option-stock { color: #ffe0b3; }
         .pdp-option-btn.selected { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
+        .pdp-option-stock-inline { font-size: 0.78rem; font-weight: 700; color: #e67700; }
         #pdp-lo-quiero {
             display: block; text-align: center; background: var(--brand-blue);
             color: white; padding: 15px; border-radius: 12px; font-weight: bold;
@@ -2726,7 +2728,6 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     // así el orden visual queda Color arriba, Talla abajo, que es el flujo natural de elección.
     function pdpBuildMatrizColores() {
         document.querySelector('#pdp-tallas-wrap .pdp-option-label').textContent = 'Color';
-        document.querySelector('#pdp-colores-wrap .pdp-option-label').textContent = 'Talla';
         pdpTallasWrap.classList.toggle('show', pdpVariantesMatriz.length > 0);
         pdpTallasOptions.innerHTML = '';
         pdpColoresWrap.classList.remove('show');
@@ -2752,9 +2753,40 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     }
 
     function pdpBuildMatrizTallas(colorObj) {
+        var tallas = colorObj.tallas || [];
+        var labelEl = document.querySelector('#pdp-colores-wrap .pdp-option-label');
         pdpColoresWrap.classList.add('show');
         pdpColoresOptions.innerHTML = '';
-        (colorObj.tallas || []).forEach(function(t) {
+
+        if (tallas.length === 1) {
+            // Una sola talla para este color (ej: gorra "Ajustable"): se autoselecciona,
+            // no hace falta un segundo clic. El aviso de stock va junto a "Talla", no en el botón.
+            var t0 = tallas[0];
+            var sinStock0 = (t0.stock !== null && t0.stock !== undefined && t0.stock <= 0);
+            var etiqueta0 = sinStock0 ? 'Agotado' : ((t0.stock !== null && t0.stock !== undefined && t0.stock <= 3) ? '¡Últ. ' + t0.stock + '!' : '');
+            labelEl.innerHTML = 'Talla' + (etiqueta0 ? ' <span class="pdp-option-stock-inline">' + etiqueta0 + '</span>' : '');
+
+            var btn0 = document.createElement('button');
+            btn0.type = 'button';
+            btn0.className = 'pdp-option-btn' + (sinStock0 ? '' : ' selected');
+            btn0.textContent = t0.talla;
+            if (sinStock0) { btn0.disabled = true; btn0.style.opacity = '0.4'; btn0.style.cursor = 'not-allowed'; }
+            pdpColoresOptions.appendChild(btn0);
+
+            if (!sinStock0) {
+                pdpSelTalla = t0.talla;
+                var htmlPrecio0 = pdpFormatearPrecio(parseFloat(t0.precio));
+                pdpPrice.innerHTML = htmlPrecio0;
+                pdpSelVariantePrecio = htmlPrecio0.split('<')[0].trim();
+            } else {
+                pdpSelTalla = '';
+                pdpSelVariantePrecio = '';
+            }
+            return;
+        }
+
+        labelEl.textContent = 'Talla';
+        tallas.forEach(function(t) {
             var sinStock = (t.stock !== null && t.stock !== undefined && t.stock <= 0);
             var etiquetaStock = sinStock ? 'Agotado' : ((t.stock !== null && t.stock !== undefined && t.stock <= 3) ? '¡Últ. ' + t.stock + '!' : '');
             var btn = document.createElement('button');
