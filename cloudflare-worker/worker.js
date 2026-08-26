@@ -134,6 +134,11 @@ async function manejarSheinInfo(request) {
   if (!nombre && !imagen) {
     return jsonError('No se pudo leer ese link (puede que Shein esté bloqueando la lectura automática). Copia nombre e imagen a mano.', 502);
   }
+  // Shein a veces responde con su página genérica (captcha/portada) en vez del producto real.
+  // Si el "nombre" es ese texto genérico, es una lectura fallida disfrazada de éxito — se rechaza.
+  if (nombre && /mainly design and produce fashion clothing|SHEIN official site|fashion shopping online/i.test(nombre)) {
+    return jsonError('Ese link llevó a la página genérica de Shein, no al producto (posible bloqueo anti-bot). Usa el link corto que compartes desde la app, o copia nombre e imagen a mano.', 502);
+  }
 
   return new Response(JSON.stringify({ nombre: limpiarHtml(nombre || ''), imagen: imagen || '' }), {
     headers: { 'Content-Type': 'application/json', ...cabecerasCors() },
