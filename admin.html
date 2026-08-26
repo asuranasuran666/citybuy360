@@ -808,7 +808,7 @@
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
       <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
         <span style="color:var(--text);font-weight:700;">👤 Clientes identificados</span>
-        <span id="clientes-count" style="color:var(--text-muted);font-size:0.8rem;"></span>
+        <span id="clientes-identificados-count" style="color:var(--text-muted);font-size:0.8rem;"></span>
       </div>
       <table class="sales-table">
         <thead><tr><th>Nombre</th><th></th></tr></thead>
@@ -2376,6 +2376,14 @@ function generarCodigo() {
   const code = gen.code;
   const expira = new Date(gen.expiraDiaEpoch * 86400000);
   const expiraStr = expira.toLocaleDateString('es-ES');
+
+  // El código se guarda YA, aquí — no depende de que el correo se llegue a mandar.
+  // Antes solo se guardaba dentro del .then() del envío de EmailJS: si el correo fallaba
+  // (o el admin nunca llegaba a tocar "Enviar"), el código jamás existía en Firebase.
+  db.ref('acceso360/codes/' + code).set(true);
+  db.ref('acceso360/clientes/' + code).set({ correo: email, referencia: ref, fecha_activacion: new Date().toISOString().split('T')[0], expira: expiraStr });
+  loadAcceso360Admin();
+
   document.getElementById('codigo-generado').textContent = code;
   document.getElementById('email-preview-body').innerHTML = `
     <div style="margin-bottom:8px;"><strong style="color:#ffd700;">Para:</strong> ${email}</div>
@@ -2387,7 +2395,8 @@ function generarCodigo() {
     <p>Válido hasta el <strong>${expiraStr}</strong>. Visita <a href="https://citybuy360.onrender.com" style="color:#ffd700;">citybuy360.onrender.com</a>, pulsa <strong>✦ ACCESO 360</strong> e introduce tu código.</p>
     <div style="color:#555;font-size:0.75rem;margin-top:12px;">CityBUY360 · citybuy360.contacto@gmail.com</div>`;
   document.getElementById('email-preview-wrap').style.display = 'block';
-  document.getElementById('envio-status').textContent = '';
+  document.getElementById('envio-status').style.color = '#7fff7f';
+  document.getElementById('envio-status').textContent = '✅ Código guardado y activo — el correo es opcional, es solo para avisarle al cliente';
   const cfg = getEmailjsConfig();
   document.getElementById('emailjs-config-warn').style.display = (!cfg.service || !cfg.template || !cfg.pubkey) ? 'block' : 'none';
   window._pendingAcceso = { code, email, ref, expira: expiraStr };
@@ -2407,16 +2416,14 @@ function enviarAcceso360() {
   emailjs.init(cfg.pubkey);
   emailjs.send(cfg.service, cfg.template, { to_email: p.email, codigo: p.code, expira: p.expira, referencia: p.ref })
     .then(() => {
-      db.ref('acceso360/codes/' + p.code).set(true);
-      db.ref('acceso360/clientes/' + p.code).set({ correo: p.email, referencia: p.ref, fecha_activacion: new Date().toISOString().split('T')[0], expira: p.expira });
-      statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Correo enviado y código activado';
+      statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Correo enviado (el código ya estaba activo desde que lo generaste)';
       btn.textContent = '📧 Enviar correo de acceso'; btn.disabled = false;
       document.getElementById('gen-email').value = ''; document.getElementById('gen-ref').value = '';
       document.getElementById('email-preview-wrap').style.display = 'none';
       window._pendingAcceso = null;
       setTimeout(() => loadAcceso360Admin(), 1000);
     }).catch(err => {
-      statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Error: ' + (err.text || err);
+      statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ El código YA está activo y funciona — solo falló el envío del correo: ' + (err.text || err);
       btn.textContent = '📧 Enviar correo de acceso'; btn.disabled = false;
     });
 }
@@ -4687,7 +4694,7 @@ function loadClientesAdmin() {
     var data = snap.val() || {};
     var lista = Object.entries(data).map(function(e) { return { key: e[0], datos: e[1] }; });
     lista.sort(function(a, b) { return (a.datos.creado || 0) - (b.datos.creado || 0); });
-    document.getElementById('clientes-count').textContent = lista.length + (lista.length === 1 ? ' cliente' : ' clientes');
+    document.getElementById('clientes-identificados-count').textContent = lista.length + (lista.length === 1 ? ' cliente' : ' clientes');
     var tbody = document.getElementById('clientes-tbody');
     if (!lista.length) {
       tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Aún no hay clientes identificados</td></tr>';
