@@ -1629,6 +1629,11 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         if (gridShein) gridShein.style.display = 'none';
         if (tituloShein) tituloShein.style.display = 'none';
 
+        // Restaurar TODOS los grids que la vista "Shein" pudo haber ocultado, antes de aplicar
+        // el filtro de categoría normal. Si esto no se hace, cualquier grid que no esté justo
+        // debajo de un .section-title (ver lógica de abajo) se queda oculto para siempre.
+        document.querySelectorAll('.grid').forEach(function(g) { if (g.id !== 'grid-shein') g.style.display = ''; });
+
         var cards = document.querySelectorAll('.card');
         cards.forEach(function(card) {
             if (card.closest('#grid-shein')) return;
