@@ -3304,14 +3304,19 @@ function borrarCompromiso(id) {
 }
 
 function autocompletarDesdeShein() {
-  var link = document.getElementById('sh-link').value.trim();
+  var raw = document.getElementById('sh-link').value.trim();
   var status = document.getElementById('sh-autocompletar-status');
   var btn = document.getElementById('sh-autocompletar-btn');
-  if (!link) {
+  if (!raw) {
     status.style.color = '#ff9999';
     status.textContent = 'Pega primero el link de Shein';
     return;
   }
+  // Si se pegó el bloque completo que comparte la app (nombre + frase + link),
+  // se saca solo la URL en vez de exigir que el link vaya solo.
+  var match = raw.match(/https?:\/\/\S+/);
+  var link = match ? match[0] : raw;
+  document.getElementById('sh-link').value = link;
   btn.disabled = true;
   status.style.color = '';
   status.textContent = 'Leyendo el link…';
@@ -3344,7 +3349,9 @@ function agregarProductoShein() {
   var nombre = document.getElementById('sh-nombre').value.trim();
   var precio = parseFloat(document.getElementById('sh-precio').value);
   var imagen = document.getElementById('sh-imagen').value.trim();
-  var link = document.getElementById('sh-link').value.trim();
+  var linkRaw = document.getElementById('sh-link').value.trim();
+  var linkMatch = linkRaw.match(/https?:\/\/\S+/);
+  var link = linkMatch ? linkMatch[0] : linkRaw;
   var publicoTienda = document.getElementById('sh-publico').checked;
   var status = document.getElementById('sh-status');
   if (!nombre || isNaN(precio) || !link) {
