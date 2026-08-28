@@ -1265,7 +1265,7 @@
             </div>
         </div>
 
-        <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none;">
+        <div class="slide" style="background: linear-gradient(135deg, #0f3460, #533483); display: none; cursor: pointer;" onclick="mostrarStockBajo()">
             <div>
                 <div class="slide-label" style="color: #00d4ff;">Acaba de llegar</div>
                 <div class="slide-title">Nueva Mercancía</div>
@@ -1582,22 +1582,27 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 .sort(function(a, b) { return new Date(b[1].creado || 0) - new Date(a[1].creado || 0); });
             if (!lista.length) { grid.innerHTML = ''; return; }
             grid.innerHTML = lista.map(function(e) {
-                var p = e[1];
+                var id = e[0], p = e[1];
                 var nombre = p.nombre || 'Producto Shein';
                 var precioTxt = (p.precio !== undefined && p.precio !== null && p.precio !== '') ? parseFloat(p.precio).toFixed(2) + ' USD' : '';
-                var waText = encodeURIComponent('Hola, quiero pedir este producto de Shein: ' + nombre + (precioTxt ? ' (' + precioTxt + ')' : '') + (p.link ? '\n' + p.link : ''));
-                var waLink = 'https://wa.me/5353255813?text=' + waText;
-                return '<div class="card" data-genero="shein">' +
-                    '<div class="card-img-container" style="position:relative;">' +
-                    (p.imagen ? '<img src="' + p.imagen + '" class="card-img" alt="' + nombre.replace(/"/g, '') + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
+                var img = p.imagen || '';
+                // Misma estructura data-* que una card normal: openProductDetail() y addToCart()
+                // leen todo de aquí, así que "Lo quiero" abre la ficha y agrega al carrito normal
+                // de la tienda — no manda a WhatsApp directo ni a la calculadora VIP.
+                return '<div class="card" data-product="shein-' + id + '" data-genero="shein" data-colores="" data-tallas="" ' +
+                    'data-variantes="" data-variantes-matriz="" data-variantes-tipo="color" data-moneda="USD" data-precio-modo="" ' +
+                    'data-proxima-venta="false" data-tryon="false">' +
+                    '<div class="card-img-container" data-images="' + img + '" data-count="1" style="position:relative;">' +
+                    (img ? '<img src="' + img + '" class="card-img" alt="' + nombre.replace(/"/g, '') + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
                     '</div>' +
                     '<div class="card-content">' +
                     '<div class="tag-category">SHEIN</div>' +
                     '<div class="product-name">' + nombre + '</div>' +
+                    '<div class="details-block product-desc-larga"></div>' +
                     (precioTxt ? '<div class="price product-price">' + precioTxt + '</div>' : '<div class="price"></div>') +
                     '<div class="price-conversion"></div>' +
-                    '<div class="card-vendedor">CityBUY360</div>' +
-                    '<a href="' + waLink + '" target="_blank" class="btn-lo-quiero">🛒 Lo quiero</a>' +
+                    '<div class="card-vendedor">CityBUY360 · Shein</div>' +
+                    '<button class="btn-lo-quiero" onclick="openProductDetail(this.closest(\'.card\'))">🛒 Lo quiero</button>' +
                     '</div></div>';
             }).join('');
         });
@@ -1658,6 +1663,40 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var destGrid  = document.getElementById('grid-destacado');
         if (destTitle) destTitle.style.display = cat === 'todos' ? '' : 'none';
         if (destGrid)  destGrid.style.display  = cat === 'todos' ? '' : 'none';
+    }
+
+    // Filtro especial activado desde el slide "Nueva Mercancía": productos con 15 o menos en stock.
+    // Solo cuenta productos con stock realmente controlado (los que no llevan control de stock, quedan fuera).
+    function mostrarStockBajo() {
+        document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+
+        var gridShein = document.getElementById('grid-shein');
+        var tituloShein = document.getElementById('sec-title-shein');
+        if (gridShein) gridShein.style.display = 'none';
+        if (tituloShein) tituloShein.style.display = 'none';
+        document.querySelectorAll('.grid').forEach(function(g) { if (g.id !== 'grid-shein') g.style.display = ''; });
+
+        document.querySelectorAll('.card').forEach(function(card) {
+            if (card.closest('#grid-shein')) { card.style.display = 'none'; return; }
+            var stockVal = card.getAttribute('data-stock');
+            var esBajo = stockVal !== '' && stockVal !== null && !isNaN(parseFloat(stockVal)) && parseFloat(stockVal) <= 15;
+            card.style.display = esBajo ? '' : 'none';
+        });
+        document.querySelectorAll('.section-title').forEach(function(title) {
+            if (title.id === 'sec-title-shein') return;
+            var grid = title.nextElementSibling;
+            if (!grid) return;
+            var visible = grid.querySelectorAll('.card:not([style*="display: none"])').length > 0;
+            title.style.display = visible ? '' : 'none';
+            grid.style.display = visible ? '' : 'none';
+        });
+        var destTitle = document.getElementById('sec-title-destacado');
+        var destGrid  = document.getElementById('grid-destacado');
+        if (destTitle) destTitle.style.display = 'none';
+        if (destGrid)  destGrid.style.display  = 'none';
+
+        var pc = document.getElementById('products-container');
+        if (pc) pc.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // ── NAVEGACIÓN INFERIOR ──────────────────────────────────────────────────
@@ -1898,6 +1937,18 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
 
         // Conversión a MN si el precio está en USD/EUR y el toggle está activo
         var tieneVariantesMatriz = p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
+
+        // Stock total para el filtro "Nueva Mercancía" (stock bajo): simple si lo tiene, o suma de toda la matriz.
+        // Productos sin control de stock (undefined o -1) quedan fuera del filtro, no cuentan como "bajo".
+        var stockFiltro = '';
+        if (tieneVariantesMatriz) {
+            var sumaMatriz = 0, algunaConDato = false;
+            p.variantesMatriz.forEach(function(c){ (c.tallas||[]).forEach(function(t){ if (t.stock !== null && t.stock !== undefined) { sumaMatriz += t.stock; algunaConDato = true; } }); });
+            if (algunaConDato) stockFiltro = sumaMatriz;
+        } else if (stock !== undefined && stock !== null && stock !== -1) {
+            stockFiltro = stock;
+        }
+
         var tieneVariantesConPrecio = (Array.isArray(p.variantes) && p.variantes.length > 0) || tieneVariantesMatriz;
         var precioBase = p.precio;
         if (tieneVariantesMatriz) {
@@ -1989,7 +2040,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
                     : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>');
         }
-        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-matriz="' + variantesMatrizAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" id="card-' + p.id + '">' +
+        return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-matriz="' + variantesMatrizAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" data-stock="' + stockFiltro + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'"' + (esProximaVenta ? ' style="filter:grayscale(60%) brightness(0.7);"' : '') + '>' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
