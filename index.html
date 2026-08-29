@@ -823,16 +823,26 @@
         .pdp-option-label-stock { font-size: 0.72rem; font-weight: 700; color: #e67700; }
         .pdp-options { display: flex; flex-wrap: wrap; gap: 8px; }
         .pdp-option-btn {
-            border: 1px solid #ccc; background: #fff; padding: 7px 16px; border-radius: 8px;
+            border: 1px solid #ccc; background: #fff; padding: 8px 16px; border-radius: 8px;
             font-size: 0.85rem; cursor: pointer; color: #333; transition: all 0.15s;
-            display: flex; flex-direction: column; align-items: center; line-height: 1.25;
+            position: relative; overflow: visible;
         }
-        .pdp-option-btn .pdp-option-stock {
-            font-size: 0.68rem; font-weight: 600; color: #e67700; margin-top: 1px;
-        }
-        .pdp-option-btn.selected .pdp-option-stock { color: #ffe0b3; }
         .pdp-option-btn.selected { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
-        .pdp-option-stock-inline { font-size: 0.78rem; font-weight: 700; color: #e67700; }
+        .pdp-option-stock {
+            position: absolute; top: -9px; right: -8px; z-index: 2;
+            background: linear-gradient(135deg, #ff5252, #ff8a00); color: #fff;
+            font-size: 0.6rem; font-weight: 800; padding: 3px 7px; border-radius: 10px;
+            white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.28);
+            animation: pdpStockPulso 1.7s ease-in-out infinite;
+        }
+        @keyframes pdpStockPulso {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .pdp-option-stock-inline {
+            font-size: 0.76rem; font-weight: 800; color: #ff5252;
+            animation: pdpStockPulso 1.7s ease-in-out infinite; display: inline-block;
+        }
         #pdp-lo-quiero {
             display: block; text-align: center; background: var(--brand-blue);
             color: white; padding: 15px; border-radius: 12px; font-weight: bold;
@@ -1876,13 +1886,15 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         // Badge de stock
         var stock = inventarioData[p.id];
         var stockBadge = '';
+        var matrizTotalmenteAgotada = p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0 &&
+            p.variantesMatriz.every(function(c){ return (c.tallas||[]).every(function(t){ return t.stock !== null && t.stock !== undefined && t.stock <= 0; }); });
         if (stock !== undefined && stock !== null && stock !== 0) {
             if (stock <= 3) {
                 stockBadge = '<div class="stock-badge ultimas">¡Últimas ' + stock + ' unidades!</div>';
             } else if (p.ventas && p.ventas > 10) {
                 stockBadge = '<div class="stock-badge pedido">🔥 Muy pedido</div>';
             }
-        } else if (stock === 0 && inventarioData[p.id] !== undefined) {
+        } else if ((stock === 0 && inventarioData[p.id] !== undefined) || matrizTotalmenteAgotada) {
             stockBadge = '<div class="stock-badge agotado">Agotado</div>';
         }
 
@@ -2021,11 +2033,16 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:4px;">Los clientes Acceso 360 ya pueden reservarlo</div>';
             }
         } else {
-            botonHTML = (stock === 0 && inventarioData[p.id] !== undefined
-                ? '<button class="btn-lo-quiero" disabled style="opacity:0.5;cursor:not-allowed;">Agotado</button>'
-                : tieneVariantesConPrecio
+            var estaAgotadoCard = (stock === 0 && inventarioData[p.id] !== undefined) || (tieneVariantesMatriz && stockFiltro === 0);
+            if (estaAgotadoCard) {
+                var waTextAgotado = encodeURIComponent('Hola, vi que "' + p.nombre + '" está agotado. ¿Me pueden conseguir uno extra?');
+                var waLinkAgotado = 'https://wa.me/5353255813?text=' + waTextAgotado;
+                botonHTML = '<a href="' + waLinkAgotado + '" class="btn-lo-quiero" data-reserva="true" style="background:linear-gradient(135deg,#555,#333);" target="_blank">📩 Solicitar pedido extra</a>';
+            } else {
+                botonHTML = tieneVariantesConPrecio
                     ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
-                    : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>');
+                    : '<a href="' + waLink + '" class="btn-lo-quiero" data-product="' + p.id + '" onclick="trackSale(this)">' + (esVIP ? '✦ 🛒 Lo quiero' : '🛒 Lo quiero') + '</a>';
+            }
         }
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-matriz="' + variantesMatrizAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" data-stock="' + stockFiltro + '" data-orden="' + (p.orden || '') + '" id="card-' + p.id + '">' +
             '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
@@ -2774,6 +2791,15 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     // Selector en cascada Color → Talla (sistema de matriz de variantes).
     // Usa el wrap de "tallas" para el paso 1 (Color) y el wrap de "colores" para el paso 2 (Talla)
     // así el orden visual queda Color arriba, Talla abajo, que es el flujo natural de elección.
+    // Texto de urgencia de stock, siempre con palabra completa (nunca abreviado tipo "Últ.")
+    function pdpEtiquetaUrgencia(stock) {
+        if (stock === null || stock === undefined) return '';
+        if (stock <= 0) return '';
+        if (stock === 1) return '¡Última!';
+        if (stock <= 3) return '¡Quedan ' + stock + '!';
+        return '';
+    }
+
     function pdpBuildMatrizColores() {
         document.querySelector('#pdp-tallas-wrap .pdp-option-label').textContent = 'Color';
         pdpTallasWrap.classList.toggle('show', pdpVariantesMatriz.length > 0);
@@ -2811,7 +2837,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             // no hace falta un segundo clic. El aviso de stock va junto a "Talla", no en el botón.
             var t0 = tallas[0];
             var sinStock0 = (t0.stock !== null && t0.stock !== undefined && t0.stock <= 0);
-            var etiqueta0 = sinStock0 ? 'Agotado' : ((t0.stock !== null && t0.stock !== undefined && t0.stock <= 3) ? '¡Últ. ' + t0.stock + '!' : '');
+            var etiqueta0 = sinStock0 ? 'Agotado' : pdpEtiquetaUrgencia(t0.stock);
             labelEl.innerHTML = 'Talla' + (etiqueta0 ? ' <span class="pdp-option-stock-inline">' + etiqueta0 + '</span>' : '');
 
             var btn0 = document.createElement('button');
@@ -2836,7 +2862,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         labelEl.textContent = 'Talla';
         tallas.forEach(function(t) {
             var sinStock = (t.stock !== null && t.stock !== undefined && t.stock <= 0);
-            var etiquetaStock = sinStock ? 'Agotado' : ((t.stock !== null && t.stock !== undefined && t.stock <= 3) ? '¡Últ. ' + t.stock + '!' : '');
+            var etiquetaStock = sinStock ? 'Agotado' : pdpEtiquetaUrgencia(t.stock);
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'pdp-option-btn';
@@ -2974,6 +3000,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         } else {
             pdpLoQuiero.href = 'javascript:void(0)';
             pdpLoQuiero.removeAttribute('data-reserva');
+            pdpLoQuiero.removeAttribute('target');
             pdpLoQuiero.style.maxWidth = '';
             pdpLoQuiero.style.margin = '';
             pdpLoQuiero.textContent = '🛒 Lo quiero';
@@ -3047,11 +3074,14 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             if (!hayStockGeneral && !esProximaVentaPdp && !esCardNegocio) {
                 pdpTallasWrap.classList.remove('show');
                 pdpColoresWrap.classList.remove('show');
-                pdpLoQuiero.href = 'javascript:void(0)';
-                pdpLoQuiero.textContent = '❌ Agotado';
-                pdpLoQuiero.setAttribute('disabled', 'true');
-                pdpLoQuiero.style.opacity = '0.6';
-                pdpLoQuiero.style.cursor = 'not-allowed';
+                var waTextAgotadoPdp = encodeURIComponent('Hola, vi que "' + title + '" está agotado. ¿Me pueden conseguir uno extra?');
+                pdpLoQuiero.href = 'https://wa.me/5353255813?text=' + waTextAgotadoPdp;
+                pdpLoQuiero.setAttribute('target', '_blank');
+                pdpLoQuiero.setAttribute('data-reserva', 'true');
+                pdpLoQuiero.textContent = '📩 Solicitar pedido extra';
+                pdpLoQuiero.removeAttribute('disabled');
+                pdpLoQuiero.style.opacity = '';
+                pdpLoQuiero.style.cursor = '';
             } else if (pdpVariantesMatriz.length === 1 && pdpVariantesMatriz[0].tallas && pdpVariantesMatriz[0].tallas.length === 1) {
                 // Único color y única talla: no hace falta que el cliente elija nada
                 var unico = pdpVariantesMatriz[0];
