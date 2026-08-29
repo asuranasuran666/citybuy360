@@ -1129,6 +1129,11 @@
             <div id="pdp-compromiso"></div>
         </div>
         <div id="pdp-footer">
+            <div id="pdp-shein-calc" style="display:none;background:#f5f5f5;border:1px solid #ddd;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+                <label style="font-size:0.82rem;font-weight:700;color:#333;display:block;margin-bottom:5px;">📦 Peso aproximado del paquete (<span id="pdp-shein-calc-unidad">lb</span>)</label>
+                <input type="number" id="pdp-shein-peso" step="0.1" min="0" placeholder="Ej: 0.5" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;box-sizing:border-box;margin-bottom:6px;">
+                <div id="pdp-shein-calc-desglose" style="font-size:0.76rem;color:#666;line-height:1.55;"></div>
+            </div>
             <div id="pdp-price"></div>
             <a id="pdp-lo-quiero" class="btn-lo-quiero" href="javascript:void(0)">🛒 Lo quiero</a>
             <button id="pdp-tryon-btn" class="btn-lo-quiero" style="background:linear-gradient(135deg,#7c3aed,#c026d3);margin-top:8px;display:none;" onclick="abrirProbadorVirtual()">✨ Pruébatelo con IA</button>
@@ -1593,7 +1598,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 // de la tienda — no manda a WhatsApp directo ni a la calculadora VIP.
                 return '<div class="card" data-product="shein-' + id + '" data-genero="shein" data-colores="" data-tallas="" ' +
                     'data-variantes="" data-variantes-matriz="" data-variantes-tipo="color" data-moneda="USD" data-precio-modo="" ' +
-                    'data-proxima-venta="false" data-tryon="false">' +
+                    'data-proxima-venta="false" data-tryon="false" data-shein-calc="' + (p.usarCalculadora === true ? 'true' : 'false') + '">' +
                     '<div class="card-img-container" data-images="' + img + '" data-count="1" style="position:relative;">' +
                     (img ? '<img src="' + img + '" class="card-img" alt="' + nombre.replace(/"/g, '') + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
                     '</div>' +
@@ -2273,6 +2278,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     var inventarioData = {};
     var cardCfg = {};
     var tasasConversion = { usd: 0, eur: 0 };
+    var tsConfig = { comisionMinima: 0, comisionPorcentaje: 0, precioLibra: 0, arancel: 0, moneda: 'USD', unidadPeso: 'lb' };
     var mostrarConversion = { mn: true, usd: true };
 
     var catalogoTimeout = setTimeout(function() {
@@ -2422,6 +2428,10 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                                 hidePageLoader();
                             });
                             loadOfertasShein();
+                            db.ref('config/temuShein').once('value', function(tsSnap) {
+                                var tsData = tsSnap.val();
+                                if (tsData) tsConfig = tsData;
+                            });
                         });
                     });
                 });
@@ -2976,6 +2986,39 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpTitle.textContent = title;
         pdpDesc.innerHTML = desc;
         pdpPrice.innerHTML = price + (conversion ? '<div class="pdp-price-conv">' + conversion + '</div>' : '');
+
+        // Ofertas Shein con calculadora activada: el precio final depende del peso del paquete,
+        // no es el precio fijo. Se muestra un campo de peso y se recalcula en vivo.
+        var sheinCalcBox = document.getElementById('pdp-shein-calc');
+        var usaCalculadoraShein = card.getAttribute('data-shein-calc') === 'true';
+        if (usaCalculadoraShein) {
+            var precioBaseShein = parseFloat(price) || 0;
+            document.getElementById('pdp-shein-calc-unidad').textContent = tsConfig.unidadPeso === 'kg' ? 'kg' : 'lb';
+            var pesoInput = document.getElementById('pdp-shein-peso');
+            pesoInput.value = '';
+            var desglose = document.getElementById('pdp-shein-calc-desglose');
+            var recalcularShein = function() {
+                var peso = parseFloat(pesoInput.value) || 0;
+                var comision = Math.max(tsConfig.comisionMinima || 0, precioBaseShein * (tsConfig.comisionPorcentaje || 0) / 100);
+                var envio = peso * (tsConfig.precioLibra || 0);
+                var arancel = tsConfig.arancel || 0;
+                var total = precioBaseShein + comision + envio + arancel;
+                var m = tsConfig.moneda || 'USD';
+                desglose.innerHTML = 'Producto: ' + precioBaseShein.toFixed(2) + ' ' + m + '<br>Comisión: ' + comision.toFixed(2) + ' ' + m +
+                    '<br>Envío: ' + envio.toFixed(2) + ' ' + m + (peso <= 0 ? ' (pon el peso)' : '') +
+                    (arancel > 0 ? '<br>Arancel: ' + arancel.toFixed(2) + ' ' + m : '');
+                var totalTxt = total.toFixed(2) + ' ' + m;
+                pdpPrice.innerHTML = totalTxt;
+                pdpSelVariantePrecio = totalTxt;
+                if (peso > 0) { pdpLoQuiero.removeAttribute('disabled'); pdpLoQuiero.style.opacity = ''; pdpLoQuiero.style.cursor = ''; }
+                else { pdpLoQuiero.setAttribute('disabled', 'true'); pdpLoQuiero.style.opacity = '0.6'; pdpLoQuiero.style.cursor = 'not-allowed'; }
+            };
+            pesoInput.oninput = recalcularShein;
+            sheinCalcBox.style.display = 'block';
+            recalcularShein();
+        } else {
+            sheinCalcBox.style.display = 'none';
+        }
 
         // Vendedor
         document.getElementById('pdp-vendedor').textContent = vendedor;
