@@ -3394,6 +3394,7 @@ function loadProductosShein() {
         '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nombre + '</div>' +
         '<div style="font-size:0.78rem;color:var(--text-muted);">' + p.precio + ' USD' + (p.activo === false ? ' · desactivado' : '') + '</div></div>' +
         '<button onclick="togglePublicoShein(\'' + id + '\',' + (p.publicoTienda === true) + ')" title="Mostrar también en la tienda pública, sin VIP" style="background:' + (p.publicoTienda ? '#0a2a0a' : 'none') + ';border:1px solid ' + (p.publicoTienda ? '#336633' : 'var(--border)') + ';color:' + (p.publicoTienda ? '#88ff88' : 'var(--text-muted)') + ';border-radius:6px;padding:4px 8px;font-size:0.68rem;cursor:pointer;white-space:nowrap;">' + (p.publicoTienda ? '🌐 En tienda' : '🔒 Solo VIP') + '</button>' +
+        '<button onclick="toggleCalculadoraShein(\'' + id + '\',' + (p.usarCalculadora === true) + ')" title="El cliente pone el peso del paquete y el precio final se calcula con la calculadora Temu/Shein, en vez de cobrar el precio fijo" style="background:' + (p.usarCalculadora ? '#0a1a2a' : 'none') + ';border:1px solid ' + (p.usarCalculadora ? '#336699' : 'var(--border)') + ';color:' + (p.usarCalculadora ? '#88ccff' : 'var(--text-muted)') + ';border-radius:6px;padding:4px 8px;font-size:0.68rem;cursor:pointer;white-space:nowrap;">' + (p.usarCalculadora ? '🧮 Calculadora' : '💲 Precio fijo') + '</button>' +
         '<button onclick="toggleProductoShein(\'' + id + '\',' + (p.activo !== false) + ')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">' + (p.activo !== false ? '👁️' : '🚫') + '</button>' +
         '<button onclick="borrarProductoShein(\'' + id + '\')" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:4px 8px;font-size:0.72rem;cursor:pointer;">🗑️</button>' +
         '</div>';
@@ -3403,6 +3404,10 @@ function loadProductosShein() {
 
 function togglePublicoShein(id, esPublico) {
   db.ref('shein_productos/' + id).update({ publicoTienda: !esPublico }).then(loadProductosShein);
+}
+
+function toggleCalculadoraShein(id, usaCalc) {
+  db.ref('shein_productos/' + id).update({ usarCalculadora: !usaCalc }).then(loadProductosShein);
 }
 
 function toggleProductoShein(id, estaActivo) {
