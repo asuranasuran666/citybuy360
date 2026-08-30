@@ -258,6 +258,13 @@
   <!-- ── TAB: CONTROL ── -->
   <div id="tab-control" class="tab-content active">
 
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🧹 Links de WhatsApp con precio desactualizado</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Revisa todo el catálogo y corrige los botones "Lo quiero" que tienen un precio viejo escrito a mano en el mensaje de WhatsApp (pasa cuando cambias el precio de un producto pero el link no se actualiza solo). Solo toca los que van a tu número normal — nunca los que usan otro número a propósito (Emprendedores, etc).</div>
+      <button onclick="revisarWaLinksDesactualizados()" id="btn-revisar-walinks" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:0.85rem;">🔍 Revisar catálogo</button>
+      <div id="walinks-resultado" style="margin-top:10px;font-size:0.82rem;"></div>
+    </div>
+
     <!-- Gestión del catálogo dinámico -->
     <div id="catalogo-admin-panel" style="display:none;margin-bottom:16px;">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
@@ -3343,6 +3350,44 @@ function autocompletarDesdeShein() {
       status.style.color = '#ff9999';
       status.textContent = '❌ Error de conexión: ' + e.message;
     });
+}
+
+function revisarWaLinksDesactualizados() {
+  var btn = document.getElementById('btn-revisar-walinks');
+  var out = document.getElementById('walinks-resultado');
+  btn.disabled = true;
+  out.textContent = 'Revisando…';
+  db.ref('catalogo').once('value', function(snap) {
+    var data = snap.val() || {};
+    var candidatos = [];
+    Object.keys(data).forEach(function(id) {
+      var p = data[id];
+      if (p.waLink && p.waLink.indexOf('wa.me/5353255813') !== -1) {
+        candidatos.push({ id: id, nombre: p.nombre || id });
+      }
+    });
+    btn.disabled = false;
+    if (!candidatos.length) {
+      out.innerHTML = '<span style="color:#7fff7f;">✅ No se encontró ningún link desactualizado.</span>';
+      return;
+    }
+    out.innerHTML = '<div style="margin-bottom:8px;">Encontrados ' + candidatos.length + ' producto(s) con link fijo a tu número normal — se van a regenerar con el precio actual:</div>' +
+      candidatos.map(function(c) { return '<div style="padding:4px 0;border-top:1px solid var(--border);">• ' + c.nombre + '</div>'; }).join('') +
+      '<button onclick="aplicarLimpiezaWaLinks(\'' + candidatos.map(function(c){ return c.id; }).join(',') + '\')" style="margin-top:10px;background:#22c55e;border:none;color:#fff;font-weight:700;border-radius:8px;padding:8px 14px;cursor:pointer;">✅ Corregir estos ' + candidatos.length + '</button>';
+  });
+}
+
+function aplicarLimpiezaWaLinks(idsStr) {
+  var ids = idsStr.split(',');
+  var out = document.getElementById('walinks-resultado');
+  out.textContent = 'Corrigiendo…';
+  var updates = {};
+  ids.forEach(function(id) { updates['catalogo/' + id + '/waLink'] = null; });
+  db.ref().update(updates).then(function() {
+    out.innerHTML = '<span style="color:#7fff7f;">✅ Corregidos ' + ids.length + ' producto(s) — ya usan el precio actual, calculado solo.</span>';
+  }).catch(function(e) {
+    out.innerHTML = '<span style="color:#ff9999;">❌ Error: ' + e.message + '</span>';
+  });
 }
 
 function agregarProductoShein() {
