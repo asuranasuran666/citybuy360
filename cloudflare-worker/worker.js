@@ -15,6 +15,9 @@ export default {
     if (url.pathname === '/shein-info') {
       return manejarSheinInfo(request);
     }
+    if (url.pathname === '/temu-info') {
+      return manejarTemuInfo(request);
+    }
 
     if (request.method !== 'POST') {
       return jsonError('Método no permitido', 405);
@@ -141,6 +144,49 @@ async function manejarSheinInfo(request) {
   }
 
   return new Response(JSON.stringify({ nombre: limpiarHtml(nombre || ''), imagen: imagen || '' }), {
+    headers: { 'Content-Type': 'application/json', ...cabecerasCors() },
+  });
+}
+
+// Misma idea que manejarSheinInfo pero para links de Temu (share.temu.com/...).
+// No verificado en pruebas propias (Temu bloquea hasta el intento de lectura desde
+// herramientas automatizadas conocidas) — se prueba en vivo desde el admin real.
+// Se incluye también og:description por si Temu sí trae texto útil (a diferencia de
+// Shein, que solo da una frase genérica ahí) — si resulta ser genérico también, se
+// añade un filtro como el de Shein una vez se vea el texto real en una prueba.
+async function manejarTemuInfo(request) {
+  const url = new URL(request.url);
+  const link = url.searchParams.get('url');
+  if (!link) return jsonError('Falta el parámetro url', 400);
+
+  let html;
+  try {
+    const resp = await fetch(link, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'es-ES,es;q=0.9',
+      },
+      redirect: 'follow',
+    });
+    html = await resp.text();
+  } catch (e) {
+    return jsonError('Error leyendo el link: ' + e.message, 500);
+  }
+
+  const nombre = extraerMeta(html, 'og:title') || extraerTitulo(html);
+  const imagen = extraerMeta(html, 'og:image');
+  const descripcion = extraerMeta(html, 'og:description');
+
+  if (!nombre && !imagen) {
+    return jsonError('No se pudo leer ese link (puede que Temu esté bloqueando la lectura automática). Copia los datos a mano.', 502);
+  }
+
+  return new Response(JSON.stringify({
+    nombre: limpiarHtml(nombre || ''),
+    imagen: imagen || '',
+    descripcion: limpiarHtml(descripcion || ''),
+  }), {
     headers: { 'Content-Type': 'application/json', ...cabecerasCors() },
   });
 }
