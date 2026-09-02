@@ -1068,16 +1068,17 @@
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
-      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🛍️ Catálogo curado de Shein (VIP)</div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Pega el link que compartes desde la app de Shein — el nombre y la imagen se llenan solos. El precio lo escribes tú (cambia seguido). Luego "Agregar a la galería".</div>
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;">🛍️ Ofertas externas (Shein / Temu)</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Pega el link que compartes desde la app de Shein o de Temu — detecta solo de cuál tienda es. El nombre y la imagen se llenan solos (y la descripción, cuando la tienda la trae). El precio lo escribes tú (cambia seguido). Luego "Agregar a la galería".</div>
 
       <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <input type="text" id="sh-link" placeholder="Pega aquí el link del producto en Shein" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <input type="text" id="sh-link" placeholder="Pega aquí el link de Shein o Temu" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
         <button type="button" onclick="autocompletarDesdeShein()" id="sh-autocompletar-btn" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;white-space:nowrap;font-size:0.8rem;">🔎 Leer link</button>
       </div>
       <div id="sh-autocompletar-status" style="font-size:0.75rem;margin-bottom:10px;"></div>
 
       <input type="text" id="sh-nombre" placeholder="Nombre del producto" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
+      <textarea id="sh-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;resize:vertical;font-family:inherit;"></textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <input type="number" id="sh-precio" step="0.01" placeholder="Precio (USD)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
         <input type="text" id="sh-imagen" placeholder="URL de la imagen" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
@@ -1085,7 +1086,7 @@
       <div id="sh-imagen-preview" style="margin-bottom:10px;"></div>
       <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;color:var(--text);cursor:pointer;">
         <input type="checkbox" id="sh-publico" style="width:16px;height:16px;">
-        🌐 Mostrar también en la tienda pública (pestaña "Shein", sin código VIP)
+        🌐 Mostrar también en la tienda pública (pestaña "Ofertas", sin código VIP)
       </label>
       <button onclick="agregarProductoShein()" style="width:100%;background:var(--primary);border:none;color:#90caf9;font-weight:900;border-radius:8px;padding:10px;cursor:pointer;">+ Agregar a la galería</button>
       <div id="sh-status" style="font-size:0.8rem;text-align:center;margin-top:6px;"></div>
@@ -3316,7 +3317,7 @@ function autocompletarDesdeShein() {
   var btn = document.getElementById('sh-autocompletar-btn');
   if (!raw) {
     status.style.color = '#ff9999';
-    status.textContent = 'Pega primero el link de Shein';
+    status.textContent = 'Pega primero el link de Shein o Temu';
     return;
   }
   // Si se pegó el bloque completo que comparte la app (nombre + frase + link),
@@ -3324,10 +3325,23 @@ function autocompletarDesdeShein() {
   var match = raw.match(/https?:\/\/\S+/);
   var link = match ? match[0] : raw;
   document.getElementById('sh-link').value = link;
+
+  // Detecta automáticamente de cuál tienda es el link, por el dominio.
+  var esTemu = /temu\.com/i.test(link);
+  var esShein = /shein\.com/i.test(link);
+  if (!esTemu && !esShein) {
+    status.style.color = '#ff9999';
+    status.textContent = 'Ese link no parece ser de Shein ni de Temu';
+    return;
+  }
+  var fuente = esTemu ? 'temu' : 'shein';
+  var endpoint = esTemu ? 'temu-info' : 'shein-info';
+  document.getElementById('sh-link').setAttribute('data-fuente', fuente);
+
   btn.disabled = true;
   status.style.color = '';
-  status.textContent = 'Leyendo el link…';
-  fetch('https://citybuy360-tryon.asuranasuran666.workers.dev/shein-info?url=' + encodeURIComponent(link))
+  status.textContent = 'Leyendo el link de ' + (esTemu ? 'Temu' : 'Shein') + '…';
+  fetch('https://citybuy360-tryon.asuranasuran666.workers.dev/' + endpoint + '?url=' + encodeURIComponent(link))
     .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
     .then(function(res) {
       btn.disabled = false;
@@ -3337,12 +3351,13 @@ function autocompletarDesdeShein() {
         return;
       }
       if (res.data.nombre) document.getElementById('sh-nombre').value = res.data.nombre;
+      if (res.data.descripcion) document.getElementById('sh-descripcion').value = res.data.descripcion;
       if (res.data.imagen) {
         document.getElementById('sh-imagen').value = res.data.imagen;
         document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + res.data.imagen + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
       }
       status.style.color = '#7fff7f';
-      status.textContent = '✅ Nombre e imagen listos — solo falta el precio';
+      status.textContent = '✅ ' + (esTemu ? 'Temu' : 'Shein') + ' — datos listos, solo falta el precio';
       document.getElementById('sh-precio').focus();
     })
     .catch(function(e) {
@@ -3392,11 +3407,15 @@ function aplicarLimpiezaWaLinks(idsStr) {
 
 function agregarProductoShein() {
   var nombre = document.getElementById('sh-nombre').value.trim();
+  var descripcion = document.getElementById('sh-descripcion').value.trim();
   var precio = parseFloat(document.getElementById('sh-precio').value);
   var imagen = document.getElementById('sh-imagen').value.trim();
-  var linkRaw = document.getElementById('sh-link').value.trim();
+  var linkEl = document.getElementById('sh-link');
+  var linkRaw = linkEl.value.trim();
   var linkMatch = linkRaw.match(/https?:\/\/\S+/);
   var link = linkMatch ? linkMatch[0] : linkRaw;
+  // Si nunca se tocó "Leer link", se detecta la fuente igual por el dominio del link.
+  var fuente = linkEl.getAttribute('data-fuente') || (/temu\.com/i.test(link) ? 'temu' : (/shein\.com/i.test(link) ? 'shein' : ''));
   var publicoTienda = document.getElementById('sh-publico').checked;
   var status = document.getElementById('sh-status');
   if (!nombre || isNaN(precio) || !link) {
@@ -3407,15 +3426,17 @@ function agregarProductoShein() {
   status.style.color = '';
   status.textContent = 'Guardando…';
   db.ref('shein_productos').push({
-    nombre: nombre, precio: precio, imagen: imagen, link: link,
+    nombre: nombre, descripcion: descripcion, precio: precio, imagen: imagen, link: link, fuente: fuente,
     activo: true, publicoTienda: publicoTienda, creado: new Date().toISOString()
   }).then(function() {
     status.style.color = '#7fff7f';
     status.textContent = '✅ Agregado';
     document.getElementById('sh-nombre').value = '';
+    document.getElementById('sh-descripcion').value = '';
     document.getElementById('sh-precio').value = '';
     document.getElementById('sh-imagen').value = '';
     document.getElementById('sh-link').value = '';
+    document.getElementById('sh-link').removeAttribute('data-fuente');
     document.getElementById('sh-publico').checked = false;
     document.getElementById('sh-imagen-preview').innerHTML = '';
     setTimeout(function(){ status.textContent = ''; }, 2000);
@@ -3436,7 +3457,7 @@ function loadProductosShein() {
       var id = e[0], p = e[1];
       return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;flex-wrap:wrap;">' +
         (p.imagen ? '<img src="' + p.imagen + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex:none;" onerror="this.style.display=\'none\'">' : '') +
-        '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.nombre + '</div>' +
+        '<div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (p.fuente === 'temu' ? '📦 ' : (p.fuente === 'shein' ? '🛍️ ' : '')) + p.nombre + '</div>' +
         '<div style="font-size:0.78rem;color:var(--text-muted);">' + p.precio + ' USD' + (p.activo === false ? ' · desactivado' : '') + '</div></div>' +
         '<button onclick="togglePublicoShein(\'' + id + '\',' + (p.publicoTienda === true) + ')" title="Mostrar también en la tienda pública, sin VIP" style="background:' + (p.publicoTienda ? '#0a2a0a' : 'none') + ';border:1px solid ' + (p.publicoTienda ? '#336633' : 'var(--border)') + ';color:' + (p.publicoTienda ? '#88ff88' : 'var(--text-muted)') + ';border-radius:6px;padding:4px 8px;font-size:0.68rem;cursor:pointer;white-space:nowrap;">' + (p.publicoTienda ? '🌐 En tienda' : '🔒 Solo VIP') + '</button>' +
         '<button onclick="toggleCalculadoraShein(\'' + id + '\',' + (p.usarCalculadora === true) + ')" title="El cliente pone el peso del paquete y el precio final se calcula con la calculadora Temu/Shein, en vez de cobrar el precio fijo" style="background:' + (p.usarCalculadora ? '#0a1a2a' : 'none') + ';border:1px solid ' + (p.usarCalculadora ? '#336699' : 'var(--border)') + ';color:' + (p.usarCalculadora ? '#88ccff' : 'var(--text-muted)') + ';border-radius:6px;padding:4px 8px;font-size:0.68rem;cursor:pointer;white-space:nowrap;">' + (p.usarCalculadora ? '🧮 Calculadora' : '💲 Precio fijo') + '</button>' +
