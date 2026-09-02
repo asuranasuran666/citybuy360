@@ -1239,7 +1239,7 @@
     <button class="cat-btn" onclick="filterCat('electronica',this)">🔌 Electrónica</button>
     <button class="cat-btn" onclick="filterCat('aseo',this)">🧴 Aseo</button>
     <button class="cat-btn" onclick="filterCat('servicios',this)">⚡ Servicios</button>
-    <button class="cat-btn" onclick="filterCat('shein',this)">🛍️ Shein</button>
+    <button class="cat-btn" onclick="filterCat('shein',this)">🛍️ Ofertas</button>
 </div>
 </header>
 
@@ -1262,7 +1262,7 @@
 
         <div class="products-container" id="products-container">
 
-            <div class="section-title" id="sec-title-shein" style="display:none;">🛍️ Ofertas Shein</div>
+            <div class="section-title" id="sec-title-shein" style="display:none;">🛍️ Ofertas externas</div>
             <div class="grid" id="grid-shein" style="display:none;"></div>
 
             <div class="header-slider" id="header-slider">
@@ -1583,9 +1583,11 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             if (!lista.length) { grid.innerHTML = ''; return; }
             grid.innerHTML = lista.map(function(e) {
                 var id = e[0], p = e[1];
-                var nombre = p.nombre || 'Producto Shein';
+                var nombre = p.nombre || 'Producto';
                 var precioTxt = (p.precio !== undefined && p.precio !== null && p.precio !== '') ? parseFloat(p.precio).toFixed(2) + ' USD' : '';
                 var img = p.imagen || '';
+                var fuenteTxt = p.fuente === 'temu' ? 'Temu' : (p.fuente === 'shein' ? 'Shein' : 'Externo');
+                var fuenteEmoji = p.fuente === 'temu' ? '📦' : '🛍️';
                 // Misma estructura data-* que una card normal: openProductDetail() y addToCart()
                 // leen todo de aquí, así que "Lo quiero" abre la ficha y agrega al carrito normal
                 // de la tienda — no manda a WhatsApp directo ni a la calculadora VIP.
@@ -1596,12 +1598,12 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     (img ? '<img src="' + img + '" class="card-img" alt="' + nombre.replace(/"/g, '') + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
                     '</div>' +
                     '<div class="card-content">' +
-                    '<div class="tag-category">SHEIN</div>' +
+                    '<div class="tag-category">' + fuenteEmoji + ' ' + fuenteTxt.toUpperCase() + '</div>' +
                     '<div class="product-name">' + nombre + '</div>' +
-                    '<div class="details-block product-desc-larga"></div>' +
+                    '<div class="details-block product-desc-larga">' + (p.descripcion || '') + '</div>' +
                     (precioTxt ? '<div class="price product-price">' + precioTxt + '</div>' : '<div class="price"></div>') +
                     '<div class="price-conversion"></div>' +
-                    '<div class="card-vendedor">CityBUY360 · Shein</div>' +
+                    '<div class="card-vendedor">CityBUY360 · ' + fuenteTxt + '</div>' +
                     '<button class="btn-lo-quiero" onclick="openProductDetail(this.closest(\'.card\'))">🛒 Lo quiero</button>' +
                     '</div></div>';
             }).join('');
