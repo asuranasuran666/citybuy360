@@ -3006,7 +3006,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 var envio = peso * (tsConfig.precioLibra || 0);
                 var arancel = tsConfig.arancel || 0;
                 var total = precioBaseShein + comision + envio + arancel;
-                var m = tsConfig.moneda || 'USD';
+                var m = 'USD';
                 desglose.innerHTML = 'Producto: ' + precioBaseShein.toFixed(2) + ' ' + m + '<br>Comisión: ' + comision.toFixed(2) + ' ' + m +
                     '<br>Envío: ' + envio.toFixed(2) + ' ' + m + (peso <= 0 ? ' (pon el peso)' : '') +
                     (arancel > 0 ? '<br>Arancel: ' + arancel.toFixed(2) + ' ' + m : '');
