@@ -2700,6 +2700,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     var pdpColoresOptions = document.getElementById('pdp-colores-options');
     var pdpLoQuiero = document.getElementById('pdp-lo-quiero');
     var pdpImgs = [];
+    var pdpImgsBase = [];
     var pdpIdx = 0;
     var pdpSelTalla = '';
     var pdpSelColor = '';
@@ -2720,6 +2721,34 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         pdpDots.querySelectorAll('span').forEach(function(d, di) {
             d.classList.toggle('active', di === pdpIdx);
         });
+    }
+
+    // Reconstruye puntos/flechas de la galería y salta a la primera foto.
+    // Se llama al abrir el producto y también al cambiar de color (si ese color tiene foto propia).
+    function pdpRenderGallery() {
+        pdpDots.innerHTML = '';
+        pdpImgs.forEach(function(_, i) {
+            var d = document.createElement('span');
+            if (i === 0) d.classList.add('active');
+            pdpDots.appendChild(d);
+        });
+        var hasMultiple = pdpImgs.length > 1;
+        pdpPrev.style.display = hasMultiple ? '' : 'none';
+        pdpNext.style.display = hasMultiple ? '' : 'none';
+        pdpDots.style.display = hasMultiple ? '' : 'none';
+        pdpShowImg(0);
+    }
+
+    // Si el color elegido tiene foto propia, la pone primero en la galería (sin perder las demás
+    // fotos generales del producto). Si el color no tiene foto propia, vuelve a la galería original.
+    function pdpAplicarImagenColor(imagenColor) {
+        if (imagenColor) {
+            var resto = pdpImgsBase.filter(function(u) { return u !== imagenColor; });
+            pdpImgs = [imagenColor].concat(resto);
+        } else {
+            pdpImgs = pdpImgsBase.slice();
+        }
+        pdpRenderGallery();
     }
 
     function pdpFormatearPrecio(valor) {
@@ -2796,6 +2825,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 pdpSelColor = c.color;
                 pdpSelTalla = '';
                 pdpSelVariantePrecio = '';
+                pdpAplicarImagenColor(c.imagen);
                 pdpBuildMatrizTallas(c);
             });
             pdpTallasOptions.appendChild(btn);
@@ -2898,6 +2928,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var imgContainer = card.querySelector('.card-img-container');
         var raw = imgContainer ? (imgContainer.getAttribute('data-images') || '') : '';
         pdpImgs = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        pdpImgsBase = pdpImgs.slice();
         var tooltip = imgContainer ? imgContainer.querySelector('.hover-tooltip') : null;
         var descLarga = card.querySelector('.product-desc-larga');
         var title = (card.querySelector('.product-name') || {}).textContent || '';
@@ -3076,6 +3107,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 pdpColoresWrap.classList.remove('show');
                 pdpSelColor = unico.color;
                 pdpSelTalla = unico.tallas[0].talla;
+                pdpAplicarImagenColor(unico.imagen);
                 var htmlPrecioUnico2 = pdpFormatearPrecio(parseFloat(unico.tallas[0].precio));
                 pdpPrice.innerHTML = htmlPrecioUnico2;
                 pdpSelVariantePrecio = htmlPrecioUnico2.split('<')[0].trim();
@@ -3104,17 +3136,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         }
 
         // Galería
-        pdpDots.innerHTML = '';
-        pdpImgs.forEach(function(_, i) {
-            var d = document.createElement('span');
-            if (i === 0) d.classList.add('active');
-            pdpDots.appendChild(d);
-        });
-        var hasMultiple = pdpImgs.length > 1;
-        pdpPrev.style.display = hasMultiple ? '' : 'none';
-        pdpNext.style.display = hasMultiple ? '' : 'none';
-        pdpDots.style.display = hasMultiple ? '' : 'none';
-        pdpShowImg(0);
+        pdpRenderGallery();
 
         pdpOverlay.classList.add('active');
         pdpModal.classList.add('active');
