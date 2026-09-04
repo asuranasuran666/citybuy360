@@ -3585,7 +3585,7 @@ function actualizarVistaVariantesTipo(prefijo) {
   document.getElementById(prefijo + '-variantes-matriz-wrap').style.display = esMatriz ? '' : 'none';
 }
 
-function agregarColorMatriz(prefijo, colorNombre, tallas) {
+function agregarColorMatriz(prefijo, colorNombre, tallas, imagenColor) {
   var lista = document.getElementById(prefijo + '-variantes-matriz-lista');
   var bloque = document.createElement('div');
   bloque.className = 'variante-color-bloque';
@@ -3595,6 +3595,7 @@ function agregarColorMatriz(prefijo, colorNombre, tallas) {
       '<input type="text" placeholder="Color (ej: Negro)" value="' + (colorNombre ? String(colorNombre).replace(/"/g,'') : '') + '" class="variante-color-nombre" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
       '<button type="button" onclick="this.closest(\'.variante-color-bloque\').remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>' +
     '</div>' +
+    '<input type="text" placeholder="Foto de este color (URL, opcional — si no se pone usa las fotos generales del producto)" value="' + (imagenColor ? String(imagenColor).replace(/"/g,'') : '') + '" class="variante-color-imagen" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.78rem;margin-bottom:6px;">' +
     '<div class="variante-tallas-lista" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px;"></div>' +
     '<button type="button" onclick="agregarTallaMatriz(this)" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;">+ Agregar talla a este color</button>';
   lista.appendChild(bloque);
@@ -3626,6 +3627,7 @@ function leerVariantesMatriz(prefijo) {
   bloques.forEach(function(bloque) {
     var color = bloque.querySelector('.variante-color-nombre').value.trim();
     if (!color) return;
+    var imagenColor = bloque.querySelector('.variante-color-imagen').value.trim();
     var tallas = [];
     bloque.querySelectorAll('.variante-talla-row').forEach(function(fila) {
       var talla = fila.querySelector('.variante-talla-nombre').value.trim();
@@ -3634,7 +3636,7 @@ function leerVariantesMatriz(prefijo) {
       var stock = stockRaw === '' ? null : parseInt(stockRaw, 10);
       if (talla && !isNaN(precio)) tallas.push({ talla: talla, precio: precio, stock: (stock !== null && !isNaN(stock)) ? stock : null });
     });
-    if (tallas.length) matriz.push({ color: color, tallas: tallas });
+    if (tallas.length) matriz.push({ color: color, imagen: imagenColor || null, tallas: tallas });
   });
   return matriz;
 }
@@ -3642,7 +3644,7 @@ function leerVariantesMatriz(prefijo) {
 function cargarVariantesMatriz(prefijo, matriz) {
   var lista = document.getElementById(prefijo + '-variantes-matriz-lista');
   lista.innerHTML = '';
-  (matriz || []).forEach(function(c) { agregarColorMatriz(prefijo, c.color, c.tallas); });
+  (matriz || []).forEach(function(c) { agregarColorMatriz(prefijo, c.color, c.tallas, c.imagen); });
 }
 
 function borrarDatosVentas() {
