@@ -1048,7 +1048,7 @@
         /* ── CARD TASAS DE CAMBIO ── */
 
         
-        /* ── MARQUESINA (carrusel de mensajes) ── */
+        /* ── MARQUESINA (cinta continua) ── */
         #marquesina-wrap {
             position: relative;
             background: linear-gradient(90deg, #0a0a1a, #111130, #0a0a1a);
@@ -1057,16 +1057,15 @@
             overflow: hidden; width: 100%; box-sizing: border-box;
             height: 34px; display: flex; align-items: center;
         }
-        .marquesina-msg {
-            position: absolute; left: 0; right: 0;
-            text-align: center; padding: 0 14px;
-            font-size: 0.8rem; font-weight: 700; letter-spacing: 0.4px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            opacity: 0; transform: translateY(8px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            pointer-events: none;
+        #marquesina-track {
+            display: inline-flex; white-space: nowrap;
+            will-change: transform;
         }
-        .marquesina-msg.activo { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .marquesina-msg {
+            display: inline-block; padding: 0 40px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
         .marquesina-msg[data-tipo="tasa"] { color: #00d4ff; text-transform: uppercase; }
         .marquesina-msg[data-msgtipo="confianza"] { color: #7bffb0; }
         .marquesina-msg[data-msgtipo="promo"] { color: #ffd25c; }
@@ -1075,7 +1074,7 @@
             background-size: 200% 200%; animation: goldshine 3s ease infinite;
             -webkit-background-clip: text; background-clip: text; color: transparent;
         }
-        @keyframes ticker-scroll { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
+        @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
         </style>
 </head>
@@ -1223,10 +1222,7 @@
 
 
 <div id="marquesina-wrap">
-  <div class="marquesina-msg" data-tipo="tasa" id="marquesina-msg-tasa"></div>
-  <div class="marquesina-msg" data-tipo="extra" id="marquesina-msg-extra-0"></div>
-  <div class="marquesina-msg" data-tipo="extra" id="marquesina-msg-extra-1"></div>
-  <div class="marquesina-msg" data-tipo="extra" id="marquesina-msg-extra-2"></div>
+  <div id="marquesina-track"></div>
 </div>
 
 <div id="cat-bar">
@@ -2013,7 +2009,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             if (estaAgotadoCard) {
                 var waTextAgotado = encodeURIComponent('Hola, vi que "' + p.nombre + '" está agotado. ¿Me pueden conseguir uno extra?');
                 var waLinkAgotado = 'https://wa.me/5353255813?text=' + waTextAgotado;
-                botonHTML = '<a href="' + waLinkAgotado + '" class="btn-lo-quiero" data-reserva="true" style="background:linear-gradient(135deg,#555,#333);" target="_blank">📩 Solicitar pedido extra</a>';
+                botonHTML = '<a href="' + waLinkAgotado + '" class="btn-lo-quiero" data-reserva="true" target="_blank">🛒 Lo quiero</a>';
             } else {
                 botonHTML = tieneVariantesConPrecio
                     ? '<button class="btn-lo-quiero" data-product="' + p.id + '" onclick="openProductDetail(this.closest(\'.card\'))">' + (esVIP ? '✦ 🛒 Elegir opción' : '🛒 Elegir opción') + '</button>'
@@ -3091,7 +3087,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             pdpLoQuiero.href = 'https://wa.me/5353255813?text=' + waTextAgotadoPdp;
             pdpLoQuiero.setAttribute('target', '_blank');
             pdpLoQuiero.setAttribute('data-reserva', 'true');
-            pdpLoQuiero.textContent = '📩 Solicitar pedido extra';
+            pdpLoQuiero.textContent = '🛒 Lo quiero';
             pdpLoQuiero.removeAttribute('disabled');
             pdpLoQuiero.style.opacity = '';
             pdpLoQuiero.style.cursor = '';
@@ -3988,57 +3984,48 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
     }
 
     
-    // ── MARQUESINA (carrusel de mensajes) ──
+    // ── MARQUESINA (cinta continua) ──
     function cargarMarquesina() {
         var wrap = document.getElementById('marquesina-wrap');
-        if (!wrap) return;
-        var msgTasa = document.getElementById('marquesina-msg-tasa');
-        var slotsExtra = [
-            document.getElementById('marquesina-msg-extra-0'),
-            document.getElementById('marquesina-msg-extra-1'),
-            document.getElementById('marquesina-msg-extra-2')
-        ];
+        var track = document.getElementById('marquesina-track');
+        if (!wrap || !track) return;
 
         db.ref('interfaz/ticker').once('value', function(snapTasa) {
             var valTasa = snapTasa.val();
-            if (valTasa && typeof valTasa === 'string' && msgTasa) {
-                msgTasa.textContent = valTasa;
-            } else if (msgTasa) {
-                msgTasa.remove();
-                msgTasa = null;
+            var items = [];
+            if (valTasa && typeof valTasa === 'string') {
+                items.push({ texto: valTasa, tipo: 'tasa' });
             }
 
             db.ref('interfaz/marquesinaMensajes').once('value', function(snapMsgs) {
                 var mensajes = snapMsgs.val() || [];
-                var activos = [];
-                if (msgTasa) activos.push(msgTasa);
-                mensajes.forEach(function(m, i) {
-                    var slot = slotsExtra[i];
-                    if (!slot) return;
+                mensajes.forEach(function(m) {
                     if (m && m.activo !== false && m.texto) {
-                        slot.textContent = m.texto;
-                        slot.setAttribute('data-msgtipo', m.tipo || 'confianza');
-                        activos.push(slot);
-                    } else {
-                        slot.remove();
+                        items.push({ texto: m.texto, msgtipo: m.tipo || 'confianza' });
                     }
                 });
-                // limpiar slots no usados que quedaron sin remover
-                slotsExtra.forEach(function(slot, i) {
-                    if (slot && activos.indexOf(slot) === -1 && slot.parentElement) slot.remove();
+
+                if (!items.length) { wrap.style.display = 'none'; return; }
+
+                function pintarItem(it) {
+                    var span = document.createElement('span');
+                    span.className = 'marquesina-msg';
+                    if (it.tipo) span.setAttribute('data-tipo', it.tipo);
+                    if (it.msgtipo) span.setAttribute('data-msgtipo', it.msgtipo);
+                    span.textContent = it.texto;
+                    return span;
+                }
+
+                // Duplicamos la lista para que el bucle sea continuo y sin salto
+                items.concat(items).forEach(function(it) {
+                    track.appendChild(pintarItem(it));
                 });
 
-                if (!activos.length) { wrap.style.display = 'none'; return; }
-
-                var idx = 0;
-                activos[0].classList.add('activo');
-                if (activos.length > 1) {
-                    setInterval(function() {
-                        activos[idx].classList.remove('activo');
-                        idx = (idx + 1) % activos.length;
-                        activos[idx].classList.add('activo');
-                    }, 5000);
-                }
+                requestAnimationFrame(function() {
+                    var mitad = track.scrollWidth / 2;
+                    var duracion = Math.max(12, mitad / 60); // ~60px/seg
+                    track.style.animation = 'ticker-scroll ' + duracion + 's linear infinite';
+                });
             });
         });
     }
