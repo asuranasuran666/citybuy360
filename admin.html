@@ -3312,6 +3312,12 @@ function borrarCompromiso(id) {
   db.ref('compromisos/' + id).remove().then(loadCompromisosAdmin);
 }
 
+function capitalizarPrimeraLetra(texto) {
+  if (!texto) return texto;
+  var t = texto.trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 function autocompletarDesdeShein() {
   var raw = document.getElementById('sh-link').value.trim();
   var status = document.getElementById('sh-autocompletar-status');
@@ -3351,8 +3357,7 @@ function autocompletarDesdeShein() {
         status.textContent = '❌ ' + (res.data.error || 'No se pudo leer el link');
         return;
       }
-      if (res.data.nombre) document.getElementById('sh-nombre').value = res.data.nombre;
-      if (res.data.descripcion) document.getElementById('sh-descripcion').value = res.data.descripcion;
+      if (res.data.nombre) document.getElementById('sh-nombre').value = capitalizarPrimeraLetra(res.data.nombre);
       if (res.data.imagen) {
         document.getElementById('sh-imagen').value = res.data.imagen;
         document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + res.data.imagen + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
