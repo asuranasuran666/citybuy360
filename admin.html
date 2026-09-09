@@ -973,6 +973,13 @@
       </div>
       <div id="historial-ventas-list" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto;"></div>
     </div>
+    <div id="inventario-sin-migrar-wrap" style="padding:0 16px 14px;display:none;">
+      <div onclick="toggleSinMigrar()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 12px;background:#3a2a10;border:1px solid #6b4f1a;border-radius:8px;">
+        <span style="font-size:0.85rem;font-weight:700;color:#ffcc66;">⚠️ Sin migrar a Color+Talla (<span id="inventario-sin-migrar-count">0</span>) — sin control de stock</span>
+        <span id="inventario-sin-migrar-icon" style="color:#ffcc66;">▾</span>
+      </div>
+      <div id="inventario-sin-migrar-list" style="display:none;margin-top:8px;display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
     <div id="inventario-matriz-list" style="padding:0 16px 16px;"><div class="empty-state">Cargando…</div></div>
   </div>
 
@@ -3318,6 +3325,14 @@ function capitalizarPrimeraLetra(texto) {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
+// Los títulos de Temu/Shein suelen traer pegado el nombre de la tienda y el país
+// al final (ej: "... - Temu Spain"). Eso solo le sirve al vendedor, no al cliente,
+// así que se quita antes de guardar el nombre del producto.
+function limpiarNombreImportado(texto) {
+  if (!texto) return texto;
+  return texto.replace(/\s*[-–—]\s*(temu|shein|aliexpress|amazon)\b.*$/i, '').trim();
+}
+
 function autocompletarDesdeShein() {
   var raw = document.getElementById('sh-link').value.trim();
   var status = document.getElementById('sh-autocompletar-status');
@@ -3357,7 +3372,7 @@ function autocompletarDesdeShein() {
         status.textContent = '❌ ' + (res.data.error || 'No se pudo leer el link');
         return;
       }
-      if (res.data.nombre) document.getElementById('sh-nombre').value = capitalizarPrimeraLetra(res.data.nombre);
+      if (res.data.nombre) document.getElementById('sh-nombre').value = capitalizarPrimeraLetra(limpiarNombreImportado(res.data.nombre));
       if (res.data.imagen) {
         document.getElementById('sh-imagen').value = res.data.imagen;
         document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + res.data.imagen + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
@@ -4034,6 +4049,8 @@ function renderInventarioMatriz() {
   var buscarEl = document.getElementById('inventario-matriz-buscar');
   var buscar = buscarEl ? buscarEl.value.trim().toLowerCase() : '';
 
+  renderSinMigrar();
+
   var productos = Object.values(catalogoAdminData).filter(function(p) {
     return p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
   });
@@ -4086,14 +4103,50 @@ function renderInventarioMatriz() {
       '</div>');
     });
     var filas = (compactas.length ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">' + compactas.join('') + '</div>' : '') + acordeon.join('');
+    var prodKey = 'prod-' + p.id;
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+      '<div onclick="toggleProductoInventario(\'' + prodKey + '\')" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;">' +
         (p.imagen ? '<img src="' + esc(p.imagen.split(',')[0].trim()) + '" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex:none;background:#111;" onerror="this.style.display=\'none\'">' : '') +
-        '<div style="font-weight:800;font-size:0.92rem;">' + esc(p.nombre || p.id) + '</div>' +
+        '<div style="font-weight:800;font-size:0.92rem;flex:1;">' + esc(p.nombre || p.id) + '</div>' +
+        '<span id="icon-' + prodKey + '" style="font-size:0.9rem;color:var(--text-muted);">▾</span>' +
       '</div>' +
-      filas +
+      '<div id="body-' + prodKey + '" style="display:none;">' + filas + '</div>' +
     '</div>';
   }).join('');
+}
+
+function toggleProductoInventario(key) {
+  var body = document.getElementById('body-' + key);
+  var icon = document.getElementById('icon-' + key);
+  if (!body) return;
+  var abierto = body.style.display !== 'none';
+  body.style.display = abierto ? 'none' : 'block';
+  if (icon) icon.textContent = abierto ? '▾' : '▴';
+}
+
+function renderSinMigrar() {
+  var wrap = document.getElementById('inventario-sin-migrar-wrap');
+  var list = document.getElementById('inventario-sin-migrar-list');
+  var countEl = document.getElementById('inventario-sin-migrar-count');
+  if (!wrap || !list) return;
+  var sinMigrar = Object.values(catalogoAdminData).filter(function(p) {
+    return p.variantesTipo !== 'matriz';
+  });
+  sinMigrar.sort(function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); });
+  countEl.textContent = sinMigrar.length;
+  wrap.style.display = sinMigrar.length ? 'block' : 'none';
+  list.innerHTML = sinMigrar.map(function(p) {
+    return '<div style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;cursor:pointer;" onclick="abrirModalEditar(\'' + p.id + '\')">' + esc(p.nombre || p.id) + '</div>';
+  }).join('');
+}
+
+function toggleSinMigrar() {
+  var list = document.getElementById('inventario-sin-migrar-list');
+  var icon = document.getElementById('inventario-sin-migrar-icon');
+  if (!list) return;
+  var abierto = list.style.display !== 'none';
+  list.style.display = abierto ? 'none' : 'flex';
+  if (icon) icon.textContent = abierto ? '▾' : '▴';
 }
 
 function esc(s) {
