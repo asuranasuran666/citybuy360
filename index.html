@@ -1870,8 +1870,13 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         { id: 'acceso360',     emoji: '✦',  nombre: 'ACCESO 360',          contenedor: 'grid-acceso360' },
     ];
 
+    function forzarHttps(url) {
+        if (!url) return url;
+        return url.trim().replace(/^http:\/\//i, 'https://');
+    }
+
     function buildCard(p) {
-        var imgs = (p.imagenes || (p.id + '.jpg')).split(',');
+        var imgs = (p.imagenes || (p.id + '.jpg')).split(',').map(forzarHttps);
         var waText = encodeURIComponent('Hola, quiero comprar: ' + p.nombre + (p.precio ? ' (' + p.precio + ')' : ''));
         var waLink = p.waLink || ('https://wa.me/5353255813?text=' + waText);
         var esVIP = p.seccion === 'acceso360';
@@ -2029,7 +2034,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             }
         }
         return '<div class="card" data-product="' + p.id + '" data-genero="' + (p.genero||'') + '" data-colores="' + (p.colores||'') + '" data-tallas="' + (p.tallas||'') + '" data-variantes="' + variantesAttr + '" data-variantes-matriz="' + variantesMatrizAttr + '" data-variantes-tipo="' + (p.variantesTipo||'color') + '" data-moneda="' + monedaProd + '" data-precio-modo="' + (modoPrecio||'') + '" data-proxima-venta="' + (esProximaVenta ? 'true' : 'false') + '" data-tryon="' + (p.tryonHabilitado === false ? 'false' : 'true') + '" data-stock="' + stockFiltro + '" data-orden="' + (p.orden || '') + '" id="card-' + p.id + '">' +
-            '<div class="card-img-container" data-images="' + (p.imagenes||p.id+'.jpg') + '" data-count="' + imgs.length + '" style="position:relative;">' +
+            '<div class="card-img-container" data-images="' + imgs.join(',') + '" data-count="' + imgs.length + '" style="position:relative;">' +
                 '<img src="' + imgs[0] + '" class="card-img" alt="' + p.nombre + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'#222\';this.parentElement.style.minHeight=\'180px\'"' + (esProximaVenta ? ' style="filter:grayscale(60%) brightness(0.7);"' : '') + '>' +
                 (showDescripcion && p.descripcion ? '<div class="hover-tooltip">' + p.descripcion + '</div>' : '') +
                 badgeInline +
