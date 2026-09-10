@@ -2872,6 +2872,9 @@ function toggleDestacado(pid, btn) {
   btn.textContent = nuevoValor ? '⭐' : '☆';
   db.ref('catalogo/' + pid + '/destacado').set(nuevoValor);
   if (catalogoAdminData[pid]) catalogoAdminData[pid].destacado = nuevoValor;
+  if (nuevoValor && catalogoAdminData[pid]) {
+    reforzarPruebaSocialDestacado(pid, catalogoAdminData[pid].nombre, catalogoAdminData[pid].seccion);
+  }
 }
 
 function updateDestacadosSaveBtn() {
@@ -3791,108 +3794,164 @@ async function downloadBackup() {
 
 // Siembra automática de prueba social (estrellas + testimonios) para un producto
 // recién creado, para que nunca salga a la tienda con "0 votos" o vacío de opiniones.
-function sembrarPruebaSocialInicial(id, nombreProducto, seccion) {
-  var count = 10 + Math.floor(Math.random() * 11); // 10 a 20
-  var avg = 4 + Math.random(); // 4.00 a 5.00
-  var total = Math.round(avg * count);
-  db.ref('ratings/' + id).set({ total: total, count: count });
+// ── PRUEBA SOCIAL (reseñas + testimonios) ──
+// Basado en investigación real de conversión (Spiegel Research Center,
+// Northwestern): el promedio que más vende NO es 5.0 — es 4.2-4.6. Un 5.0
+// perfecto genera sospecha de reseñas falsas. Por eso el promedio se genera
+// con más peso en esa franja creíble, con algunos productos más bajos y muy
+// pocos casi perfectos.
+var NOMBRES_TESTIMONIOS = ['Yaditza R.', 'Osmany P.', 'Liset M.', 'Reinier G.', 'Yusleidys F.',
+  'Ariel D.', 'Yailin C.', 'Leandro T.', 'Marlenis V.', 'Dayron S.',
+  'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.',
+  'Dianelys O.', 'Ernesto M.', 'Yadira P.', 'Raidel C.', 'Suyen G.'];
 
-  var NOMBRES = ['Yaditza R.', 'Osmany P.', 'Liset M.', 'Reinier G.', 'Yusleidys F.',
-    'Ariel D.', 'Yailin C.', 'Leandro T.', 'Marlenis V.', 'Dayron S.',
-    'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.',
-    'Dianelys O.', 'Ernesto M.', 'Yadira P.', 'Raidel C.', 'Suyen G.'];
+// Palabras clave en el nombre del producto → banco de frases específico del
+// tipo de artículo (no solo de la categoría amplia). Se revisa en orden,
+// la primera coincidencia gana.
+var TIPOS_PRODUCTO = [
+  { claves: ['media', 'calcetin', 'calcetín'], tipo: 'medias' },
+  { claves: ['gorra', 'sombrero', 'cachucha'], tipo: 'gorra' },
+  { claves: ['ventilador'], tipo: 'ventilador' },
+  { claves: ['audifono', 'audífono', 'auricular', 'bocina', 'parlante', 'altavoz'], tipo: 'audio' },
+  { claves: ['saldo', 'recarga'], tipo: 'recarga' },
+  { claves: ['perfume', 'colonia', 'crema', 'locion', 'loción', 'shampoo', 'champú', 'jabon', 'jabón', 'desodorante'], tipo: 'aseo_especifico' },
+  { claves: ['zapato', 'tenis', 'sandalia', 'bota', 'chancleta'], tipo: 'calzado' },
+  { claves: ['mochila', 'bolso', 'cartera', 'maleta'], tipo: 'bolso' },
+  { claves: ['reloj'], tipo: 'reloj' },
+  { claves: ['juguete', 'muñeca', 'muneca', 'carrito'], tipo: 'juguete' },
+  { claves: ['cargador', 'cable', 'power bank', 'bateria portatil', 'batería portátil'], tipo: 'accesorio_electronico' },
+  { claves: ['camisa', 'camiseta', 'pulover', 'pulóver', 'blusa', 'vestido', 'pantalon', 'pantalón', 'short', 'saya', 'falda'], tipo: 'ropa' }
+];
 
-  // Escritas como escribe la gente de verdad: sin tildes en algunas, mayúsculas
-  // inconsistentes, emoji a veces. No se corrige nada de esto a propósito.
-  // Cada categoría tiene su propio banco de frases (opinar de un ventilador
-  // no suena igual que opinar de un pulóver), más un banco genérico que se
-  // mezcla con todas para dar variedad extra.
-  var POR_CATEGORIA = {
-    mujer: [
-      'me quedó divina, tal cual la talla que pedí',
-      'la tela se siente de buena calidad, no rasca',
-      'combina con todo, ya me la e puesto varias veces',
-      'buen corte, no se ve barata para nada',
-      'el color es igualito a la foto',
-      'me encantó como me quedó {producto}'
-    ],
-    hombre: [
-      'buena tela, no se destiñó al lavarla',
-      'pedí mi talla de siempre y ajustó perfecto',
-      'buen acabado, se ve mejor en persona que en la foto',
-      'cómoda y fresca, la uso para todo',
-      'aguanta bien el uso diario',
-      '{producto} de buena calidad, no me quejo'
-    ],
-    ninos: [
-      'le quedó perfecta a mi niño, buena talla',
-      'tela suave, no le dio alergia',
-      'buena calidad para lo que cuesta',
-      'aguanta el trote de los niños sin dañarse rápido',
-      'a mi hija le encantó {producto}'
-    ],
-    unisex: [
-      'se ve bien, buen acabado',
-      'combina con todo lo que tengo',
-      'buena calidad, no se siente barato',
-      'ajusta bien, cómodo de usar',
-      '{producto} tal cual se veía en la tienda'
-    ],
-    electronica: [
-      'funciona excelente, la batería dura bastante',
-      'se conecta rápido, sin interferencias',
-      'buena calidad para el precio',
-      'llegó bien empacado y prendió a la primera',
-      'cumple lo que promete, sin fallas hasta ahora',
-      '{producto} mejor de lo que esperaba por el precio'
-    ],
-    aseo: [
-      'huele bien y rinde bastante',
-      'buena textura, no reseca',
-      'cumple lo que promete',
-      'buena relación cantidad-precio',
-      'ya voy por el segundo, me gustó {producto}'
-    ],
-    servicios: [
-      'cumplieron rápido con lo acordado',
-      'buena comunicación durante todo el proceso',
-      'resolvieron todo sin complicaciones',
-      'excelente atención de principio a fin'
-    ]
-  };
-  var GENERICAS = [
-    'buena atención por WhatsApp, resolvieron mis dudas rapido',
-    'todo bien, cumplieron con lo prometido 👍',
-    'un poco de espera pero valió la pena',
-    'primera vez que compro aqui y quedé satisfecho',
-    'buen trato, me explicaron todo antes de decidir',
-    'rapido y sin complicaciones, todo ok',
-    'genial!! seguro vuelvo a comprar',
-    'todo tal cual lo pedí, gracias por la atención',
-    '100% recomendado, buen servicio',
-    'me gustó que el precio en MN estaba claro desde el principio',
-    'waoo quedó mejor de lo que pensaba 😍',
-    'buena experiencia, sin problemas'
-  ];
-  var PLANTILLAS = (POR_CATEGORIA[seccion] || []).concat(GENERICAS);
+var POOLS_TIPO = {
+  medias: ['buena tela, no aprietan para nada', 'calientan bien, buena calidad', 'no se han descosido después de varios lavados', 'cómodas para todo el día', 'buen grosor, ni muy finas ni muy gruesas', 'se ven bien, además duraderas'],
+  gorra: ['buen ajuste, no me aprieta', 'protege bien del sol', 'buena tela, no destiñe con el sudor', 'se ve mejor en persona que en la foto', 'buen material, ligera', 'me quedó cómoda, ajusta bien'],
+  ventilador: ['buena brisa, silencioso', 'la batería dura bastante', 'las velocidades funcionan bien todas', 'liviano y fácil de mover', 'cumple lo que promete, buen producto', 'se siente resistente, no es de mala calidad'],
+  audio: ['buen sonido para el precio', 'la batería aguanta bastante', 'se conecta rápido por bluetooth', 'cómodos, no molestan al usarlos rato largo', 'cumple bien, sin cortes de sonido', 'buena calidad, no esperaba tanto por el precio'],
+  recarga: ['llegó el saldo al momento, sin demora', 'cómodo hacerlo todo por WhatsApp, sin salir de casa', 'rápido, en minutos ya tenía el saldo', 'buen servicio, sin complicaciones', 'confiable, ya es la segunda vez que recargo aquí', 'todo correcto, el monto llegó completo'],
+  aseo_especifico: ['huele muy bien, dura bastante', 'buena textura, no reseca', 'rinde bastante, no se acaba rápido', 'buena calidad, se nota la diferencia', 'ya voy a comprar otro, me gustó bastante'],
+  calzado: ['buena talla, ajustó como esperaba', 'cómodos para caminar todo el día', 'buen material, no aprietan', 'se ven mejor en persona', 'buena calidad para el precio'],
+  bolso: ['buen espacio, cabe bastante', 'material resistente, buen acabado', 'los cierres funcionan bien', 'se ve mejor en persona que en la foto', 'buena calidad para lo que costó'],
+  reloj: ['se ve bien, buen acabado', 'la batería aguanta bien', 'cómodo, no aprieta la muñeca', 'funciona bien, sin fallas hasta ahora', 'buena calidad para el precio'],
+  juguete: ['a mi hijo le encantó, buena calidad', 'aguanta bien el uso de los niños', 'buen material, no se rompió rápido', 'tal cual la foto, buen tamaño'],
+  accesorio_electronico: ['funciona bien, carga rápido', 'buen cable, resistente', 'cumple lo que promete', 'buena calidad para el precio'],
+  ropa: ['me quedó bien, la talla ajustó perfecto', 'buena tela, no destiñe al lavar', 'buen corte, se ve mejor en persona', 'el color es igual a la foto', 'cómoda, la uso seguido', 'buena calidad para el precio']
+};
 
-  function elegir(arr, n) {
-    var c = arr.slice();
-    for (var i = c.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = c[i]; c[i] = c[j]; c[j] = t; }
-    return c.slice(0, n);
+// Respaldo cuando el nombre no coincide con ningún tipo de arriba.
+var POR_CATEGORIA = {
+  mujer: ['me quedó divina, tal cual la talla que pedí', 'la tela se siente de buena calidad, no rasca', 'combina con todo, ya me la e puesto varias veces', 'buen corte, no se ve barata para nada', 'el color es igualito a la foto'],
+  hombre: ['buena tela, no se destiñó al lavarla', 'pedí mi talla de siempre y ajustó perfecto', 'buen acabado, se ve mejor en persona', 'cómoda y fresca, la uso para todo', 'aguanta bien el uso diario'],
+  ninos: ['le quedó perfecta a mi niño, buena talla', 'tela suave, no le dio alergia', 'buena calidad para lo que cuesta', 'aguanta el trote de los niños sin dañarse rápido'],
+  unisex: ['se ve bien, buen acabado', 'combina con todo lo que tengo', 'buena calidad, no se siente barato', 'ajusta bien, cómodo de usar'],
+  electronica: ['funciona excelente, la batería dura bastante', 'se conecta rápido, sin interferencias', 'buena calidad para el precio', 'llegó bien empacado y prendió a la primera'],
+  aseo: ['huele bien y rinde bastante', 'buena textura, no reseca', 'cumple lo que promete', 'buena relación cantidad-precio'],
+  servicios: ['cumplieron rápido con lo acordado', 'buena comunicación durante todo el proceso', 'resolvieron todo sin complicaciones', 'excelente atención de principio a fin']
+};
+
+// Genérico "de tienda" — se mezcla en pequeña proporción con lo específico,
+// nunca domina, para que no todos los productos suenen igual.
+var GENERICAS_TESTIMONIOS = [
+  'buena atención por WhatsApp, resolvieron mis dudas rapido',
+  'todo bien, cumplieron con lo prometido 👍',
+  'primera vez que compro aqui y quedé satisfecho',
+  'buen trato, me explicaron todo antes de decidir',
+  'rapido y sin complicaciones, todo ok',
+  'me gustó que el precio en MN estaba claro desde el principio'
+];
+
+function detectarTipoProducto(nombre) {
+  var n = (nombre || '').toLowerCase();
+  for (var i = 0; i < TIPOS_PRODUCTO.length; i++) {
+    for (var j = 0; j < TIPOS_PRODUCTO[i].claves.length; j++) {
+      if (n.indexOf(TIPOS_PRODUCTO[i].claves[j]) !== -1) return TIPOS_PRODUCTO[i].tipo;
+    }
   }
-  var cantidad = 3 + Math.floor(Math.random() * 3); // 3 a 5
-  var nombres = elegir(NOMBRES, cantidad);
-  var plantillas = elegir(PLANTILLAS, cantidad);
+  return null;
+}
+
+function mezclarArray(arr) {
+  var c = arr.slice();
+  for (var i = c.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = c[i]; c[i] = c[j]; c[j] = t; }
+  return c;
+}
+
+function elegirPlantillas(cantidad, nombreProducto, seccion) {
+  var tipo = detectarTipoProducto(nombreProducto);
+  var poolEspecifico = (tipo && POOLS_TIPO[tipo]) || POR_CATEGORIA[seccion] || [];
+  var numGenerico = Math.max(1, Math.round(cantidad * 0.25));
+  var numEspecifico = cantidad - numGenerico;
+  if (poolEspecifico.length < numEspecifico) { numEspecifico = poolEspecifico.length; numGenerico = cantidad - numEspecifico; }
+  var especificos = mezclarArray(poolEspecifico).slice(0, numEspecifico);
+  var genericos = mezclarArray(GENERICAS_TESTIMONIOS).slice(0, numGenerico);
+  return mezclarArray(especificos.concat(genericos));
+}
+
+// Promedio ponderado hacia la franja de credibilidad (4.2-4.6). Los productos
+// "destacados" pueden pesar un poco más alto, pero nunca mayoría en 5.0 puro.
+function generarPromedio(esDestacado) {
+  var r = Math.random();
+  if (esDestacado) {
+    if (r < 0.10) return +(4.9 + Math.random() * 0.1).toFixed(2);
+    if (r < 0.70) return +(4.5 + Math.random() * 0.3).toFixed(2);
+    return +(4.2 + Math.random() * 0.3).toFixed(2);
+  }
+  if (r < 0.06) return +(4.9 + Math.random() * 0.1).toFixed(2);
+  if (r < 0.65) return +(4.3 + Math.random() * 0.3).toFixed(2);
+  if (r < 0.90) return +(4.0 + Math.random() * 0.3).toFixed(2);
+  return +(4.6 + Math.random() * 0.3).toFixed(2);
+}
+
+// Estrella de cada testimonio individual, coherente con el promedio del
+// producto — y un pequeño % de 3 estrellas, a propósito: un review corpus
+// sin ninguna imperfección se ve menos real, no más.
+function elegirEstrellaTestimonio(avgObjetivo) {
+  var r = Math.random();
+  if (r < 0.08) return 3;
+  if (avgObjetivo >= 4.6) return Math.random() < 0.80 ? 5 : 4;
+  if (avgObjetivo >= 4.3) return Math.random() < 0.55 ? 5 : 4;
+  return Math.random() < 0.30 ? 5 : 4;
+}
+
+function generarTestimonios(id, nombreProducto, seccion, avg, cantidad) {
+  var nombres = mezclarArray(NOMBRES_TESTIMONIOS).slice(0, cantidad);
+  var plantillas = elegirPlantillas(cantidad, nombreProducto, seccion);
   var nombreLower = (nombreProducto || '').toLowerCase();
   for (var i = 0; i < cantidad; i++) {
     db.ref('testimonios/' + id).push({
       nombre: nombres[i],
-      texto: plantillas[i].replace('{producto}', nombreLower || 'el producto'),
-      estrellas: Math.random() < 0.65 ? 5 : 4,
+      texto: (plantillas[i] || '').replace('{producto}', nombreLower || 'el producto'),
+      estrellas: elegirEstrellaTestimonio(avg),
       fecha: Date.now() - Math.floor(Math.random() * 60) * 86400000
     });
   }
+}
+
+// Producto recién creado: nivel base. Algo nuevo no puede tener 40 reseñas
+// de golpe sin verse falso — por eso arranca bajo/medio (7-18).
+function sembrarPruebaSocialInicial(id, nombreProducto, seccion) {
+  var count = 7 + Math.floor(Math.random() * 12); // 7 a 18
+  var avg = generarPromedio(false);
+  var total = Math.round(avg * count);
+  db.ref('ratings/' + id).set({ total: total, count: count });
+  var cantidadTestimonios = 3 + Math.floor(Math.random() * 3); // 3 a 5
+  generarTestimonios(id, nombreProducto, seccion, avg, cantidadTestimonios);
+}
+
+// Cuando marcas ⭐ Destacado en un producto, se refuerza su prueba social al
+// nivel "más vendido" (38-65) — tu propia señal de qué empujar, sin que yo
+// tenga que adivinar cuál vende más.
+function reforzarPruebaSocialDestacado(id, nombreProducto, seccion) {
+  db.ref('ratings/' + id).once('value', function(snap) {
+    var actual = snap.val();
+    if (actual && actual.count >= 30) return; // ya está en nivel alto, no se vuelve a inflar
+    var count = 38 + Math.floor(Math.random() * 28); // 38 a 65
+    var avg = generarPromedio(true);
+    var total = Math.round(avg * count);
+    db.ref('ratings/' + id).set({ total: total, count: count });
+    var cantidadTestimonios = 2 + Math.floor(Math.random() * 2); // 2-3 testimonios extra
+    generarTestimonios(id, nombreProducto, seccion, avg, cantidadTestimonios);
+  });
 }
 
 async function doPublish() {
@@ -4408,8 +4467,11 @@ function eliminarProducto(pid) {
 function toggleDestacadoCatalogo(pid) {
   if (!catalogoAdminData[pid]) return;
   catalogoAdminData[pid].destacado = !catalogoAdminData[pid].destacado;
-  db.ref('catalogo/' + pid + '/destacado').set(catalogoAdminData[pid].destacado).then(function() {
+  var nuevoValor = catalogoAdminData[pid].destacado;
+  var producto = catalogoAdminData[pid];
+  db.ref('catalogo/' + pid + '/destacado').set(nuevoValor).then(function() {
     renderCatalogoAdmin();
+    if (nuevoValor) reforzarPruebaSocialDestacado(pid, producto.nombre, producto.seccion);
   });
 }
 
