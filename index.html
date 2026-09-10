@@ -3149,7 +3149,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             // La tienda pública siempre cobra en USD. Si la calculadora VIP está configurada en EUR
             // (comisión/envío/arancel), esos valores se convierten a USD con una tasa aproximada —
             // no basta con cambiar la etiqueta, el número también tiene que convertirse de verdad.
-            var EUR_A_USD = 1.16; // tasa aproximada del mercado; ajustar aquí si el euro se mueve mucho
+            var EUR_A_USD = tsConfig.tasaEurUsd || 1.16; // configurable en admin (pestaña Ofertas externas)
             var tasaConvShein = (tsConfig.moneda === 'EUR') ? EUR_A_USD : 1;
             var comisionMinimaUSD = (tsConfig.comisionMinima || 0) * tasaConvShein;
             var precioLibraUSD = (tsConfig.precioLibra || 0) * tasaConvShein;
