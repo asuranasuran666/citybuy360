@@ -1087,10 +1087,15 @@
 
       <input type="text" id="sh-nombre" placeholder="Nombre del producto" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;">
       <textarea id="sh-descripcion" placeholder="Descripción (opcional)" rows="2" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-bottom:8px;box-sizing:border-box;resize:vertical;font-family:inherit;"></textarea>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px;">
         <input type="number" id="sh-precio" step="0.01" placeholder="Precio (USD)" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
-        <input type="text" id="sh-imagen" placeholder="URL de la imagen" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;">
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="sh-imagen" placeholder="URL de la imagen" style="flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;box-sizing:border-box;min-width:0;">
+          <input type="file" id="sh-imagen-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,'sh-imagen','ofertas-externas')">
+          <button type="button" onclick="document.getElementById('sh-imagen-file').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 10px;cursor:pointer;white-space:nowrap;font-size:0.78rem;flex:none;">📤</button>
+        </div>
       </div>
+      <div id="sh-imagen-status" style="font-size:0.72rem;margin-bottom:8px;"></div>
       <div id="sh-imagen-preview" style="margin-bottom:10px;"></div>
       <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;color:var(--text);cursor:pointer;">
         <input type="checkbox" id="sh-publico" style="width:16px;height:16px;">
@@ -1549,6 +1554,9 @@ async function subirImagenSimple(fileInput, targetFieldId, carpeta, agregar) {
     }
     if (statusEl) { statusEl.style.color = '#7fff7f'; statusEl.textContent = '✅ Subida'; }
     if (targetFieldId === 'promo-imagen' && typeof actualizarPreviewImagenesPromo === 'function') actualizarPreviewImagenesPromo();
+    if (targetFieldId === 'sh-imagen') {
+      document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + rawUrl + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
+    }
   } catch (e) {
     if (statusEl) { statusEl.style.color = '#ff9999'; statusEl.textContent = '❌ Error: ' + e.message; }
   } finally {
@@ -3612,12 +3620,18 @@ function agregarColorMatriz(prefijo, colorNombre, tallas, imagenColor) {
   var bloque = document.createElement('div');
   bloque.className = 'variante-color-bloque';
   bloque.style.cssText = 'border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;';
+  var imgFieldId = 'color-img-' + Math.random().toString(36).slice(2, 9);
   bloque.innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">' +
       '<input type="text" placeholder="Color (ej: Negro)" value="' + (colorNombre ? String(colorNombre).replace(/"/g,'') : '') + '" class="variante-color-nombre" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
       '<button type="button" onclick="this.closest(\'.variante-color-bloque\').remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>' +
     '</div>' +
-    '<input type="text" placeholder="Foto de este color (URL, opcional — si no se pone usa las fotos generales del producto)" value="' + (imagenColor ? String(imagenColor).replace(/"/g,'') : '') + '" class="variante-color-imagen" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.78rem;margin-bottom:6px;">' +
+    '<div style="display:flex;gap:6px;margin-bottom:2px;">' +
+      '<input type="text" id="' + imgFieldId + '" placeholder="Foto de este color (URL, opcional — si no se pone usa las fotos generales del producto)" value="' + (imagenColor ? String(imagenColor).replace(/"/g,'') : '') + '" class="variante-color-imagen" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.78rem;min-width:0;">' +
+      '<input type="file" id="' + imgFieldId + '-file" accept="image/*" style="display:none;" onchange="subirImagenSimple(this,\'' + imgFieldId + '\',\'colores\')">' +
+      '<button type="button" onclick="document.getElementById(\'' + imgFieldId + '-file\').click()" style="background:var(--surface2,#222);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 10px;cursor:pointer;white-space:nowrap;font-size:0.75rem;flex:none;">📤 Subir</button>' +
+    '</div>' +
+    '<div id="' + imgFieldId + '-status" style="font-size:0.72rem;margin-bottom:6px;"></div>' +
     '<div class="variante-tallas-lista" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px;"></div>' +
     '<button type="button" onclick="agregarTallaMatriz(this)" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;">+ Agregar talla a este color</button>';
   lista.appendChild(bloque);
