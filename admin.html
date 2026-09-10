@@ -3791,7 +3791,7 @@ async function downloadBackup() {
 
 // Siembra automática de prueba social (estrellas + testimonios) para un producto
 // recién creado, para que nunca salga a la tienda con "0 votos" o vacío de opiniones.
-function sembrarPruebaSocialInicial(id, nombreProducto) {
+function sembrarPruebaSocialInicial(id, nombreProducto, seccion) {
   var count = 10 + Math.floor(Math.random() * 11); // 10 a 20
   var avg = 4 + Math.random(); // 4.00 a 5.00
   var total = Math.round(avg * count);
@@ -3801,21 +3801,72 @@ function sembrarPruebaSocialInicial(id, nombreProducto) {
     'Ariel D.', 'Yailin C.', 'Leandro T.', 'Marlenis V.', 'Dayron S.',
     'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.',
     'Dianelys O.', 'Ernesto M.', 'Yadira P.', 'Raidel C.', 'Suyen G.'];
+
   // Escritas como escribe la gente de verdad: sin tildes en algunas, mayúsculas
-  // inconsistentes, a veces con emoji, a veces sin. No se corrige nada de esto.
-  var PLANTILLAS = [
-    'llego rapido y tal cual la foto, contenta con {producto}',
+  // inconsistentes, emoji a veces. No se corrige nada de esto a propósito.
+  // Cada categoría tiene su propio banco de frases (opinar de un ventilador
+  // no suena igual que opinar de un pulóver), más un banco genérico que se
+  // mezcla con todas para dar variedad extra.
+  var POR_CATEGORIA = {
+    mujer: [
+      'me quedó divina, tal cual la talla que pedí',
+      'la tela se siente de buena calidad, no rasca',
+      'combina con todo, ya me la e puesto varias veces',
+      'buen corte, no se ve barata para nada',
+      'el color es igualito a la foto',
+      'me encantó como me quedó {producto}'
+    ],
+    hombre: [
+      'buena tela, no se destiñó al lavarla',
+      'pedí mi talla de siempre y ajustó perfecto',
+      'buen acabado, se ve mejor en persona que en la foto',
+      'cómoda y fresca, la uso para todo',
+      'aguanta bien el uso diario',
+      '{producto} de buena calidad, no me quejo'
+    ],
+    ninos: [
+      'le quedó perfecta a mi niño, buena talla',
+      'tela suave, no le dio alergia',
+      'buena calidad para lo que cuesta',
+      'aguanta el trote de los niños sin dañarse rápido',
+      'a mi hija le encantó {producto}'
+    ],
+    unisex: [
+      'se ve bien, buen acabado',
+      'combina con todo lo que tengo',
+      'buena calidad, no se siente barato',
+      'ajusta bien, cómodo de usar',
+      '{producto} tal cual se veía en la tienda'
+    ],
+    electronica: [
+      'funciona excelente, la batería dura bastante',
+      'se conecta rápido, sin interferencias',
+      'buena calidad para el precio',
+      'llegó bien empacado y prendió a la primera',
+      'cumple lo que promete, sin fallas hasta ahora',
+      '{producto} mejor de lo que esperaba por el precio'
+    ],
+    aseo: [
+      'huele bien y rinde bastante',
+      'buena textura, no reseca',
+      'cumple lo que promete',
+      'buena relación cantidad-precio',
+      'ya voy por el segundo, me gustó {producto}'
+    ],
+    servicios: [
+      'cumplieron rápido con lo acordado',
+      'buena comunicación durante todo el proceso',
+      'resolvieron todo sin complicaciones',
+      'excelente atención de principio a fin'
+    ]
+  };
+  var GENERICAS = [
+    'buena atención por WhatsApp, resolvieron mis dudas rapido',
     'todo bien, cumplieron con lo prometido 👍',
-    'buena calidad, no me lo esperaba tan bueno',
-    'excelente atención por WhatsApp, resolvieron mis dudas rapido',
-    'Me encantó {producto}, superó lo que esperaba',
-    'todo perfecto, gracias 🙌',
     'un poco de espera pero valió la pena',
     'primera vez que compro aqui y quedé satisfecho',
     'buen trato, me explicaron todo antes de decidir',
-    '{producto} tal cual se veia en la tienda, recomendado',
     'rapido y sin complicaciones, todo ok',
-    'la verdad no esperaba tanta calidad por ese precio',
     'genial!! seguro vuelvo a comprar',
     'todo tal cual lo pedí, gracias por la atención',
     '100% recomendado, buen servicio',
@@ -3823,6 +3874,8 @@ function sembrarPruebaSocialInicial(id, nombreProducto) {
     'waoo quedó mejor de lo que pensaba 😍',
     'buena experiencia, sin problemas'
   ];
+  var PLANTILLAS = (POR_CATEGORIA[seccion] || []).concat(GENERICAS);
+
   function elegir(arr, n) {
     var c = arr.slice();
     for (var i = c.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = c[i]; c[i] = c[j]; c[j] = t; }
@@ -3937,7 +3990,7 @@ async function doPublish() {
       if (!invSnap.exists()) {
         await db.ref('inventario/' + id).set(null); // null = sin control de stock, no se muestra "agotado"
       }
-      sembrarPruebaSocialInicial(id, name);
+      sembrarPruebaSocialInicial(id, name, secId);
     }
     catalogoAdminData[id] = Object.assign(catalogoAdminData[id] || {}, producto);
     log('✅ ¡Publicado en Firebase!', 'log-ok');
