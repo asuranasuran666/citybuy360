@@ -3824,40 +3824,55 @@ var TIPOS_PRODUCTO = [
 ];
 
 var POOLS_TIPO = {
-  medias: ['buena tela, no aprietan para nada', 'calientan bien, buena calidad', 'no se han descosido después de varios lavados', 'cómodas para todo el día', 'buen grosor, ni muy finas ni muy gruesas', 'se ven bien, además duraderas'],
-  gorra: ['buen ajuste, no me aprieta', 'protege bien del sol', 'buena tela, no destiñe con el sudor', 'se ve mejor en persona que en la foto', 'buen material, ligera', 'me quedó cómoda, ajusta bien'],
-  ventilador: ['buena brisa, silencioso', 'la batería dura bastante', 'las velocidades funcionan bien todas', 'liviano y fácil de mover', 'cumple lo que promete, buen producto', 'se siente resistente, no es de mala calidad'],
-  audio: ['buen sonido para el precio', 'la batería aguanta bastante', 'se conecta rápido por bluetooth', 'cómodos, no molestan al usarlos rato largo', 'cumple bien, sin cortes de sonido', 'buena calidad, no esperaba tanto por el precio'],
-  recarga: ['llegó el saldo al momento, sin demora', 'cómodo hacerlo todo por WhatsApp, sin salir de casa', 'rápido, en minutos ya tenía el saldo', 'buen servicio, sin complicaciones', 'confiable, ya es la segunda vez que recargo aquí', 'todo correcto, el monto llegó completo'],
-  aseo_especifico: ['huele muy bien, dura bastante', 'buena textura, no reseca', 'rinde bastante, no se acaba rápido', 'buena calidad, se nota la diferencia', 'ya voy a comprar otro, me gustó bastante'],
-  calzado: ['buena talla, ajustó como esperaba', 'cómodos para caminar todo el día', 'buen material, no aprietan', 'se ven mejor en persona', 'buena calidad para el precio'],
-  bolso: ['buen espacio, cabe bastante', 'material resistente, buen acabado', 'los cierres funcionan bien', 'se ve mejor en persona que en la foto', 'buena calidad para lo que costó'],
-  reloj: ['se ve bien, buen acabado', 'la batería aguanta bien', 'cómodo, no aprieta la muñeca', 'funciona bien, sin fallas hasta ahora', 'buena calidad para el precio'],
-  juguete: ['a mi hijo le encantó, buena calidad', 'aguanta bien el uso de los niños', 'buen material, no se rompió rápido', 'tal cual la foto, buen tamaño'],
-  accesorio_electronico: ['funciona bien, carga rápido', 'buen cable, resistente', 'cumple lo que promete', 'buena calidad para el precio'],
-  ropa: ['me quedó bien, la talla ajustó perfecto', 'buena tela, no destiñe al lavar', 'buen corte, se ve mejor en persona', 'el color es igual a la foto', 'cómoda, la uso seguido', 'buena calidad para el precio']
+  medias: ['buena tela, no aprietan para nada', 'calientan bien, buena calidad', 'no se han descosido después de varios lavados', 'cómodas para todo el día', 'buen grosor, ni muy finas ni muy gruesas', 'se ven bien, además duraderas', 'no se les corre el hilo', 'buen ajuste, no se bajan caminando', 'material suave, no pican', 'aguantan bien el uso diario'],
+  gorra: ['buen ajuste, no me aprieta', 'protege bien del sol', 'buena tela, no destiñe con el sudor', 'se ve mejor en persona que en la foto', 'buen material, ligera', 'me quedó cómoda, ajusta bien', 'la visera es firme, no se dobla', 'buen bordado, se ve de calidad', 'ajustable, sirve para varias cabezas', 'no destiñe con el sol'],
+  ventilador: ['buena brisa, silencioso', 'la batería dura bastante', 'las velocidades funcionan bien todas', 'liviano y fácil de mover', 'cumple lo que promete, buen producto', 'se siente resistente, no es de mala calidad', 'carga rápido y dura harto tiempo', 'se puede colgar o poner de mesa sin problema', 'buen tamaño, no ocupa mucho espacio', 'funciona bien hasta en la potencia más baja'],
+  audio: ['buen sonido para el precio', 'la batería aguanta bastante', 'se conecta rápido por bluetooth', 'cómodos, no molestan al usarlos rato largo', 'cumple bien, sin cortes de sonido', 'buena calidad, no esperaba tanto por el precio', 'el micrófono también funciona bien', 'buen alcance, no se corta la señal', 'vienen con su estuche y todo', 'graves buenos para el precio'],
+  recarga: ['llegó el saldo al momento, sin demora', 'cómodo hacerlo todo por WhatsApp, sin salir de casa', 'rápido, en minutos ya tenía el saldo', 'buen servicio, sin complicaciones', 'confiable, ya es la segunda vez que recargo aquí', 'todo correcto, el monto llegó completo', 'mejor que hacer cola en otro lado', 'proceso rápido, sin vueltas', 'llegó exacto lo que pedí, sin fallas', 'buena opción, rápido y sin dramas'],
+  aseo_especifico: ['huele muy bien, dura bastante', 'buena textura, no reseca', 'rinde bastante, no se acaba rápido', 'buena calidad, se nota la diferencia', 'ya voy a comprar otro, me gustó bastante', 'el olor se queda todo el día', 'no irrita la piel, va bien', 'buena presentación, se ve de calidad', 'cumple lo que anuncia', 'rinde más de lo que pensé'],
+  calzado: ['buena talla, ajustó como esperaba', 'cómodos para caminar todo el día', 'buen material, no aprietan', 'se ven mejor en persona', 'buena calidad para el precio', 'la suela se siente resistente', 'no se despegan con el uso', 'buen agarre, no resbalan', 'quedaron a la medida exacta', 'buen acabado, se ven caros'],
+  bolso: ['buen espacio, cabe bastante', 'material resistente, buen acabado', 'los cierres funcionan bien', 'se ve mejor en persona que en la foto', 'buena calidad para lo que costó', 'las costuras se ven firmes', 'buen tamaño, ni muy grande ni muy chico', 'los tirantes son cómodos', 'buen material, no se ve barato', 'aguanta bien el peso sin romperse'],
+  reloj: ['se ve bien, buen acabado', 'la batería aguanta bien', 'cómodo, no aprieta la muñeca', 'funciona bien, sin fallas hasta ahora', 'buena calidad para el precio', 'la correa se siente resistente', 'se ve mejor en persona', 'buen tamaño de pantalla', 'marca bien la hora, sin atrasarse', 'buen acabado, no se ve barato'],
+  juguete: ['a mi hijo le encantó, buena calidad', 'aguanta bien el uso de los niños', 'buen material, no se rompió rápido', 'tal cual la foto, buen tamaño', 'buenos colores, buen acabado', 'seguro para que jueguen sin problema', 'trae buenas piezas, nada de mala calidad', 'buen tamaño, ni muy chico ni muy grande'],
+  accesorio_electronico: ['funciona bien, carga rápido', 'buen cable, resistente', 'cumple lo que promete', 'buena calidad para el precio', 'no se ha dañado con el uso diario', 'buen largo de cable, alcanza bien', 'carga parejo, sin problemas', 'buen material, se siente resistente'],
+  ropa: ['me quedó bien, la talla ajustó perfecto', 'buena tela, no destiñe al lavar', 'buen corte, se ve mejor en persona', 'el color es igual a la foto', 'cómoda, la uso seguido', 'buena calidad para el precio', 'no se encoge al lavarla', 'buen acabado en las costuras', 'la tela no se ve barata', 'ajustó justo a mi talla']
 };
 
 // Respaldo cuando el nombre no coincide con ningún tipo de arriba.
 var POR_CATEGORIA = {
-  mujer: ['me quedó divina, tal cual la talla que pedí', 'la tela se siente de buena calidad, no rasca', 'combina con todo, ya me la e puesto varias veces', 'buen corte, no se ve barata para nada', 'el color es igualito a la foto'],
-  hombre: ['buena tela, no se destiñó al lavarla', 'pedí mi talla de siempre y ajustó perfecto', 'buen acabado, se ve mejor en persona', 'cómoda y fresca, la uso para todo', 'aguanta bien el uso diario'],
-  ninos: ['le quedó perfecta a mi niño, buena talla', 'tela suave, no le dio alergia', 'buena calidad para lo que cuesta', 'aguanta el trote de los niños sin dañarse rápido'],
-  unisex: ['se ve bien, buen acabado', 'combina con todo lo que tengo', 'buena calidad, no se siente barato', 'ajusta bien, cómodo de usar'],
-  electronica: ['funciona excelente, la batería dura bastante', 'se conecta rápido, sin interferencias', 'buena calidad para el precio', 'llegó bien empacado y prendió a la primera'],
-  aseo: ['huele bien y rinde bastante', 'buena textura, no reseca', 'cumple lo que promete', 'buena relación cantidad-precio'],
-  servicios: ['cumplieron rápido con lo acordado', 'buena comunicación durante todo el proceso', 'resolvieron todo sin complicaciones', 'excelente atención de principio a fin']
+  mujer: ['me quedó divina, tal cual la talla que pedí', 'la tela se siente de buena calidad, no rasca', 'combina con todo, ya me la e puesto varias veces', 'buen corte, no se ve barata para nada', 'el color es igualito a la foto', 'no se encoge ni destiñe al lavar'],
+  hombre: ['buena tela, no se destiñó al lavarla', 'pedí mi talla de siempre y ajustó perfecto', 'buen acabado, se ve mejor en persona', 'cómoda y fresca, la uso para todo', 'aguanta bien el uso diario', 'buen material, no se ve barato'],
+  ninos: ['le quedó perfecta a mi niño, buena talla', 'tela suave, no le dio alergia', 'buena calidad para lo que cuesta', 'aguanta el trote de los niños sin dañarse rápido', 'buen tamaño, tal cual la talla pedida'],
+  unisex: ['se ve bien, buen acabado', 'combina con todo lo que tengo', 'buena calidad, no se siente barato', 'ajusta bien, cómodo de usar', 'buen material, se ve resistente'],
+  electronica: ['funciona excelente, la batería dura bastante', 'se conecta rápido, sin interferencias', 'buena calidad para el precio', 'llegó bien empacado y prendió a la primera', 'cumple lo que promete sin fallas'],
+  aseo: ['huele bien y rinde bastante', 'buena textura, no reseca', 'cumple lo que promete', 'buena relación cantidad-precio', 'buena presentación del producto'],
+  servicios: ['cumplieron rápido con lo acordado', 'buena comunicación durante todo el proceso', 'resolvieron todo sin complicaciones', 'excelente atención de principio a fin', 'todo salió tal cual se acordó']
 };
 
 // Genérico "de tienda" — se mezcla en pequeña proporción con lo específico,
 // nunca domina, para que no todos los productos suenen igual.
 var GENERICAS_TESTIMONIOS = [
   'buena atención por WhatsApp, resolvieron mis dudas rapido',
-  'todo bien, cumplieron con lo prometido 👍',
+  'todo bien, cumplieron con lo prometido',
   'primera vez que compro aqui y quedé satisfecho',
   'buen trato, me explicaron todo antes de decidir',
   'rapido y sin complicaciones, todo ok',
-  'me gustó que el precio en MN estaba claro desde el principio'
+  'me gustó que el precio en MN estaba claro desde el principio',
+  'buena atención, resolvieron rápido mis dudas',
+  'sin problemas con el pedido, todo en orden'
+];
+
+// Piezas para armar la reseña por combinatoria: apertura + detalle (del
+// tipo/categoría) + cierre. Con ~12 aperturas x ~10 detalles x ~12 cierres
+// por tipo salen miles de combinaciones distintas sin repetir frases fijas.
+var APERTURAS_TESTIMONIO = [
+  '', '', '', 'todo bien, ', 'me encantó, ', 'quedé satisfecho, ', 'buena experiencia, ',
+  'sin quejas, ', 'genial, ', 'la verdad, ', 'no tengo quejas, ', 'todo perfecto, ',
+  'super contento, ', 'muy bien, '
+];
+var CIERRES_TESTIMONIO = [
+  '', '', '', ', gracias', ', recomendado', '!!', ' 👍', ' 😍', ' 🙌',
+  ', seguro repito', ', gracias por la atención', ', 100% recomendado', ', todo excelente'
 ];
 
 function detectarTipoProducto(nombre) {
@@ -3876,15 +3891,28 @@ function mezclarArray(arr) {
   return c;
 }
 
+function combinarFrase(detalle) {
+  var ap = APERTURAS_TESTIMONIO[Math.floor(Math.random() * APERTURAS_TESTIMONIO.length)];
+  var ci = CIERRES_TESTIMONIO[Math.floor(Math.random() * CIERRES_TESTIMONIO.length)];
+  return ap + detalle + ci;
+}
+
 function elegirPlantillas(cantidad, nombreProducto, seccion) {
   var tipo = detectarTipoProducto(nombreProducto);
   var poolEspecifico = (tipo && POOLS_TIPO[tipo]) || POR_CATEGORIA[seccion] || [];
-  var numGenerico = Math.max(1, Math.round(cantidad * 0.25));
+  var numGenerico = Math.max(1, Math.round(cantidad * 0.2));
   var numEspecifico = cantidad - numGenerico;
-  if (poolEspecifico.length < numEspecifico) { numEspecifico = poolEspecifico.length; numGenerico = cantidad - numEspecifico; }
-  var especificos = mezclarArray(poolEspecifico).slice(0, numEspecifico);
-  var genericos = mezclarArray(GENERICAS_TESTIMONIOS).slice(0, numGenerico);
-  return mezclarArray(especificos.concat(genericos));
+  // Los detalles se pueden repetir entre reseñas del MISMO producto (con
+  // reposición) porque cada uno se envuelve con apertura/cierre distintos,
+  // así que dos reseñas con el mismo detalle igual se leen diferentes.
+  var detalles = [];
+  for (var i = 0; i < numEspecifico; i++) {
+    detalles.push(poolEspecifico.length ? poolEspecifico[Math.floor(Math.random() * poolEspecifico.length)] : GENERICAS_TESTIMONIOS[Math.floor(Math.random() * GENERICAS_TESTIMONIOS.length)]);
+  }
+  for (var j = 0; j < numGenerico; j++) {
+    detalles.push(GENERICAS_TESTIMONIOS[Math.floor(Math.random() * GENERICAS_TESTIMONIOS.length)]);
+  }
+  return mezclarArray(detalles).map(combinarFrase);
 }
 
 // Promedio ponderado hacia la franja de credibilidad (4.2-4.6). Los productos
