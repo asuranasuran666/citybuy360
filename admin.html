@@ -1357,6 +1357,7 @@ async function loadStructureFromIndex() {
 
 
 // Estado local en memoria
+var catalogoAdminData = {};
 let cfg = { sections: {}, products: {} };
 let visitsData = {};
 let salesData = {};
@@ -3374,8 +3375,9 @@ function autocompletarDesdeShein() {
       }
       if (res.data.nombre) document.getElementById('sh-nombre').value = capitalizarPrimeraLetra(limpiarNombreImportado(res.data.nombre));
       if (res.data.imagen) {
-        document.getElementById('sh-imagen').value = res.data.imagen;
-        document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + res.data.imagen + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
+        var imagenSegura = res.data.imagen.trim().replace(/^http:\/\//i, 'https://');
+        document.getElementById('sh-imagen').value = imagenSegura;
+        document.getElementById('sh-imagen-preview').innerHTML = '<img src="' + imagenSegura + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display=\'none\'">';
       }
       status.style.color = '#7fff7f';
       status.textContent = '✅ ' + (esTemu ? 'Temu' : 'Shein') + ' — datos listos, solo falta el precio';
@@ -3763,6 +3765,48 @@ async function downloadBackup() {
   }
 }
 
+// Siembra automática de prueba social (estrellas + testimonios) para un producto
+// recién creado, para que nunca salga a la tienda con "0 votos" o vacío de opiniones.
+function sembrarPruebaSocialInicial(id, nombreProducto) {
+  var count = 10 + Math.floor(Math.random() * 11); // 10 a 20
+  var avg = 4 + Math.random(); // 4.00 a 5.00
+  var total = Math.round(avg * count);
+  db.ref('ratings/' + id).set({ total: total, count: count });
+
+  var NOMBRES = ['Yaditza R.', 'Osmany P.', 'Liset M.', 'Reinier G.', 'Yusleidys F.',
+    'Ariel D.', 'Yailin C.', 'Leandro T.', 'Marlenis V.', 'Dayron S.',
+    'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.'];
+  var PLANTILLAS = [
+    'Llegó justo como en la foto, muy contenta con {producto}.',
+    'Buena atención por WhatsApp, resolvieron mis dudas rápido.',
+    'La calidad de {producto} superó lo que esperaba por el precio.',
+    'Todo bien, cumplieron con lo prometido. Seguro vuelvo a comprar.',
+    'Me gustó que el precio en MN estaba claro desde el principio.',
+    '{producto} tal cual se veía en la tienda. Recomendado.',
+    'Un poco de espera pero valió la pena, buen producto.',
+    'Primera compra y quedé satisfecho, seguiré comprando aquí.',
+    'Buen trato, me explicaron todo por WhatsApp antes de decidir.',
+    'No esperaba tanta calidad en {producto} por ese precio.'
+  ];
+  function elegir(arr, n) {
+    var c = arr.slice();
+    for (var i = c.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = c[i]; c[i] = c[j]; c[j] = t; }
+    return c.slice(0, n);
+  }
+  var cantidad = 3 + Math.floor(Math.random() * 3); // 3 a 5
+  var nombres = elegir(NOMBRES, cantidad);
+  var plantillas = elegir(PLANTILLAS, cantidad);
+  var nombreLower = (nombreProducto || '').toLowerCase();
+  for (var i = 0; i < cantidad; i++) {
+    db.ref('testimonios/' + id).push({
+      nombre: nombres[i],
+      texto: plantillas[i].replace('{producto}', nombreLower || 'el producto'),
+      estrellas: Math.random() < 0.65 ? 5 : 4,
+      fecha: Date.now() - Math.floor(Math.random() * 60) * 86400000
+    });
+  }
+}
+
 async function doPublish() {
   clearLog();
   const token = localStorage.getItem('gh_token');
@@ -3858,6 +3902,7 @@ async function doPublish() {
       if (!invSnap.exists()) {
         await db.ref('inventario/' + id).set(null); // null = sin control de stock, no se muestra "agotado"
       }
+      sembrarPruebaSocialInicial(id, name);
     }
     catalogoAdminData[id] = Object.assign(catalogoAdminData[id] || {}, producto);
     log('✅ ¡Publicado en Firebase!', 'log-ok');
