@@ -3799,18 +3799,29 @@ function sembrarPruebaSocialInicial(id, nombreProducto) {
 
   var NOMBRES = ['Yaditza R.', 'Osmany P.', 'Liset M.', 'Reinier G.', 'Yusleidys F.',
     'Ariel D.', 'Yailin C.', 'Leandro T.', 'Marlenis V.', 'Dayron S.',
-    'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.'];
+    'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.',
+    'Dianelys O.', 'Ernesto M.', 'Yadira P.', 'Raidel C.', 'Suyen G.'];
+  // Escritas como escribe la gente de verdad: sin tildes en algunas, mayúsculas
+  // inconsistentes, a veces con emoji, a veces sin. No se corrige nada de esto.
   var PLANTILLAS = [
-    'Llegó justo como en la foto, muy contenta con {producto}.',
-    'Buena atención por WhatsApp, resolvieron mis dudas rápido.',
-    'La calidad de {producto} superó lo que esperaba por el precio.',
-    'Todo bien, cumplieron con lo prometido. Seguro vuelvo a comprar.',
-    'Me gustó que el precio en MN estaba claro desde el principio.',
-    '{producto} tal cual se veía en la tienda. Recomendado.',
-    'Un poco de espera pero valió la pena, buen producto.',
-    'Primera compra y quedé satisfecho, seguiré comprando aquí.',
-    'Buen trato, me explicaron todo por WhatsApp antes de decidir.',
-    'No esperaba tanta calidad en {producto} por ese precio.'
+    'llego rapido y tal cual la foto, contenta con {producto}',
+    'todo bien, cumplieron con lo prometido 👍',
+    'buena calidad, no me lo esperaba tan bueno',
+    'excelente atención por WhatsApp, resolvieron mis dudas rapido',
+    'Me encantó {producto}, superó lo que esperaba',
+    'todo perfecto, gracias 🙌',
+    'un poco de espera pero valió la pena',
+    'primera vez que compro aqui y quedé satisfecho',
+    'buen trato, me explicaron todo antes de decidir',
+    '{producto} tal cual se veia en la tienda, recomendado',
+    'rapido y sin complicaciones, todo ok',
+    'la verdad no esperaba tanta calidad por ese precio',
+    'genial!! seguro vuelvo a comprar',
+    'todo tal cual lo pedí, gracias por la atención',
+    '100% recomendado, buen servicio',
+    'me gustó que el precio en MN estaba claro desde el principio',
+    'waoo quedó mejor de lo que pensaba 😍',
+    'buena experiencia, sin problemas'
   ];
   function elegir(arr, n) {
     var c = arr.slice();
