@@ -1040,6 +1040,13 @@
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:12px;">💱 Tasa EUR → USD</div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Cuando compras en euros pero vendes en dólares, esta tasa convierte tus costos (comisión, envío, arancel) a USD en la calculadora del cliente. Actualízala cuando el euro se mueva mucho.</div>
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">1 EUR = cuántos USD</label>
+      <input type="number" id="ts-tasa-eur" step="0.01" placeholder="1.16" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;box-sizing:border-box;max-width:200px;">
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:0 16px 16px;">
       <div style="font-weight:700;color:var(--text);margin-bottom:12px;">🖼️ Imagen de las cards "Comprar en Temu/Shein" (VIP)</div>
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Imagen card Temu (URL)</label>
       <div style="display:flex;gap:6px;margin-bottom:10px;">
@@ -3539,6 +3546,7 @@ function guardarConfigTemuShein() {
   var comisionPorcentaje = parseFloat(document.getElementById('ts-comision-porcentaje').value) || 0;
   var precioLibra = parseFloat(document.getElementById('ts-precio-libra').value) || 0;
   var arancel = parseFloat(document.getElementById('ts-arancel').value) || 0;
+  var tasaEurUsd = parseFloat(document.getElementById('ts-tasa-eur').value) || 1.16;
   var imagenTemu = document.getElementById('ts-imagen-temu').value.trim();
   var imagenShein = document.getElementById('ts-imagen-shein').value.trim();
   var moneda = document.getElementById('ts-moneda').value;
@@ -3550,6 +3558,7 @@ function guardarConfigTemuShein() {
     comisionPorcentaje: comisionPorcentaje,
     precioLibra: precioLibra,
     arancel: arancel,
+    tasaEurUsd: tasaEurUsd,
     imagenTemu: imagenTemu,
     imagenShein: imagenShein,
     moneda: moneda,
@@ -3571,6 +3580,7 @@ function loadConfigTemuShein() {
     document.getElementById('ts-comision-porcentaje').value = data.comisionPorcentaje || '';
     document.getElementById('ts-precio-libra').value = data.precioLibra || '';
     document.getElementById('ts-arancel').value = data.arancel || '';
+    document.getElementById('ts-tasa-eur').value = data.tasaEurUsd || '';
     document.getElementById('ts-imagen-temu').value = data.imagenTemu || '';
     document.getElementById('ts-imagen-shein').value = data.imagenShein || '';
     document.getElementById('ts-moneda').value = data.moneda || 'USD';
