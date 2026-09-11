@@ -2527,7 +2527,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             if (!items.length) {
                 lista.innerHTML = '<div style="font-size:0.82rem;color:#999;">Aún no hay opiniones. ¡Sé el primero!</div>';
             } else {
-                lista.innerHTML = items.map(function(t) {
+                var TANDA = 4;
+                var itemHTML = function(t) {
                     var estrellasHTML = '';
                     for (var i = 1; i <= 5; i++) estrellasHTML += (i <= (t.estrellas || 0)) ? '★' : '☆';
                     return '<div style="border-bottom:1px solid #eee;padding-bottom:8px;">' +
@@ -2537,7 +2538,16 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                         '</div>' +
                         '<div style="font-size:0.83rem;color:#555;margin-top:3px;">' + escTexto(t.texto || '') + '</div>' +
                     '</div>';
-                }).join('');
+                };
+                lista.innerHTML =
+                    '<div id="pdp-testimonios-visibles">' + items.slice(0, TANDA).map(itemHTML).join('') + '</div>' +
+                    (items.length > TANDA
+                        ? '<div id="pdp-testimonios-resto" style="display:none;">' + items.slice(TANDA).map(itemHTML).join('') + '</div>' +
+                          '<div id="pdp-testimonios-vermas" onclick="' +
+                            'document.getElementById(\'pdp-testimonios-resto\').style.display=\'block\';' +
+                            'this.style.display=\'none\';' +
+                          '" style="font-size:0.82rem;color:#0d6efd;font-weight:700;cursor:pointer;padding:6px 0;">Ver más opiniones (' + (items.length - TANDA) + ')</div>'
+                        : '');
             }
 
             // ¿ya opinó en este producto desde este dispositivo?
