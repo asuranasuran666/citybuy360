@@ -169,6 +169,17 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-
     <input type="text" id="code-input" class="login-input" placeholder="TU CÓDIGO" maxlength="20" onkeydown="if(event.key==='Enter')checkCode()">
     <button class="login-btn" id="login-btn" onclick="checkCode()">Acceder ✦</button>
     <div class="login-error" id="code-error"></div>
+
+    <div id="no-code-toggle" onclick="document.getElementById('no-code-form').style.display='block';this.style.display='none';" style="margin-top:18px;color:#f5c518;font-size:0.82rem;font-weight:700;cursor:pointer;text-align:center;">¿No tienes código? Sé el primero en enterarte →</div>
+    <div id="no-code-form" style="display:none;margin-top:12px;background:#161616;border:1px solid #333;border-radius:12px;padding:14px;text-align:left;">
+      <div style="color:#fff;font-weight:800;font-size:0.85rem;margin-bottom:4px;">Déjanos tu correo</div>
+      <div style="color:#999;font-size:0.72rem;margin-bottom:10px;">Te avisamos cuando lleguen productos limitados — velos y cómpralos antes que el resto.</div>
+      <input type="text" id="no-code-nombre" placeholder="Tu nombre" style="width:100%;box-sizing:border-box;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.82rem;margin-bottom:8px;">
+      <input type="email" id="no-code-email" placeholder="Tu correo" style="width:100%;box-sizing:border-box;padding:9px;background:#0d0d0d;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.82rem;margin-bottom:8px;">
+      <button onclick="enviarCorreoVip()" style="width:100%;padding:10px;background:#f5c518;color:#1a0a00;border:none;border-radius:8px;font-weight:800;font-size:0.82rem;cursor:pointer;">Quiero enterarme primero</button>
+      <div id="no-code-msg" style="font-size:0.72rem;margin-top:6px;color:#999;"></div>
+    </div>
+
     <div class="login-back-link" onclick="window.location.href='index.html'">← Volver al catálogo</div>
   </div>
 </div>
@@ -383,6 +394,27 @@ function agregarPedidoTemuShein() {
 }
 
 // ===== ACCESO 360: verificación matemática offline — núcleo compartido en acceso360-core.js =====
+
+function enviarCorreoVip() {
+  var nombre = document.getElementById('no-code-nombre').value.trim();
+  var email = document.getElementById('no-code-email').value.trim();
+  var msg = document.getElementById('no-code-msg');
+  var emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!nombre) { msg.style.color = '#ff6b6b'; msg.textContent = 'Escribe tu nombre.'; return; }
+  if (!emailValido) { msg.style.color = '#ff6b6b'; msg.textContent = 'Escribe un correo válido.'; return; }
+
+  msg.style.color = '#999'; msg.textContent = 'Enviando…';
+  db.ref('emailsVip').push({
+    nombre: nombre.slice(0, 60),
+    email: email.slice(0, 100),
+    fecha: Date.now()
+  }).then(function() {
+    document.getElementById('no-code-form').innerHTML = '<div style="color:#7fff7f;font-size:0.85rem;font-weight:700;">✓ Listo, te avisaremos primero.</div>';
+  }).catch(function() {
+    msg.style.color = '#ff6b6b'; msg.textContent = 'No se pudo enviar, intenta de nuevo.';
+  });
+}
 
 function checkCode() {
   var code = document.getElementById('code-input').value.trim().toUpperCase();
