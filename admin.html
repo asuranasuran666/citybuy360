@@ -3957,23 +3957,26 @@ function generarTestimonios(id, nombreProducto, seccion, avg, cantidad) {
 
 // Producto recién creado: nivel base. Algo nuevo no puede tener 40 reseñas
 // de golpe sin verse falso — por eso arranca bajo/medio (7-18).
+// Tienda nueva: arranca bajo, no con historial exagerado. El crecimiento
+// real viene del job diario (ver scripts/agregar_testimonio_diario.py).
 function sembrarPruebaSocialInicial(id, nombreProducto, seccion) {
-  var count = 7 + Math.floor(Math.random() * 12); // 7 a 18
+  var count = 3 + Math.floor(Math.random() * 6); // 3 a 8
   var avg = generarPromedio(false);
   var total = Math.round(avg * count);
   db.ref('ratings/' + id).set({ total: total, count: count });
-  var cantidadTestimonios = 3 + Math.floor(Math.random() * 3); // 3 a 5
+  var cantidadTestimonios = 1 + Math.floor(Math.random() * 2); // 1 a 2
   generarTestimonios(id, nombreProducto, seccion, avg, cantidadTestimonios);
 }
 
-// Cuando marcas ⭐ Destacado en un producto, se refuerza su prueba social al
-// nivel "más vendido" (38-65) — tu propia señal de qué empujar, sin que yo
-// tenga que adivinar cuál vende más.
+// Cuando marcas ⭐ Destacado en un producto, se refuerza su prueba social por
+// encima del resto — tu propia señal de qué empujar, sin que yo tenga que
+// adivinar cuál vende más. Nivel moderado (no exagerado) para no romper el
+// look de tienda nueva.
 function reforzarPruebaSocialDestacado(id, nombreProducto, seccion) {
   db.ref('ratings/' + id).once('value', function(snap) {
     var actual = snap.val();
-    if (actual && actual.count >= 30) return; // ya está en nivel alto, no se vuelve a inflar
-    var count = 38 + Math.floor(Math.random() * 28); // 38 a 65
+    if (actual && actual.count >= 20) return; // ya está reforzado, no se vuelve a inflar
+    var count = 12 + Math.floor(Math.random() * 14); // 12 a 25
     var avg = generarPromedio(true);
     var total = Math.round(avg * count);
     db.ref('ratings/' + id).set({ total: total, count: count });
