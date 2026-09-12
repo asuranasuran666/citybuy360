@@ -788,16 +788,10 @@
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <span class="gold-label">📧 Lista de correos interesados</span>
-        <span id="emails-vip-count" style="font-size:0.75rem;color:var(--text-muted)">Cargando…</span>
+      <div style="padding:14px 16px;">
+        <span class="gold-label">📧 Correos de interesados sin código</span>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;line-height:1.5;">Ya no se guardan en Firebase (no llega desde Cuba) — el que llena el formulario de "no tengo código" en Acceso 360 te manda un correo directo a <b>CityBUY360.contacto@gmail.com</b>. Revísalos ahí normal, como cualquier correo.</div>
       </div>
-      <div style="padding:12px 16px;font-size:0.75rem;color:var(--text-muted);">Correos de gente que dejó su contacto en Acceso 360 sin tener código todavía. Cópialos y pégalos en el campo CCO de Gmail para un envío masivo manual.</div>
-      <div style="padding:0 16px 14px;">
-        <button onclick="copiarEmailsVip()" style="width:100%;background:var(--primary);border:none;color:#fff;font-weight:700;border-radius:8px;padding:10px;cursor:pointer;font-size:0.85rem;">📋 Copiar todos los correos</button>
-        <div id="emails-vip-copy-msg" style="font-size:0.75rem;color:#7fff7f;margin-top:6px;text-align:center;"></div>
-      </div>
-      <div id="emails-vip-list"><div class="empty-state">Cargando…</div></div>
     </div>
 
     <div id="papelera-acceso360-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
@@ -2314,63 +2308,6 @@ function loadAcceso360Admin() {
     renderPapeleraAcceso360(data.clientesEliminados || {});
   });
   loadEmailjsConfig();
-  loadEmailsVip();
-}
-
-function loadEmailsVip() {
-  db.ref('emailsVip').on('value', function(snap) {
-    var data = snap.val() || {};
-    var lista = Object.keys(data).map(function(k) { return Object.assign({ id: k }, data[k]); });
-    lista.sort(function(a, b) { return (b.fecha || 0) - (a.fecha || 0); });
-
-    var countEl = document.getElementById('emails-vip-count');
-    var listEl = document.getElementById('emails-vip-list');
-    if (countEl) countEl.textContent = lista.length + (lista.length === 1 ? ' correo' : ' correos');
-
-    if (!listEl) return;
-    if (!lista.length) {
-      listEl.innerHTML = '<div class="empty-state">Aún no hay correos guardados</div>';
-      return;
-    }
-    listEl.innerHTML = lista.map(function(e) {
-      var fechaTxt = e.fecha ? new Date(e.fecha).toLocaleDateString('es-CU') : '';
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);gap:8px;">' +
-        '<div style="min-width:0;">' +
-          '<div style="font-weight:700;font-size:0.85rem;color:var(--text);">' + esc(e.nombre || '') + '</div>' +
-          '<div style="font-size:0.78rem;color:var(--text-muted);word-break:break-all;">' + esc(e.email || '') + '</div>' +
-        '</div>' +
-        '<div style="text-align:right;flex:none;">' +
-          '<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;">' + fechaTxt + '</div>' +
-          '<button onclick="borrarEmailVip(\'' + e.id + '\')" style="background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:0.8rem;">✕</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  });
-}
-
-function borrarEmailVip(id) {
-  db.ref('emailsVip/' + id).remove();
-}
-
-function copiarEmailsVip() {
-  db.ref('emailsVip').once('value', function(snap) {
-    var data = snap.val() || {};
-    var emails = Object.values(data).map(function(e) { return e.email; }).filter(Boolean);
-    var msgEl = document.getElementById('emails-vip-copy-msg');
-    if (!emails.length) {
-      msgEl.style.color = '#ff9999';
-      msgEl.textContent = 'No hay correos guardados todavía.';
-      return;
-    }
-    var texto = emails.join(', ');
-    navigator.clipboard.writeText(texto).then(function() {
-      msgEl.style.color = '#7fff7f';
-      msgEl.textContent = '✅ ' + emails.length + ' correos copiados — pégalos en el campo CCO de Gmail.';
-    }).catch(function() {
-      msgEl.style.color = '#ff9999';
-      msgEl.textContent = 'No se pudo copiar automáticamente. Copia manual: ' + texto;
-    });
-  });
 }
 
 function toggleAcceso360Seccion(input) {
