@@ -3807,10 +3807,39 @@ async function downloadBackup() {
 // perfecto genera sospecha de reseñas falsas. Por eso el promedio se genera
 // con más peso en esa franja creíble, con algunos productos más bajos y muy
 // pocos casi perfectos.
-var NOMBRES_TESTIMONIOS = ['Yaditza R.', 'Osmany P.', 'Liset M.', 'Reinier G.', 'Yusleidys F.',
-  'Ariel D.', 'Yailin C.', 'Leandro T.', 'Marlenis V.', 'Dayron S.',
-  'Yosbel A.', 'Niurka L.', 'Alexei B.', 'Yanelis Q.', 'Frank H.',
-  'Dianelys O.', 'Ernesto M.', 'Yadira P.', 'Raidel C.', 'Suyen G.'];
+// Nombres cubanos + apellidos combinados por combinatoria (miles de variantes
+// posibles), más apodos sueltos porque no todo el mundo pone su nombre real.
+var NOMBRES_FEM = ['Yanet', 'Yailin', 'Yusleidy', 'Yusleidys', 'Yamila', 'Yumisleidis', 'Yordanka',
+  'Yaquelin', 'Yeni', 'Yolanda', 'Yaimara', 'Marisol', 'Maritza', 'Caridad', 'Mercedes', 'María',
+  'Carmen', 'Ana', 'Rosa', 'Isabel', 'Dianelys', 'Niurka', 'Liset', 'Yadira', 'Suyen', 'Marlenis',
+  'Dayana', 'Yusimí', 'Odalys', 'Yenisleidis', 'Xiomara', 'Zoila', 'Bárbara', 'Aylin', 'Yisel',
+  'Leticia', 'Nurys', 'Yuliet', 'Yanelis', 'Yaditza', 'Dianne', 'Yenima', 'Milagros', 'Anisley'];
+var NOMBRES_MASC = ['Jorge Luis', 'José', 'Antonio', 'Carlos', 'Juan', 'Luis', 'Miguel', 'Pedro',
+  'Manuel', 'Yosvani', 'Yunier', 'Yasmani', 'Yoel', 'Yordan', 'Yordanis', 'Osmany', 'Reinier',
+  'Alexei', 'Alberto', 'Roberto', 'Reinaldo', 'Leonel', 'Maikel', 'Raidel', 'Yandry', 'Ernesto',
+  'Frank', 'Ariel', 'Leandro', 'Dayron', 'Bárbaro', 'Ramón', 'Rolando', 'Yosbel', 'Yoandry', 'Dariel'];
+var APELLIDOS_INICIALES = ['González', 'Hernández', 'Rodríguez', 'Martínez', 'Díaz', 'López', 'Pérez',
+  'Sánchez', 'Álvarez', 'Gómez', 'Torres', 'Reyes', 'Ramírez', 'Cruz', 'Fernández', 'Suárez',
+  'Castillo', 'Morales', 'Ortiz', 'Rojas', 'Machado', 'Fonseca', 'Aguilar', 'Pupo', 'Osorio',
+  'Peña', 'Leyva', 'Guerra', 'Milán', 'Columbié'];
+var APODOS_TESTIMONIOS = ['Cuqui', 'Yuni', 'Nany', 'Pity', 'Fefa', 'Tato', 'Bebo', 'Mima', 'Kiki',
+  'Nene', 'La Reina del Hogar', 'El Tremendo', 'Yuni94', 'Cuqui.23', 'MamiLinda', 'PapiChulo05',
+  'LaGuajira', 'ElGuajiro', 'Bombón23', 'Chiqui.HAB'];
+
+function generarNombreTestimonio() {
+  if (Math.random() < 0.15) {
+    return APODOS_TESTIMONIOS[Math.floor(Math.random() * APODOS_TESTIMONIOS.length)];
+  }
+  var base = Math.random() < 0.55 ? NOMBRES_FEM : NOMBRES_MASC;
+  var nombre = base[Math.floor(Math.random() * base.length)];
+  var apellido1 = APELLIDOS_INICIALES[Math.floor(Math.random() * APELLIDOS_INICIALES.length)];
+  var iniciales = apellido1.charAt(0) + '.';
+  if (Math.random() < 0.3) {
+    var apellido2 = APELLIDOS_INICIALES[Math.floor(Math.random() * APELLIDOS_INICIALES.length)];
+    iniciales += apellido2.charAt(0) + '.';
+  }
+  return nombre + ' ' + iniciales;
+}
 
 // Palabras clave en el nombre del producto → banco de frases específico del
 // tipo de artículo (no solo de la categoría amplia). Se revisa en orden,
@@ -3949,7 +3978,8 @@ function elegirEstrellaTestimonio(avgObjetivo) {
 }
 
 function generarTestimonios(id, nombreProducto, seccion, avg, cantidad) {
-  var nombres = mezclarArray(NOMBRES_TESTIMONIOS).slice(0, cantidad);
+  var nombres = [];
+  for (var n = 0; n < cantidad; n++) nombres.push(generarNombreTestimonio());
   var plantillas = elegirPlantillas(cantidad, nombreProducto, seccion);
   var nombreLower = (nombreProducto || '').toLowerCase();
   for (var i = 0; i < cantidad; i++) {
@@ -4160,7 +4190,9 @@ function setSelectedGenero(generoStr) {
 
 function addCustomGeneroChip() {
   var input = document.getElementById('genero-custom-input');
-  var val = input.value.trim().toLowerCase().replace(/\s+/g,'-');
+  var val = input.value.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita tildes para evitar duplicados (ej: "electrónica" vs "electronica")
+    .replace(/\s+/g, '-');
   if (!val) return;
   var container = document.getElementById('genero-chips');
   // Check if already exists
@@ -4671,6 +4703,7 @@ function loadCatalogoAdmin() {
     // Eliminar sección mal escrita de Firebase
     db.ref('config/secciones/electrnica').remove();
     db.ref('config/sections/electrnica').remove();
+    db.ref('config/categorias/electrónica').remove(); // duplicado con tilde, roto
     // Asegurar nombre correcto de electrónica
     db.ref('config/secciones/electronica').once('value', function(s) {
       if (!s.val() || !s.val().nombre || s.val().nombre !== 'Electrónica') {
