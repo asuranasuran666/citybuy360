@@ -21,12 +21,33 @@ import urllib.request
 
 FIREBASE_URL = os.environ.get("FIREBASE_URL", "https://citybuy360-default-rtdb.firebaseio.com")
 
-NOMBRES = [
-    "Yaditza R.", "Osmany P.", "Liset M.", "Reinier G.", "Yusleidys F.",
-    "Ariel D.", "Yailin C.", "Leandro T.", "Marlenis V.", "Dayron S.",
-    "Yosbel A.", "Niurka L.", "Alexei B.", "Yanelis Q.", "Frank H.",
-    "Dianelys O.", "Ernesto M.", "Yadira P.", "Raidel C.", "Suyen G.",
-]
+NOMBRES_FEM = ["Yanet", "Yailin", "Yusleidy", "Yusleidys", "Yamila", "Yumisleidis", "Yordanka",
+    "Yaquelin", "Yeni", "Yolanda", "Yaimara", "Marisol", "Maritza", "Caridad", "Mercedes", "María",
+    "Carmen", "Ana", "Rosa", "Isabel", "Dianelys", "Niurka", "Liset", "Yadira", "Suyen", "Marlenis",
+    "Dayana", "Yusimí", "Odalys", "Yenisleidis", "Xiomara", "Zoila", "Bárbara", "Aylin", "Yisel",
+    "Leticia", "Nurys", "Yuliet", "Yanelis", "Yaditza", "Dianne", "Yenima", "Milagros", "Anisley"]
+NOMBRES_MASC = ["Jorge Luis", "José", "Antonio", "Carlos", "Juan", "Luis", "Miguel", "Pedro",
+    "Manuel", "Yosvani", "Yunier", "Yasmani", "Yoel", "Yordan", "Yordanis", "Osmany", "Reinier",
+    "Alexei", "Alberto", "Roberto", "Reinaldo", "Leonel", "Maikel", "Raidel", "Yandry", "Ernesto",
+    "Frank", "Ariel", "Leandro", "Dayron", "Bárbaro", "Ramón", "Rolando", "Yosbel", "Yoandry", "Dariel"]
+APELLIDOS_INICIALES = ["González", "Hernández", "Rodríguez", "Martínez", "Díaz", "López", "Pérez",
+    "Sánchez", "Álvarez", "Gómez", "Torres", "Reyes", "Ramírez", "Cruz", "Fernández", "Suárez",
+    "Castillo", "Morales", "Ortiz", "Rojas", "Machado", "Fonseca", "Aguilar", "Pupo", "Osorio",
+    "Peña", "Leyva", "Guerra", "Milán", "Columbié"]
+APODOS = ["Cuqui", "Yuni", "Nany", "Pity", "Fefa", "Tato", "Bebo", "Mima", "Kiki",
+    "Nene", "La Reina del Hogar", "El Tremendo", "Yuni94", "Cuqui.23", "MamiLinda", "PapiChulo05",
+    "LaGuajira", "ElGuajiro", "Bombón23", "Chiqui.HAB"]
+
+
+def generar_nombre():
+    if random.random() < 0.15:
+        return random.choice(APODOS)
+    base = NOMBRES_FEM if random.random() < 0.55 else NOMBRES_MASC
+    nombre = random.choice(base)
+    iniciales = random.choice(APELLIDOS_INICIALES)[0] + "."
+    if random.random() < 0.3:
+        iniciales += random.choice(APELLIDOS_INICIALES)[0] + "."
+    return nombre + " " + iniciales
 
 TIPOS_PRODUCTO = [
     (["media", "calcetin", "calcetín"], "medias"),
@@ -161,7 +182,7 @@ def main():
     fb_put(f"ratings/{pid}", {"total": nuevo_total, "count": nuevo_count})
 
     testimonio = {
-        "nombre": random.choice(NOMBRES),
+        "nombre": generar_nombre(),
         "texto": elegir_texto(producto.get("nombre", ""), producto.get("seccion", "")),
         "estrellas": estrella_nueva,
         "fecha": int(time.time() * 1000),
