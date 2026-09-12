@@ -404,16 +404,15 @@ function enviarCorreoVip() {
   if (!nombre) { msg.style.color = '#ff6b6b'; msg.textContent = 'Escribe tu nombre.'; return; }
   if (!emailValido) { msg.style.color = '#ff6b6b'; msg.textContent = 'Escribe un correo válido.'; return; }
 
-  msg.style.color = '#999'; msg.textContent = 'Enviando…';
-  db.ref('emailsVip').push({
-    nombre: nombre.slice(0, 60),
-    email: email.slice(0, 100),
-    fecha: Date.now()
-  }).then(function() {
-    document.getElementById('no-code-form').innerHTML = '<div style="color:#7fff7f;font-size:0.85rem;font-weight:700;">✓ Listo, te avisaremos primero.</div>';
-  }).catch(function() {
-    msg.style.color = '#ff6b6b'; msg.textContent = 'No se pudo enviar, intenta de nuevo.';
-  });
+  // No usa Firebase — Firebase no llega desde Cuba. El correo se manda por
+  // la vía normal de email (mailto), directo a la bandeja de la tienda.
+  var asunto = encodeURIComponent('Quiero ser VIP - CityBUY360');
+  var cuerpo = encodeURIComponent('Nombre: ' + nombre + '\nCorreo: ' + email);
+  window.location.href = 'mailto:CityBUY360.contacto@gmail.com?subject=' + asunto + '&body=' + cuerpo;
+
+  document.getElementById('no-code-form').innerHTML =
+    '<div style="color:#7fff7f;font-size:0.85rem;font-weight:700;margin-bottom:6px;">✓ Se abrió tu app de correo</div>' +
+    '<div style="color:#ccc;font-size:0.75rem;">Solo dale enviar ahí y listo. Si no se abrió nada, escríbenos directo a <b>CityBUY360.contacto@gmail.com</b> con tu nombre y correo.</div>';
 }
 
 function checkCode() {
