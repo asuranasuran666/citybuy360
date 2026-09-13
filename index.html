@@ -2881,15 +2881,26 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         return precioHTML + (conv ? '<div class="pdp-price-conv">' + conv + '</div>' : '');
     }
 
-    function pdpBuildOptions(container, wrap, values, isColor, esVariantePrecio) {
-        wrap.classList.toggle('show', values.length > 0);
+    function pdpBuildOptions(container, wrap, valores, isColor, esVariantePrecio) {
+        wrap.classList.toggle('show', valores.length > 0);
         container.innerHTML = '';
-        values.forEach(function(val) {
+        valores.forEach(function(item) {
+            var val = typeof item === 'string' ? item : item.nombre;
+            var stock = typeof item === 'string' ? null : item.stock;
+            var agotado = (stock === 0);
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'pdp-option-btn';
-            btn.textContent = val;
+            btn.className = 'pdp-option-btn' + (agotado ? ' pdp-option-agotado' : '');
+            var urgencia = pdpEtiquetaUrgencia(stock);
+            btn.innerHTML = val + (agotado ? ' <span style="font-size:0.72em;">(Agotado)</span>' : (urgencia ? ' <span style="font-size:0.72em;color:#e67e22;">' + urgencia + '</span>' : ''));
+            if (agotado) {
+                btn.disabled = true;
+                btn.style.opacity = '0.45';
+                btn.style.cursor = 'not-allowed';
+                btn.style.textDecoration = 'line-through';
+            }
             btn.addEventListener('click', function() {
+                if (agotado) return;
                 container.querySelectorAll('.pdp-option-btn').forEach(function(b){ b.classList.remove('selected'); });
                 btn.classList.add('selected');
                 if (isColor) pdpSelColor = val; else pdpSelTalla = val;
@@ -3232,15 +3243,23 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         } else {
             // Tallas: solo se muestra el selector si hay 2 o más opciones; con 1 sola se toma fija
             var tallasArr = tallasRaw ? tallasRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
-            if (pdpVariantes.length && pdpVariantesTipo === 'talla') tallasArr = pdpVariantes.map(function(v){ return v.nombre; });
+            var tallasParaMostrar = tallasArr;
+            if (pdpVariantes.length && pdpVariantesTipo === 'talla') {
+                tallasArr = pdpVariantes.map(function(v){ return v.nombre; });
+                tallasParaMostrar = pdpVariantes.map(function(v){ return { nombre: v.nombre, stock: v.stock }; });
+            }
             pdpSelTalla = tallasArr.length === 1 ? tallasArr[0] : '';
-            pdpBuildOptions(pdpTallasOptions, pdpTallasWrap, tallasArr.length > 1 ? tallasArr : [], false, pdpVariantesTipo === 'talla');
+            pdpBuildOptions(pdpTallasOptions, pdpTallasWrap, tallasArr.length > 1 ? tallasParaMostrar : [], false, pdpVariantesTipo === 'talla');
             document.querySelector('#pdp-tallas-wrap .pdp-option-label').textContent = (pdpVariantes.length && pdpVariantesTipo === 'talla') ? 'Elige una opción' : 'Talla';
 
             var coloresArr = coloresRaw ? coloresRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
-            if (pdpVariantes.length && pdpVariantesTipo === 'color') coloresArr = pdpVariantes.map(function(v){ return v.nombre; });
+            var coloresParaMostrar = coloresArr;
+            if (pdpVariantes.length && pdpVariantesTipo === 'color') {
+                coloresArr = pdpVariantes.map(function(v){ return v.nombre; });
+                coloresParaMostrar = pdpVariantes.map(function(v){ return { nombre: v.nombre, stock: v.stock }; });
+            }
             pdpSelColor = coloresArr.length === 1 ? coloresArr[0] : '';
-            pdpBuildOptions(pdpColoresOptions, pdpColoresWrap, coloresArr.length > 1 ? coloresArr : [], true, pdpVariantesTipo === 'color');
+            pdpBuildOptions(pdpColoresOptions, pdpColoresWrap, coloresArr.length > 1 ? coloresParaMostrar : [], true, pdpVariantesTipo === 'color');
             document.querySelector('#pdp-colores-wrap .pdp-option-label').textContent = (pdpVariantes.length && pdpVariantesTipo === 'color') ? 'Elige una opción' : 'Color';
             if (pdpVariantes.length === 1) {
                 var htmlPrecioUnico = pdpFormatearPrecio(parseFloat(pdpVariantes[0].precio));
