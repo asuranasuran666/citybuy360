@@ -493,7 +493,7 @@
             <label style="margin:0;">Variantes con precio propio (opcional)</label>
             <button type="button" onclick="agregarFilaVariante('prod')" style="background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;">+ Agregar</button>
           </div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Ej: color Negro a 12 USD, color Azul a 13.50 USD (o largo/talla, según elijas abajo). Si agregas variantes aquí, la card muestra "Desde $X" y el cliente elige el precio exacto según lo que escoja.</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Ej: color Negro a 12 USD, color Azul a 13.50 USD (o largo/talla, según elijas abajo). Si agregas variantes aquí, la card muestra "Desde $X" y el cliente elige el precio exacto según lo que escoja. El campo de stock es opcional — déjalo vacío si no quieres controlar cuántos hay de esa opción.</div>
           <label style="display:block;margin-bottom:8px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
             Estas variantes son por:
             <select id="prod-variantes-tipo" onchange="actualizarVistaVariantesTipo('prod')" style="width:100%;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;margin-top:4px;box-sizing:border-box;">
@@ -3600,7 +3600,7 @@ function loadConfigTemuShein() {
   });
 }
 
-function agregarFilaVariante(prefijo, nombre, precio) {
+function agregarFilaVariante(prefijo, nombre, precio, stock) {
   var lista = document.getElementById(prefijo + '-variantes-lista');
   var row = document.createElement('div');
   row.className = 'variante-row';
@@ -3608,6 +3608,7 @@ function agregarFilaVariante(prefijo, nombre, precio) {
   row.innerHTML =
     '<input type="text" placeholder="Nombre (ej: Negro)" value="' + (nombre ? nombre.replace(/"/g,'') : '') + '" class="variante-nombre" style="flex:2;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
     '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" class="variante-precio" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+    '<input type="number" placeholder="Stock" step="1" value="' + (stock != null ? stock : '') + '" class="variante-stock" title="Déjalo vacío si no quieres controlar stock de esta opción" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
     '<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>';
   lista.appendChild(row);
 }
@@ -3618,7 +3619,9 @@ function leerVariantes(prefijo) {
   filas.forEach(function(fila) {
     var nombre = fila.querySelector('.variante-nombre').value.trim();
     var precio = parseFloat(fila.querySelector('.variante-precio').value);
-    if (nombre && !isNaN(precio)) variantes.push({ nombre: nombre, precio: precio });
+    var stockRaw = fila.querySelector('.variante-stock').value.trim();
+    var stock = stockRaw === '' ? null : parseInt(stockRaw, 10);
+    if (nombre && !isNaN(precio)) variantes.push({ nombre: nombre, precio: precio, stock: (stock !== null && !isNaN(stock)) ? stock : null });
   });
   return variantes;
 }
@@ -3626,7 +3629,7 @@ function leerVariantes(prefijo) {
 function cargarVariantes(prefijo, variantes) {
   var lista = document.getElementById(prefijo + '-variantes-lista');
   lista.innerHTML = '';
-  (variantes || []).forEach(function(v) { agregarFilaVariante(prefijo, v.nombre, v.precio); });
+  (variantes || []).forEach(function(v) { agregarFilaVariante(prefijo, v.nombre, v.precio, v.stock); });
 }
 
 function actualizarVistaVariantesTipo(prefijo) {
@@ -4344,57 +4347,25 @@ function renderInventarioMatriz() {
   renderSinMigrar();
 
   var productos = Object.values(catalogoAdminData).filter(function(p) {
-    return p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
+    if (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0) return true;
+    if ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes) && p.variantes.length > 0) return true;
+    return false;
   });
   if (buscar) productos = productos.filter(function(p) { return (p.nombre || '').toLowerCase().indexOf(buscar) !== -1; });
   productos.sort(function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); });
 
   if (!productos.length) {
-    cont.innerHTML = '<div class="empty-state">Ningún producto usa "Color + Talla combinados" todavía. Edita un producto y cambia el tipo de variantes para que aparezca aquí.</div>';
+    cont.innerHTML = '<div class="empty-state">Ningún producto con variantes con stock todavía. Edita un producto y agrégale variantes (Color, Talla, o Color+Talla) para que aparezca aquí.</div>';
     return;
   }
 
   cont.innerHTML = productos.map(function(p) {
-    var compactas = [];
-    var acordeon = [];
-    p.variantesMatriz.forEach(function(c, ci) {
-      var unicaTalla = (c.tallas || []).length === 1;
-
-      if (unicaTalla) {
-        // Color sin variación real de talla (ej: gorras) → línea compacta, agrupada en grid de 2 columnas
-        var t0 = c.tallas[0];
-        var stock0 = (t0.stock === null || t0.stock === undefined) ? '' : t0.stock;
-        var agotado0 = (t0.stock === 0);
-        compactas.push('<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;' + (agotado0 ? 'opacity:0.7;' : '') + '">' +
-          '<span style="flex:1;font-size:0.8rem;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎨 ' + esc(c.color) + (agotado0 ? ' <span style="color:#ff6666;font-weight:400;">·Agot.</span>' : '') + '</span>' +
-          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">−</button>' +
-          '<input type="number" value="' + stock0 + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',0,this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
-          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">+</button>' +
-        '</div>');
-        return;
-      }
-
-      var stockTotalColor = (c.tallas || []).reduce(function(sum, t) { return sum + (t.stock || 0); }, 0);
-      var tallasHtml = (c.tallas || []).map(function(t, ti) {
-        var stock = (t.stock === null || t.stock === undefined) ? '' : t.stock;
-        var agotado = (t.stock === 0);
-        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border);">' +
-          '<div style="flex:1;font-size:0.82rem;' + (agotado ? 'color:#ff6666;' : '') + '">' + esc(t.talla) + (agotado ? ' — Agotado' : '') + '</div>' +
-          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">−</button>' +
-          '<input type="number" value="' + stock + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',this.value)" style="width:56px;text-align:center;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">' +
-          '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">+</button>' +
-        '</div>';
-      }).join('');
-      var colorKey = p.id + '-' + ci;
-      acordeon.push('<div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">' +
-        '<div onclick="toggleColorMatriz(\'' + colorKey + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;background:var(--bg);">' +
-          '<span style="font-size:0.85rem;font-weight:700;color:var(--text);">🎨 ' + esc(c.color) + '</span>' +
-          '<span style="font-size:0.75rem;color:var(--text-muted);">' + stockTotalColor + ' en total <span id="color-matriz-icon-' + colorKey + '">▾</span></span>' +
-        '</div>' +
-        '<div id="color-matriz-body-' + colorKey + '" style="display:none;padding:0 10px 6px;">' + tallasHtml + '</div>' +
-      '</div>');
-    });
-    var filas = (compactas.length ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">' + compactas.join('') + '</div>' : '') + acordeon.join('');
+    var filas;
+    if (p.variantesTipo === 'matriz') {
+      filas = renderFilasMatriz(p);
+    } else {
+      filas = renderFilasVariantesSimples(p);
+    }
     var prodKey = 'prod-' + p.id;
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">' +
       '<div onclick="toggleProductoInventario(\'' + prodKey + '\')" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;">' +
@@ -4405,6 +4376,64 @@ function renderInventarioMatriz() {
       '<div id="body-' + prodKey + '" style="display:none;">' + filas + '</div>' +
     '</div>';
   }).join('');
+}
+
+function renderFilasVariantesSimples(p) {
+  var compactas = p.variantes.map(function(v, vi) {
+    var stock = (v.stock === null || v.stock === undefined) ? '' : v.stock;
+    var agotado = (v.stock === 0);
+    var icono = p.variantesTipo === 'color' ? '🎨' : '📏';
+    return '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;' + (agotado ? 'opacity:0.7;' : '') + '">' +
+      '<span style="flex:1;font-size:0.8rem;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + icono + ' ' + esc(v.nombre) + (agotado ? ' <span style="color:#ff6666;font-weight:400;">·Agot.</span>' : '') + '</span>' +
+      '<button onclick="ajustarStockVariante(\'' + p.id + '\',' + vi + ',-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">−</button>' +
+      '<input type="number" value="' + stock + '" placeholder="—" min="0" onchange="setStockVariante(\'' + p.id + '\',' + vi + ',this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
+      '<button onclick="ajustarStockVariante(\'' + p.id + '\',' + vi + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">+</button>' +
+    '</div>';
+  });
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">' + compactas.join('') + '</div>';
+}
+
+function renderFilasMatriz(p) {
+  var compactas = [];
+  var acordeon = [];
+  p.variantesMatriz.forEach(function(c, ci) {
+    var unicaTalla = (c.tallas || []).length === 1;
+
+    if (unicaTalla) {
+      // Color sin variación real de talla (ej: gorras) → línea compacta, agrupada en grid de 2 columnas
+      var t0 = c.tallas[0];
+      var stock0 = (t0.stock === null || t0.stock === undefined) ? '' : t0.stock;
+      var agotado0 = (t0.stock === 0);
+      compactas.push('<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;' + (agotado0 ? 'opacity:0.7;' : '') + '">' +
+        '<span style="flex:1;font-size:0.8rem;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎨 ' + esc(c.color) + (agotado0 ? ' <span style="color:#ff6666;font-weight:400;">·Agot.</span>' : '') + '</span>' +
+        '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">−</button>' +
+        '<input type="number" value="' + stock0 + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',0,this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
+        '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">+</button>' +
+      '</div>');
+      return;
+    }
+
+    var stockTotalColor = (c.tallas || []).reduce(function(sum, t) { return sum + (t.stock || 0); }, 0);
+    var tallasHtml = (c.tallas || []).map(function(t, ti) {
+      var stock = (t.stock === null || t.stock === undefined) ? '' : t.stock;
+      var agotado = (t.stock === 0);
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border);">' +
+        '<div style="flex:1;font-size:0.82rem;' + (agotado ? 'color:#ff6666;' : '') + '">' + esc(t.talla) + (agotado ? ' — Agotado' : '') + '</div>' +
+        '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">−</button>' +
+        '<input type="number" value="' + stock + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',this.value)" style="width:56px;text-align:center;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">' +
+        '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">+</button>' +
+      '</div>';
+    }).join('');
+    var colorKey = p.id + '-' + ci;
+    acordeon.push('<div style="margin-top:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">' +
+      '<div onclick="toggleColorMatriz(\'' + colorKey + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;background:var(--bg);">' +
+        '<span style="font-size:0.85rem;font-weight:700;color:var(--text);">🎨 ' + esc(c.color) + '</span>' +
+        '<span style="font-size:0.75rem;color:var(--text-muted);">' + stockTotalColor + ' en total <span id="color-matriz-icon-' + colorKey + '">▾</span></span>' +
+      '</div>' +
+      '<div id="color-matriz-body-' + colorKey + '" style="display:none;padding:0 10px 6px;">' + tallasHtml + '</div>' +
+    '</div>');
+  });
+  return (compactas.length ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">' + compactas.join('') + '</div>' : '') + acordeon.join('');
 }
 
 function toggleProductoInventario(key) {
@@ -4422,7 +4451,9 @@ function renderSinMigrar() {
   var countEl = document.getElementById('inventario-sin-migrar-count');
   if (!wrap || !list) return;
   var sinMigrar = Object.values(catalogoAdminData).filter(function(p) {
-    return p.variantesTipo !== 'matriz';
+    if (p.variantesTipo === 'matriz') return !(Array.isArray(p.variantesMatriz) && p.variantesMatriz.length);
+    if (p.variantesTipo === 'color' || p.variantesTipo === 'talla') return !(Array.isArray(p.variantes) && p.variantes.length);
+    return true; // sin ningún tipo de variantes con stock configurado
   });
   sinMigrar.sort(function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); });
   countEl.textContent = sinMigrar.length;
@@ -4483,6 +4514,40 @@ function setStockMatriz(pid, colorIdx, tallaIdx, valor) {
   var nuevo = (t.stock === null) ? anterior : t.stock;
   if (nuevo !== anterior) registrarMovimientoHistorial(p, p.variantesMatriz[colorIdx].color, t.talla, nuevo - anterior);
   guardarVariantesMatrizProducto(pid);
+}
+
+function ajustarStockVariante(pid, vi, delta) {
+  var p = catalogoAdminData[pid];
+  if (!p || !p.variantes || !p.variantes[vi]) return;
+  var v = p.variantes[vi];
+  var actual = (v.stock === null || v.stock === undefined) ? 0 : v.stock;
+  var nuevo = actual + delta;
+  if (nuevo < 0) nuevo = 0;
+  v.stock = nuevo;
+  registrarMovimientoHistorial(p, v.nombre, '', delta);
+  guardarVariantesSimplesProducto(pid);
+}
+
+function setStockVariante(pid, vi, valor) {
+  var p = catalogoAdminData[pid];
+  if (!p || !p.variantes || !p.variantes[vi]) return;
+  var v = p.variantes[vi];
+  var anterior = (v.stock === null || v.stock === undefined) ? 0 : v.stock;
+  var n = valor.trim() === '' ? null : parseInt(valor, 10);
+  v.stock = (n !== null && !isNaN(n) && n >= 0) ? n : null;
+  var nuevo = (v.stock === null) ? anterior : v.stock;
+  if (nuevo !== anterior) registrarMovimientoHistorial(p, v.nombre, '', nuevo - anterior);
+  guardarVariantesSimplesProducto(pid);
+}
+
+function guardarVariantesSimplesProducto(pid) {
+  var p = catalogoAdminData[pid];
+  if (!p) return;
+  db.ref('catalogo/' + pid + '/variantes').set(p.variantes).then(function() {
+    renderInventarioMatriz();
+  }).catch(function(err) {
+    alert('❌ No se pudo guardar el stock: ' + err.message);
+  });
 }
 
 function guardarVariantesMatrizProducto(pid) {
