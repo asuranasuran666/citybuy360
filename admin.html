@@ -3685,21 +3685,45 @@ function agregarTallaMatrizEnLista(tallasList, talla, precio, stock) {
 
 function leerVariantesMatriz(prefijo) {
   var bloques = document.querySelectorAll('#' + prefijo + '-variantes-matriz-lista .variante-color-bloque');
+  var precioGeneralEl = document.getElementById(prefijo + '-price');
+  var precioGeneral = precioGeneralEl ? parseFloat(precioGeneralEl.value) : NaN;
   var matriz = [];
+  var coloresDescartados = [];
+
   bloques.forEach(function(bloque) {
     var color = bloque.querySelector('.variante-color-nombre').value.trim();
     if (!color) return;
     var imagenColor = bloque.querySelector('.variante-color-imagen').value.trim();
     var tallas = [];
-    bloque.querySelectorAll('.variante-talla-row').forEach(function(fila) {
-      var talla = fila.querySelector('.variante-talla-nombre').value.trim();
-      var precio = parseFloat(fila.querySelector('.variante-talla-precio').value);
+    var filas = bloque.querySelectorAll('.variante-talla-row');
+
+    filas.forEach(function(fila) {
+      var talla = fila.querySelector('.variante-talla-nombre').value.trim() || 'Único';
+      var precioInput = parseFloat(fila.querySelector('.variante-talla-precio').value);
+      var precio = !isNaN(precioInput) ? precioInput : precioGeneral; // si no puso precio propio, usa el precio general del producto
       var stockRaw = fila.querySelector('.variante-talla-stock').value.trim();
       var stock = stockRaw === '' ? null : parseInt(stockRaw, 10);
-      if (talla && !isNaN(precio)) tallas.push({ talla: talla, precio: precio, stock: (stock !== null && !isNaN(stock)) ? stock : null });
+      if (!isNaN(precio)) tallas.push({ talla: talla, precio: precio, stock: (stock !== null && !isNaN(stock)) ? stock : null });
     });
-    if (tallas.length) matriz.push({ color: color, imagen: imagenColor || null, tallas: tallas });
+
+    // Si el color tiene nombre (y foto, quizás) pero nunca se le agregó ninguna
+    // talla, no se descarta en silencio: se crea una "Único" automática usando
+    // el precio general del producto, para no perder la foto ni el color.
+    if (!filas.length && !isNaN(precioGeneral)) {
+      tallas.push({ talla: 'Único', precio: precioGeneral, stock: null });
+    }
+
+    if (tallas.length) {
+      matriz.push({ color: color, imagen: imagenColor || null, tallas: tallas });
+    } else {
+      coloresDescartados.push(color);
+    }
   });
+
+  if (coloresDescartados.length) {
+    alert('⚠️ No se guardó el color "' + coloresDescartados.join('", "') + '" porque no tiene ninguna talla con precio válido (ni precio general del producto de respaldo). Agrégale al menos una talla con precio, o pon un precio general, y guarda de nuevo.');
+  }
+
   return matriz;
 }
 
