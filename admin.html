@@ -373,6 +373,10 @@
 
   <!-- ── TAB: ANALÍTICAS ── -->
   <div id="tab-analytics" class="tab-content">
+    <div id="alertas-admin-wrap" style="display:none;background:#3a1a1a;border:1px solid #663333;border-radius:12px;margin-bottom:14px;overflow:hidden;">
+      <div style="padding:10px 14px;font-weight:800;font-size:0.85rem;color:#ff9999;">🔔 Alertas del sistema (<span id="alertas-admin-count">0</span>)</div>
+      <div id="alertas-admin-list"></div>
+    </div>
     <div class="stats-row">
       <div class="stat-card"><div class="stat-number" id="stat-hoy">—</div><div class="stat-label">Hoy</div></div>
       <div class="stat-card"><div class="stat-number" id="stat-semana">—</div><div class="stat-label">Esta semana</div></div>
@@ -2499,6 +2503,7 @@ function logout() {
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(id, btn) {
+  if (id === 'analytics') loadAlertasAdmin();
   if (id === 'mensajes') { loadMensajesAdmin(); loadClientesAdmin(); }
   if (id === 'interfaz') { loadRibbonsAdmin(); loadMarquesinaMensajesAdmin(); }
   if (id === 'vendedores') { loadVendedores(); loadVentasVendedores(); loadInventarioAdmin(); }
@@ -2628,6 +2633,8 @@ async function initAdmin() {
   loadCustomGeneros();
   window._cb360Etapa = 'loadToken';
   loadToken();
+  window._cb360Etapa = 'loadAlertasAdmin';
+  loadAlertasAdmin();
   window._cb360Etapa = 'loadStructureFromIndex (esperando red)';
   await loadStructureFromIndex();
   window._cb360Etapa = 'populateSections';
@@ -4476,6 +4483,30 @@ function esc(s) {
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Si un producto tiene UNA SOLA opción vendible en total (un solo color con
+// una sola talla, o una sola variante simple) y esa opción llega a 0, no
+// tiene sentido dejarlo visible y "en venta" — se desactiva solo y se avisa
+// en la pestaña principal, en vez de quedar silenciosamente mal.
+function verificarAutoDesactivarPorStockUnico(p, etiquetaOpcion) {
+  if (!p || p.activo === false) return; // ya estaba desactivado, no repetir aviso
+  var totalOpciones = 0;
+  var unicoStock = null;
+  if (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz)) {
+    p.variantesMatriz.forEach(function(c) { (c.tallas || []).forEach(function(t) {
+      totalOpciones++; unicoStock = t.stock;
+    }); });
+  } else if ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes)) {
+    totalOpciones = p.variantes.length;
+    if (totalOpciones === 1) unicoStock = p.variantes[0].stock;
+  }
+  if (totalOpciones === 1 && unicoStock === 0) {
+    p.activo = false;
+    db.ref('catalogo/' + p.id + '/activo').set(false);
+    crearAlertaAdmin('"' + (p.nombre || p.id) + '" se desactivó automáticamente — su única opción (' + etiquetaOpcion + ') se agotó.');
+    if (typeof renderCatalogoAdmin === 'function') renderCatalogoAdmin();
+  }
+}
+
 function ajustarStockMatriz(pid, colorIdx, tallaIdx, delta) {
   var p = catalogoAdminData[pid];
   if (!p || !p.variantesMatriz || !p.variantesMatriz[colorIdx] || !p.variantesMatriz[colorIdx].tallas[tallaIdx]) return;
@@ -4485,6 +4516,7 @@ function ajustarStockMatriz(pid, colorIdx, tallaIdx, delta) {
   if (nuevo < 0) nuevo = 0;
   t.stock = nuevo;
   registrarMovimientoHistorial(p, p.variantesMatriz[colorIdx].color, t.talla, delta);
+  verificarAutoDesactivarPorStockUnico(p, p.variantesMatriz[colorIdx].color + ' / ' + t.talla);
   guardarVariantesMatrizProducto(pid);
 }
 
@@ -4513,6 +4545,7 @@ function setStockMatriz(pid, colorIdx, tallaIdx, valor) {
   t.stock = (n !== null && !isNaN(n) && n >= 0) ? n : null;
   var nuevo = (t.stock === null) ? anterior : t.stock;
   if (nuevo !== anterior) registrarMovimientoHistorial(p, p.variantesMatriz[colorIdx].color, t.talla, nuevo - anterior);
+  verificarAutoDesactivarPorStockUnico(p, p.variantesMatriz[colorIdx].color + ' / ' + t.talla);
   guardarVariantesMatrizProducto(pid);
 }
 
@@ -4525,6 +4558,7 @@ function ajustarStockVariante(pid, vi, delta) {
   if (nuevo < 0) nuevo = 0;
   v.stock = nuevo;
   registrarMovimientoHistorial(p, v.nombre, '', delta);
+  verificarAutoDesactivarPorStockUnico(p, v.nombre);
   guardarVariantesSimplesProducto(pid);
 }
 
@@ -4537,6 +4571,7 @@ function setStockVariante(pid, vi, valor) {
   v.stock = (n !== null && !isNaN(n) && n >= 0) ? n : null;
   var nuevo = (v.stock === null) ? anterior : v.stock;
   if (nuevo !== anterior) registrarMovimientoHistorial(p, v.nombre, '', nuevo - anterior);
+  verificarAutoDesactivarPorStockUnico(p, v.nombre);
   guardarVariantesSimplesProducto(pid);
 }
 
@@ -5143,6 +5178,39 @@ function exportarVentasExcel() {
 }
 
 // ── MENSAJES ADMIN ──
+// ── ALERTAS ADMIN (internas, no las ve el cliente) ──
+function crearAlertaAdmin(texto) {
+  db.ref('alertasAdmin').push({ texto: texto, fecha: Date.now(), leida: false });
+}
+
+function loadAlertasAdmin() {
+  db.ref('alertasAdmin').orderByChild('fecha').limitToLast(20).once('value', function(snap) {
+    var data = snap.val() || {};
+    var items = Object.entries(data).filter(function(e) { return !e[1].leida; }).reverse();
+    var wrap = document.getElementById('alertas-admin-wrap');
+    var list = document.getElementById('alertas-admin-list');
+    var countEl = document.getElementById('alertas-admin-count');
+    if (!wrap || !list) return;
+    countEl.textContent = items.length;
+    wrap.style.display = items.length ? 'block' : 'none';
+    list.innerHTML = items.map(function(e) {
+      var id = e[0]; var a = e[1];
+      var fecha = a.fecha ? new Date(a.fecha).toLocaleDateString('es-ES', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      return '<div style="padding:10px 14px;border-top:1px solid #663333;display:flex;gap:10px;align-items:flex-start;">' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:0.82rem;color:#fff;line-height:1.4;">' + esc(a.texto || '') + '</div>' +
+          '<div style="font-size:0.7rem;color:#cc9999;margin-top:3px;">' + fecha + '</div>' +
+        '</div>' +
+        '<button onclick="descartarAlertaAdmin(\'' + id + '\')" style="background:none;border:1px solid #663333;color:#ff9999;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;flex:none;">✕ Descartar</button>' +
+      '</div>';
+    }).join('');
+  });
+}
+
+function descartarAlertaAdmin(id) {
+  db.ref('alertasAdmin/' + id + '/leida').set(true).then(loadAlertasAdmin);
+}
+
 function loadMensajesAdmin() {
   db.ref('mensajes').orderByChild('fecha').limitToLast(30).once('value', function(snap) {
     var data = snap.val() || {};
