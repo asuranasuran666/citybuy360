@@ -1917,14 +1917,20 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
 
         // Conversión a MN si el precio está en USD/EUR y el toggle está activo
         var tieneVariantesMatriz = p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0;
+        var tieneVariantesSimples = (p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes) && p.variantes.length > 0;
 
-        // Stock total para el filtro "Nueva Mercancía" (stock bajo): simple si lo tiene, o suma de toda la matriz.
-        // Productos sin control de stock (undefined o -1) quedan fuera del filtro, no cuentan como "bajo".
+        // Stock total para el filtro "Nueva Mercancía" (stock bajo): simple si lo tiene, suma de la matriz,
+        // o suma de las variantes simples (Color solo / Talla solo). Productos sin control de stock
+        // (undefined o -1) quedan fuera del filtro, no cuentan como "bajo".
         var stockFiltro = '';
         if (tieneVariantesMatriz) {
             var sumaMatriz = 0, algunaConDato = false;
             p.variantesMatriz.forEach(function(c){ (c.tallas||[]).forEach(function(t){ if (t.stock !== null && t.stock !== undefined) { sumaMatriz += t.stock; algunaConDato = true; } }); });
             if (algunaConDato) stockFiltro = sumaMatriz;
+        } else if (tieneVariantesSimples) {
+            var sumaSimple = 0, algunaConDatoSimple = false;
+            p.variantes.forEach(function(v){ if (v.stock !== null && v.stock !== undefined) { sumaSimple += v.stock; algunaConDatoSimple = true; } });
+            if (algunaConDatoSimple) stockFiltro = sumaSimple;
         } else if (stock !== undefined && stock !== null && stock !== -1) {
             stockFiltro = stock;
         }
@@ -2014,7 +2020,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                     '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:4px;">Los clientes Acceso 360 ya pueden reservarlo</div>';
             }
         } else {
-            var estaAgotadoCard = (stock === 0 && inventarioData[p.id] !== undefined) || (tieneVariantesMatriz && stockFiltro === 0);
+            var estaAgotadoCard = (stock === 0 && inventarioData[p.id] !== undefined) || ((tieneVariantesMatriz || tieneVariantesSimples) && stockFiltro === 0);
             if (estaAgotadoCard) {
                 var waTextAgotado = encodeURIComponent('Hola, vi que "' + p.nombre + '" está agotado. ¿Me pueden hacer un pedido extra?');
                 var waLinkAgotado = 'https://wa.me/5353255813?text=' + waTextAgotado;
