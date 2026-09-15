@@ -991,6 +991,9 @@
         <span id="inventario-sin-migrar-icon" style="color:#ffcc66;">▾</span>
       </div>
       <div id="inventario-sin-migrar-list" style="display:none;margin-top:8px;display:flex;flex-direction:column;gap:4px;"></div>
+      <button onclick="migrarInventarioViejo()" style="width:100%;margin-top:10px;background:var(--primary);border:none;color:#fff;font-weight:700;border-radius:8px;padding:10px;cursor:pointer;font-size:0.85rem;">🔄 Migrar automáticamente estos productos al inventario nuevo</button>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;">Convierte los campos viejos (Colores/Tallas de texto y el stock plano) al sistema nuevo. No borra nada del sistema viejo — puedes revisar el resultado y ajustar antes de desactivarlo.</div>
+      <div id="inventario-migracion-resultado" style="margin-top:10px;"></div>
     </div>
     <div id="inventario-matriz-list" style="padding:0 16px 16px;"><div class="empty-state">Cargando…</div></div>
   </div>
@@ -4450,6 +4453,74 @@ function toggleProductoInventario(key) {
   var abierto = body.style.display !== 'none';
   body.style.display = abierto ? 'none' : 'block';
   if (icon) icon.textContent = abierto ? '▾' : '▴';
+}
+
+// Convierte automáticamente los productos "sin migrar" (campos viejos de
+// texto Colores/Tallas + stock plano en /inventario) al sistema nuevo. No
+// borra nada del sistema viejo — solo escribe en el nuevo, para que se pueda
+// revisar antes de apagar lo viejo.
+async function migrarInventarioViejo() {
+  if (!confirm('Esto va a crear variantes nuevas (Color/Talla/Color+Talla) para los productos sin migrar, usando sus campos viejos de Colores/Tallas y el stock plano actual. No borra nada del sistema viejo. ¿Continuar?')) return;
+
+  var catSnap = await db.ref('catalogo').once('value');
+  var catalogo = catSnap.val() || {};
+  var invSnap = await db.ref('inventario').once('value');
+  var inventarioViejo = invSnap.val() || {};
+
+  var completos = [];
+  var necesitanRevision = [];
+  var sinCambios = [];
+  var updates = {};
+
+  Object.keys(catalogo).forEach(function(pid) {
+    var p = catalogo[pid];
+    var yaMigrado = (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length) ||
+      ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes) && p.variantes.length);
+    if (yaMigrado) return; // ya está migrado, no tocar
+
+    var colores = (p.colores || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var tallas = (p.tallas || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var stockViejo = (typeof inventarioViejo[pid] === 'number') ? inventarioViejo[pid] : null;
+    var nombre = p.nombre || pid;
+
+    if (colores.length && tallas.length) {
+      updates['catalogo/' + pid + '/variantesTipo'] = 'matriz';
+      updates['catalogo/' + pid + '/variantesMatriz'] = colores.map(function(c) {
+        return { color: c, imagen: null, tallas: tallas.map(function(t) { return { talla: t, precio: parseFloat(p.precio) || 0, stock: null }; }) };
+      });
+      necesitanRevision.push(nombre + ' (Color+Talla: ' + colores.length + ' colores × ' + tallas.length + ' tallas, sin stock — ponlo tú por combinación)');
+    } else if (colores.length) {
+      updates['catalogo/' + pid + '/variantesTipo'] = 'color';
+      updates['catalogo/' + pid + '/variantes'] = colores.map(function(c) { return { nombre: c, precio: parseFloat(p.precio) || 0, stock: null }; });
+      necesitanRevision.push(nombre + ' (' + colores.length + ' colores, sin stock — el stock viejo era total, no por color)');
+    } else if (tallas.length) {
+      updates['catalogo/' + pid + '/variantesTipo'] = 'talla';
+      updates['catalogo/' + pid + '/variantes'] = tallas.map(function(t) { return { nombre: t, precio: parseFloat(p.precio) || 0, stock: null }; });
+      necesitanRevision.push(nombre + ' (' + tallas.length + ' tallas, sin stock — el stock viejo era total, no por talla)');
+    } else if (stockViejo !== null) {
+      updates['catalogo/' + pid + '/variantesTipo'] = 'color';
+      updates['catalogo/' + pid + '/variantes'] = [{ nombre: 'Único', precio: parseFloat(p.precio) || 0, stock: stockViejo }];
+      completos.push(nombre + ' (stock: ' + stockViejo + ')');
+    } else {
+      sinCambios.push(nombre + ' (no tenía colores, tallas, ni stock viejo — nada que migrar)');
+    }
+  });
+
+  if (!Object.keys(updates).length) {
+    document.getElementById('inventario-migracion-resultado').innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No hay nada para migrar ahora mismo.</div>';
+    return;
+  }
+
+  await db.ref().update(updates);
+
+  var html = '';
+  if (completos.length) html += '<div style="font-size:0.78rem;color:#7fff7f;font-weight:700;margin-bottom:4px;">✅ Migrados completos (' + completos.length + '):</div><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">' + completos.join('<br>') + '</div>';
+  if (necesitanRevision.length) html += '<div style="font-size:0.78rem;color:#ffcc66;font-weight:700;margin-bottom:4px;">⚠️ Migrados, pero revisa el stock por opción (' + necesitanRevision.length + '):</div><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">' + necesitanRevision.join('<br>') + '</div>';
+  if (sinCambios.length) html += '<div style="font-size:0.78rem;color:var(--text-muted);">Sin cambios (' + sinCambios.length + '):</div><div style="font-size:0.73rem;color:var(--text-muted);">' + sinCambios.join('<br>') + '</div>';
+  document.getElementById('inventario-migracion-resultado').innerHTML = html;
+
+  await loadCatalogoAdmin();
+  renderInventarioMatriz();
 }
 
 function renderSinMigrar() {
