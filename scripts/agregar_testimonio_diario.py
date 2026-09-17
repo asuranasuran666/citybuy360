@@ -41,13 +41,14 @@ APODOS = ["Cuqui", "Yuni", "Nany", "Pity", "Fefa", "Tato", "Bebo", "Mima", "Kiki
 
 def generar_nombre():
     if random.random() < 0.15:
-        return random.choice(APODOS)
-    base = NOMBRES_FEM if random.random() < 0.55 else NOMBRES_MASC
+        return random.choice(APODOS), None
+    es_fem = random.random() < 0.55
+    base = NOMBRES_FEM if es_fem else NOMBRES_MASC
     nombre = random.choice(base)
     iniciales = random.choice(APELLIDOS_INICIALES)[0] + "."
     if random.random() < 0.3:
         iniciales += random.choice(APELLIDOS_INICIALES)[0] + "."
-    return nombre + " " + iniciales
+    return nombre + " " + iniciales, ("f" if es_fem else "m")
 
 TIPOS_PRODUCTO = [
     (["media", "calcetin", "calcetín"], "medias"),
@@ -100,6 +101,26 @@ GENERICAS = [
     "sin problemas con el pedido, todo en orden",
 ]
 
+# Cuando el género del nombre no coincide con la sección del producto (ej:
+# nombre de mujer en ropa de hombre), se reencuadra como compra para alguien
+# más, en vez de hablar en primera persona de cómo le queda a ella/él.
+RELACIONAL_HOMBRE = [
+    "a mi esposo le quedó bien, buena tela",
+    "se lo compré a mi novio y le gustó",
+    "mi esposo lo usa seguido, buena calidad",
+    "a mi esposo le encantó, buen corte",
+    "se lo llevé a mi novio, buena tela",
+    "mi esposo dice que es cómoda, buena calidad",
+]
+RELACIONAL_MUJER = [
+    "se lo compré a mi mamá y le encantó",
+    "mi hija quedó feliz con esto",
+    "a mi mamá le gustó mucho, buena calidad",
+    "se lo llevé a mi hija y le quedó bien",
+    "mi mamá lo usa seguido, buena tela",
+    "a mi hija le encantó el color",
+]
+
 APERTURAS = ["", "", "", "todo bien, ", "me encantó, ", "quedé satisfecho, ", "buena experiencia, ",
              "sin quejas, ", "genial, ", "la verdad, ", "no tengo quejas, ", "todo perfecto, ",
              "super contento, ", "muy bien, "]
@@ -115,9 +136,14 @@ def detectar_tipo(nombre):
     return None
 
 
-def elegir_texto(nombre_producto, seccion):
-    tipo = detectar_tipo(nombre_producto)
-    pool = POOLS_TIPO.get(tipo) or POR_CATEGORIA.get(seccion) or GENERICAS
+def elegir_texto(nombre_producto, seccion, genero=None):
+    if seccion == "hombre" and genero == "f":
+        pool = RELACIONAL_HOMBRE
+    elif seccion == "mujer" and genero == "m":
+        pool = RELACIONAL_MUJER
+    else:
+        tipo = detectar_tipo(nombre_producto)
+        pool = POOLS_TIPO.get(tipo) or POR_CATEGORIA.get(seccion) or GENERICAS
     # ~20% de las veces, va genérico aunque haya pool específico
     detalle = random.choice(GENERICAS) if random.random() < 0.2 else random.choice(pool)
     return random.choice(APERTURAS) + detalle + random.choice(CIERRES)
@@ -181,9 +207,10 @@ def main():
     nuevo_total = total_actual + estrella_nueva
     fb_put(f"ratings/{pid}", {"total": nuevo_total, "count": nuevo_count})
 
+    nombre_gen, genero = generar_nombre()
     testimonio = {
-        "nombre": generar_nombre(),
-        "texto": elegir_texto(producto.get("nombre", ""), producto.get("seccion", "")),
+        "nombre": nombre_gen,
+        "texto": elegir_texto(producto.get("nombre", ""), producto.get("seccion", ""), genero),
         "estrellas": estrella_nueva,
         "fecha": int(time.time() * 1000),
     }
