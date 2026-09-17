@@ -2539,8 +2539,32 @@ function loadPreciosTab() {
       }
       tbody.innerHTML = ids.map(function(id) {
         var p = catalogo[id];
-        var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i, '').trim() : '';
         var monedaActual = p.moneda === 'MN' ? 'MN' : 'USD';
+
+        // Si el producto tiene precios por variante (Color/Talla/Color+Talla), este
+        // campo general no es lo que el cliente ve — se muestra el rango real,
+        // de solo lectura, para no confundir con un campo que no hace nada.
+        var preciosVariantes = [];
+        if (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz)) {
+          p.variantesMatriz.forEach(function(c) { (c.tallas || []).forEach(function(t) { if (t.precio != null) preciosVariantes.push(parseFloat(t.precio)); }); });
+        } else if ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes)) {
+          p.variantes.forEach(function(v) { if (v.precio != null) preciosVariantes.push(parseFloat(v.precio)); });
+        }
+        var tienePreciosVariantes = preciosVariantes.length > 0;
+        var distintos = tienePreciosVariantes && (Math.min.apply(null, preciosVariantes) !== Math.max.apply(null, preciosVariantes));
+
+        if (distintos) {
+          var min = Math.min.apply(null, preciosVariantes);
+          var max = Math.max.apply(null, preciosVariantes);
+          return '<tr id="precio-row-' + id + '">' +
+            '<td>' + (p.nombre || '(sin nombre)') + '</td>' +
+            '<td style="color:var(--text-muted);font-size:0.85rem;">' + min.toFixed(2) + ' – ' + max.toFixed(2) + ' ' + monedaActual + ' <span style="font-size:0.72rem;">(por variante)</span></td>' +
+            '<td>' + preciosCalcMN(min, monedaActual) + ' – ' + preciosCalcMN(max, monedaActual) + '</td>' +
+            '<td style="font-size:0.72rem;color:var(--text-muted);">Se edita por color/talla en Catálogo, no aquí</td>' +
+          '</tr>';
+        }
+
+        var precioNum = p.precio ? String(p.precio).replace(/\s*(MN|USD|EUR)$/i, '').trim() : '';
         return '<tr id="precio-row-' + id + '">' +
           '<td>' + (p.nombre || '(sin nombre)') + '</td>' +
           '<td style="display:flex;gap:4px;align-items:center;">' +
@@ -4508,19 +4532,26 @@ async function migrarInventarioViejo() {
     var nombre = p.nombre || pid;
 
     if (colores.length && tallas.length) {
+      var totalCombos = colores.length * tallas.length;
+      var usaStockDirecto = totalCombos === 1;
       updates['catalogo/' + pid + '/variantesTipo'] = 'matriz';
       updates['catalogo/' + pid + '/variantesMatriz'] = colores.map(function(c) {
-        return { color: c, imagen: null, tallas: tallas.map(function(t) { return { talla: t, precio: parseFloat(p.precio) || 0, stock: null }; }) };
+        return { color: c, imagen: null, tallas: tallas.map(function(t) { return { talla: t, precio: parseFloat(p.precio) || 0, stock: usaStockDirecto ? stockViejo : null }; }) };
       });
-      necesitanRevision.push(nombre + ' (Color+Talla: ' + colores.length + ' colores × ' + tallas.length + ' tallas, sin stock — ponlo tú por combinación)');
+      if (usaStockDirecto) completos.push(nombre + ' (1 combinación, stock: ' + (stockViejo !== null ? stockViejo : 'sin control') + ')');
+      else necesitanRevision.push(nombre + ' (Color+Talla: ' + colores.length + ' colores × ' + tallas.length + ' tallas, sin stock — ponlo tú por combinación)');
     } else if (colores.length) {
+      var usaStockDirectoC = colores.length === 1;
       updates['catalogo/' + pid + '/variantesTipo'] = 'color';
-      updates['catalogo/' + pid + '/variantes'] = colores.map(function(c) { return { nombre: c, precio: parseFloat(p.precio) || 0, stock: null }; });
-      necesitanRevision.push(nombre + ' (' + colores.length + ' colores, sin stock — el stock viejo era total, no por color)');
+      updates['catalogo/' + pid + '/variantes'] = colores.map(function(c) { return { nombre: c, precio: parseFloat(p.precio) || 0, stock: usaStockDirectoC ? stockViejo : null }; });
+      if (usaStockDirectoC) completos.push(nombre + ' (1 color, stock: ' + (stockViejo !== null ? stockViejo : 'sin control') + ')');
+      else necesitanRevision.push(nombre + ' (' + colores.length + ' colores, sin stock — el stock viejo era total, no por color)');
     } else if (tallas.length) {
+      var usaStockDirectoT = tallas.length === 1;
       updates['catalogo/' + pid + '/variantesTipo'] = 'talla';
-      updates['catalogo/' + pid + '/variantes'] = tallas.map(function(t) { return { nombre: t, precio: parseFloat(p.precio) || 0, stock: null }; });
-      necesitanRevision.push(nombre + ' (' + tallas.length + ' tallas, sin stock — el stock viejo era total, no por talla)');
+      updates['catalogo/' + pid + '/variantes'] = tallas.map(function(t) { return { nombre: t, precio: parseFloat(p.precio) || 0, stock: usaStockDirectoT ? stockViejo : null }; });
+      if (usaStockDirectoT) completos.push(nombre + ' (1 talla, stock: ' + (stockViejo !== null ? stockViejo : 'sin control') + ')');
+      else necesitanRevision.push(nombre + ' (' + tallas.length + ' tallas, sin stock — el stock viejo era total, no por talla)');
     } else if (stockViejo !== null) {
       updates['catalogo/' + pid + '/variantesTipo'] = 'color';
       updates['catalogo/' + pid + '/variantes'] = [{ nombre: 'Único', precio: parseFloat(p.precio) || 0, stock: stockViejo }];
@@ -5522,8 +5553,14 @@ function loadSliderAdmin() {
     var container = document.getElementById('slider-admin-list');
     if (!container) return;
     container.innerHTML = slides.map(function(s, i) {
-      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;">' +
-        '<div style="font-size:0.75rem;color:var(--text-muted);font-weight:700;">SLIDE ' + (i+1) + '</div>' +
+      var activo = s.activo !== false; // por defecto activo si no se ha guardado nunca
+      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;' + (activo ? '' : 'opacity:0.5;') + '">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+          '<div style="font-size:0.75rem;color:var(--text-muted);font-weight:700;">SLIDE ' + (i+1) + '</div>' +
+          '<label style="display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--text-muted);cursor:pointer;">' +
+            '<input data-slide="'+i+'" data-field="activo" type="checkbox" onchange="toggleSlideActivoVista(this)" ' + (activo ? 'checked' : '') + '> Activo' +
+          '</label>' +
+        '</div>' +
         '<input data-slide="'+i+'" data-field="label" type="text" value="'+escHtml(s.label||'')+'" placeholder="Subtítulo" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.82rem;">' +
         '<input data-slide="'+i+'" data-field="title" type="text" value="'+escHtml(s.title||'')+'" placeholder="Título principal" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.88rem;font-weight:700;">' +
         '<div style="display:flex;gap:6px;">' +
@@ -5533,6 +5570,10 @@ function loadSliderAdmin() {
       '</div>';
     }).join('');
   });
+}
+
+function toggleSlideActivoVista(checkbox) {
+  checkbox.closest('div[style*="flex-direction:column"]').style.opacity = checkbox.checked ? '1' : '0.5';
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -5584,7 +5625,7 @@ function saveSliderConfig() {
     var i = parseInt(inp.getAttribute('data-slide'));
     var field = inp.getAttribute('data-field');
     if (!slides[i]) slides[i] = {};
-    slides[i][field] = inp.value;
+    slides[i][field] = (field === 'activo') ? inp.checked : inp.value;
   });
   db.ref('config/slider').update({ slides: slides }).then(function() {
     var chip = document.getElementById('slider-save-chip');
