@@ -3871,9 +3871,11 @@ var APODOS_TESTIMONIOS = ['Cuqui', 'Yuni', 'Nany', 'Pity', 'Fefa', 'Tato', 'Bebo
 
 function generarNombreTestimonio() {
   if (Math.random() < 0.15) {
-    return APODOS_TESTIMONIOS[Math.floor(Math.random() * APODOS_TESTIMONIOS.length)];
+    var apodo = APODOS_TESTIMONIOS[Math.floor(Math.random() * APODOS_TESTIMONIOS.length)];
+    return { nombre: apodo, genero: null }; // apodo: género no se puede saber, no se reencuadra
   }
-  var base = Math.random() < 0.55 ? NOMBRES_FEM : NOMBRES_MASC;
+  var esFem = Math.random() < 0.55;
+  var base = esFem ? NOMBRES_FEM : NOMBRES_MASC;
   var nombre = base[Math.floor(Math.random() * base.length)];
   var apellido1 = APELLIDOS_INICIALES[Math.floor(Math.random() * APELLIDOS_INICIALES.length)];
   var iniciales = apellido1.charAt(0) + '.';
@@ -3881,7 +3883,7 @@ function generarNombreTestimonio() {
     var apellido2 = APELLIDOS_INICIALES[Math.floor(Math.random() * APELLIDOS_INICIALES.length)];
     iniciales += apellido2.charAt(0) + '.';
   }
-  return nombre + ' ' + iniciales;
+  return { nombre: nombre + ' ' + iniciales, genero: esFem ? 'f' : 'm' };
 }
 
 // Palabras clave en el nombre del producto → banco de frases específico del
@@ -3941,6 +3943,28 @@ var GENERICAS_TESTIMONIOS = [
   'sin problemas con el pedido, todo en orden'
 ];
 
+// Cuando el género del nombre generado no coincide con la sección del
+// producto (ej: nombre de mujer en ropa de hombre), no tiene sentido que
+// hable en primera persona de cómo le queda a ella — se reencuadra como
+// compra para alguien más. Para ropa de mujer con nombre de hombre, se usa
+// relación familiar (mamá/hija), nunca "esposa" — así lo pidió Yoan.
+var RELACIONAL_HOMBRE = [
+  'a mi esposo le quedó bien, buena tela',
+  'se lo compré a mi novio y le gustó',
+  'mi esposo lo usa seguido, buena calidad',
+  'a mi esposo le encantó, buen corte',
+  'se lo llevé a mi novio, buena tela',
+  'mi esposo dice que es cómoda, buena calidad'
+];
+var RELACIONAL_MUJER = [
+  'se lo compré a mi mamá y le encantó',
+  'mi hija quedó feliz con esto',
+  'a mi mamá le gustó mucho, buena calidad',
+  'se lo llevé a mi hija y le quedó bien',
+  'mi mamá lo usa seguido, buena tela',
+  'a mi hija le encantó el color'
+];
+
 // Piezas para armar la reseña por combinatoria: apertura + detalle (del
 // tipo/categoría) + cierre. Con ~12 aperturas x ~10 detalles x ~12 cierres
 // por tipo salen miles de combinaciones distintas sin repetir frases fijas.
@@ -3976,22 +4000,20 @@ function combinarFrase(detalle) {
   return ap + detalle + ci;
 }
 
-function elegirPlantillas(cantidad, nombreProducto, seccion) {
+function elegirPoolDetalle(nombreProducto, seccion, genero) {
+  if (seccion === 'hombre' && genero === 'f') return RELACIONAL_HOMBRE;
+  if (seccion === 'mujer' && genero === 'm') return RELACIONAL_MUJER;
   var tipo = detectarTipoProducto(nombreProducto);
-  var poolEspecifico = (tipo && POOLS_TIPO[tipo]) || POR_CATEGORIA[seccion] || [];
-  var numGenerico = Math.max(1, Math.round(cantidad * 0.2));
-  var numEspecifico = cantidad - numGenerico;
-  // Los detalles se pueden repetir entre reseñas del MISMO producto (con
-  // reposición) porque cada uno se envuelve con apertura/cierre distintos,
-  // así que dos reseñas con el mismo detalle igual se leen diferentes.
-  var detalles = [];
-  for (var i = 0; i < numEspecifico; i++) {
-    detalles.push(poolEspecifico.length ? poolEspecifico[Math.floor(Math.random() * poolEspecifico.length)] : GENERICAS_TESTIMONIOS[Math.floor(Math.random() * GENERICAS_TESTIMONIOS.length)]);
+  return (tipo && POOLS_TIPO[tipo]) || POR_CATEGORIA[seccion] || [];
+}
+
+function elegirDetalleParaTestimonio(nombreProducto, seccion, genero) {
+  var poolEspecifico = elegirPoolDetalle(nombreProducto, seccion, genero);
+  // ~20% de las veces, va genérico de tienda aunque haya pool específico
+  if (!poolEspecifico.length || Math.random() < 0.2) {
+    return GENERICAS_TESTIMONIOS[Math.floor(Math.random() * GENERICAS_TESTIMONIOS.length)];
   }
-  for (var j = 0; j < numGenerico; j++) {
-    detalles.push(GENERICAS_TESTIMONIOS[Math.floor(Math.random() * GENERICAS_TESTIMONIOS.length)]);
-  }
-  return mezclarArray(detalles).map(combinarFrase);
+  return poolEspecifico[Math.floor(Math.random() * poolEspecifico.length)];
 }
 
 // Promedio ponderado hacia la franja de credibilidad (4.2-4.6). Los productos
@@ -4021,14 +4043,14 @@ function elegirEstrellaTestimonio(avgObjetivo) {
 }
 
 function generarTestimonios(id, nombreProducto, seccion, avg, cantidad) {
-  var nombres = [];
-  for (var n = 0; n < cantidad; n++) nombres.push(generarNombreTestimonio());
-  var plantillas = elegirPlantillas(cantidad, nombreProducto, seccion);
   var nombreLower = (nombreProducto || '').toLowerCase();
   for (var i = 0; i < cantidad; i++) {
+    var persona = generarNombreTestimonio();
+    var detalle = elegirDetalleParaTestimonio(nombreProducto, seccion, persona.genero);
+    var texto = combinarFrase(detalle).replace('{producto}', nombreLower || 'el producto');
     db.ref('testimonios/' + id).push({
-      nombre: nombres[i],
-      texto: (plantillas[i] || '').replace('{producto}', nombreLower || 'el producto'),
+      nombre: persona.nombre,
+      texto: texto,
       estrellas: elegirEstrellaTestimonio(avg),
       fecha: Date.now() - Math.floor(Math.random() * 60) * 86400000
     });
