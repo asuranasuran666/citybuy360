@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo CityBUY360</title>
+    <title>CityBUY360</title>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -3739,7 +3739,8 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
 
     // Intentar cargar slides de Firebase (si el admin los configuró)
     db.ref('config/slider/slides').once('value', function(snap) {
-        var firebaseSlides = snap.val();
+        var firebaseSlidesRaw = snap.val();
+        var firebaseSlides = Array.isArray(firebaseSlidesRaw) ? firebaseSlidesRaw.filter(function(s) { return s && s.activo !== false; }) : firebaseSlidesRaw;
         if (firebaseSlides && Array.isArray(firebaseSlides) && firebaseSlides.length > 0) {
             var sliderEl = document.querySelector('.header-slider');
             if (!sliderEl) return;
