@@ -1225,12 +1225,12 @@
         <!-- SLIDER -->
 <header>
     <div class="header-brand">
-        <h1>CityBUY<span id="span-360" onclick="navGo('acceso360')">360</span></h1>
+        <h1>CityBUY<span id="span-360">360</span></h1>
         <span class="brand-sep">|</span>
         <p><span class="brand-marquee-text">Excelente CALIDAD | Precios ASEQUIBLES</span></p>
         <button id="bell-btn" onclick="toggleMensajesPanel()" title="Mensajes de la tienda">🔔<span id="bell-badge" class="bell-badge"></span></button>
         <button id="cart-btn" onclick="toggleCart()" title="Carrito">🛒<span id="cart-badge" class="bell-badge"></span></button>
-        <span class="badge-360" id="badge-360-header" onclick="navGo('acceso360')"><span style="vertical-align:middle;line-height:1;">ACCESO360</span></span>
+        <span class="badge-360" id="badge-360-header"><span style="vertical-align:middle;line-height:1;">ACCESO360</span></span>
     </div>
     
 
@@ -1248,6 +1248,7 @@
     <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
     <button class="cat-btn" id="cat-btn-nuevo" onclick="filterCat('nuevo',this)">🆕 Lo último</button>
     <button class="cat-btn" onclick="filterCat('shein',this)">🛍️ Ofertas</button>
+    <button class="cat-btn" onclick="navGo('acceso360')">🎁 Oferta especial</button>
     <button class="cat-btn" onclick="filterCat('mujer',this)">👗 Mujer</button>
     <button class="cat-btn" onclick="filterCat('hombre',this)">👕 Hombre</button>
     <button class="cat-btn" onclick="filterCat('ninos',this)">👶 Niños</button>
