@@ -1078,6 +1078,40 @@
         }
         @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
+        /* ── OFERTA ESPECIAL / ACCESO 360 VIP: modal de bienvenida + confetti ── */
+        #welcome-modal-oe {
+            display: none; position: fixed; inset: 0; z-index: 9998;
+            pointer-events: none;
+            background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 20px;
+        }
+        #welcome-modal-oe.show { display: flex; }
+        .welcome-box-oe {
+            pointer-events: all;
+            background: linear-gradient(160deg, #0d0d0d, #1a1100);
+            border: 1px solid #b8860b; border-radius: 20px;
+            padding: 36px 30px; max-width: 400px; width: 100%;
+            box-shadow: 0 0 60px rgba(255,200,0,0.25);
+            animation: modalInOE 0.4s cubic-bezier(.34,1.56,.64,1);
+            text-align: center;
+        }
+        @keyframes modalInOE { from{opacity:0;transform:scale(0.8) translateY(30px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .welcome-icon-oe { font-size: 2.5rem; margin-bottom: 10px; }
+        .welcome-badge-text-oe { display: inline-block; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518); color: #1a0a00; font-size: 0.72rem; font-weight: 900; padding: 4px 14px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 14px; }
+        .welcome-title-oe { color: #f5c518; font-size: 1.5rem; font-weight: 900; margin-bottom: 6px; }
+        .welcome-sub-oe { color: #999; font-size: 0.84rem; margin-bottom: 20px; }
+        .welcome-perks-oe { list-style: none; text-align: left; margin-bottom: 24px; padding: 0; }
+        .welcome-perks-oe li { color: #ccc; font-size: 0.84rem; padding: 7px 0; border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; gap: 10px; }
+        .welcome-perks-oe li:last-child { border-bottom: none; }
+        .welcome-perks-oe li::before { content: '✦'; color: #f5c518; font-size: 0.7rem; flex-shrink: 0; }
+        .welcome-perks-oe li.coming { opacity: 0.5; font-style: italic; }
+        .welcome-enter-btn-oe {
+            width: 100%; padding: 14px; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518);
+            border: none; border-radius: 10px; color: #1a0a00; font-weight: 900; font-size: 1rem;
+            cursor: pointer; letter-spacing: 0.5px; transition: transform 0.15s;
+        }
+        .welcome-enter-btn-oe:hover { transform: scale(1.02); }
+        #confetti-canvas-oe { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
+
         </style>
 </head>
 <body>
@@ -1277,6 +1311,24 @@
 
 
         <div id="tab-oferta-especial" style="display:none;background:#0d0d0d;min-height:60vh;padding:20px 14px;border-radius:14px;margin-bottom:20px;">
+            <canvas id="confetti-canvas-oe"></canvas>
+            <div id="welcome-modal-oe">
+                <div class="welcome-box-oe">
+                    <div class="welcome-icon-oe">✦</div>
+                    <div class="welcome-badge-text-oe">ACCESO 360 VIP</div>
+                    <div class="welcome-title-oe">Bienvenido/a</div>
+                    <div class="welcome-sub-oe">Tu acceso exclusivo está activo</div>
+                    <ul class="welcome-perks-oe">
+                        <li>Productos exclusivos no disponibles al público</li>
+                        <li>Drops limitados con acceso anticipado</li>
+                        <li>Reserva antes del lanzamiento</li>
+                        <li>Envío prioritario</li>
+                        <li class="coming">Virtual Try-On con IA — próximamente</li>
+                    </ul>
+                    <button class="welcome-enter-btn-oe" onclick="enterVipTienda()">✦ Entrar al ACCESO 360 VIP</button>
+                </div>
+            </div>
+
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <div style="color:#f5c518;font-weight:900;font-size:1.1rem;">✦ ACCESO 360 VIP</div>
                 <div onclick="cerrarOfertaEspecial()" style="color:#888;cursor:pointer;font-size:1.3rem;line-height:1;">×</div>
@@ -3841,7 +3893,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var codigoGuardado = localStorage.getItem('cb360_acceso360_code');
         var resultado = codigoGuardado ? acceso360Verificar(codigoGuardado) : null;
         if (resultado && resultado.valido) {
-            mostrarGridOfertaEspecial();
+            unlockVipTienda();
         } else {
             if (codigoGuardado) localStorage.removeItem('cb360_acceso360_code');
             document.getElementById('oferta-especial-lock').style.display = 'block';
@@ -3899,11 +3951,71 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
                 errEl.textContent = '❌ Este código fue revocado';
                 btn.disabled = false; btn.textContent = 'Acceder ✦';
             } else {
-                mostrarGridOfertaEspecial();
+                unlockVipTienda();
             }
         };
         setTimeout(function() { entrarSiNoRevocado(null); }, 2500);
         db.ref('acceso360/revocados/' + code).once('value', entrarSiNoRevocado, function() { entrarSiNoRevocado(null); });
+    }
+
+    function unlockVipTienda() {
+        document.getElementById('oferta-especial-lock').style.display = 'none';
+        document.getElementById('welcome-modal-oe').classList.add('show');
+        launchConfettiOE();
+    }
+
+    function enterVipTienda() {
+        document.getElementById('welcome-modal-oe').classList.remove('show');
+        mostrarGridOfertaEspecial();
+    }
+
+    function launchConfettiOE() {
+        var canvas = document.getElementById('confetti-canvas-oe');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var ctx = canvas.getContext('2d');
+        var colors = ['#ffd700','#f5c518','#ffe566','#fff','#ffec5c','#b8860b','#ffffff'];
+        var particles = [];
+        for (var i = 0; i < 150; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 7 + 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 1.5,
+                angle: 0, tiltSpeed: Math.random() * 0.1 + 0.05,
+                shape: Math.random() > 0.5 ? 'star' : 'rect',
+                w: Math.random() * 8 + 4, h: Math.random() * 4 + 2
+            });
+        }
+        var frame = 0;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(function(p) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = p.color;
+                if (p.shape === 'star') {
+                    ctx.beginPath();
+                    for (var j = 0; j < 5; j++) {
+                        ctx.lineTo(Math.cos((18+j*72)*Math.PI/180)*p.r, Math.sin((18+j*72)*Math.PI/180)*p.r);
+                        ctx.lineTo(Math.cos((54+j*72)*Math.PI/180)*p.r*0.4, Math.sin((54+j*72)*Math.PI/180)*p.r*0.4);
+                    }
+                    ctx.closePath(); ctx.fill();
+                } else {
+                    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                }
+                ctx.restore();
+                p.y += p.speed; p.angle += p.tiltSpeed;
+                p.x += Math.sin(p.angle) * 1.5;
+                if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+            });
+            frame++;
+            if (frame < 360) requestAnimationFrame(draw);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        draw();
     }
 
     function mostrarGridOfertaEspecial() {
