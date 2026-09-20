@@ -1273,7 +1273,7 @@
   <div id="marquesina-track"></div>
 </div>
 
-<div id="vip-promo-banner" onclick="window.location.href='acceso360.html'" style="background:linear-gradient(90deg,#1a1100,#2a1d00,#1a1100);border-bottom:1px solid #b8860b55;padding:8px 14px;text-align:center;cursor:pointer;">
+<div id="vip-promo-banner" onclick="mostrarOfertaEspecial()" style="background:linear-gradient(90deg,#1a1100,#2a1d00,#1a1100);border-bottom:1px solid #b8860b55;padding:8px 14px;text-align:center;cursor:pointer;">
   <span style="color:#ffd700;font-weight:800;font-size:0.78rem;">✦ ACCESO VIP</span>
   <span style="color:#e8c97a;font-size:0.78rem;"> — Sé el primero en ver y comprar antes que se agote →</span>
 </div>
@@ -1611,7 +1611,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             localStorage.setItem('cb360_acceso360_code', code);
             sessionStorage.setItem('acceso360', 'true');
             errEl.textContent = '';
-            window.location.href = 'acceso360.html';
+            mostrarOfertaEspecial();
         }
 
         // El código ya es válido matemáticamente (funciona siempre, con o sin conexión).
@@ -1781,14 +1781,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         var catBar = document.getElementById('cat-bar');
             if (catBar) catBar.scrollIntoView({ behavior: 'smooth' });
         } else if (dest === 'acceso360') {
-            var codigoGuardado = localStorage.getItem('cb360_acceso360_code');
-            var resultadoGuardado = codigoGuardado ? acceso360Verificar(codigoGuardado) : null;
-            if (resultadoGuardado && resultadoGuardado.valido) {
-                window.location.href = 'acceso360.html';
-            } else {
-                if (codigoGuardado) localStorage.removeItem('cb360_acceso360_code');
-                openVipModal();
-            }
+            mostrarOfertaEspecial();
         }
     }
 
@@ -4502,7 +4495,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
         </ul>
         <div class="modal-step active" id="modal-step-1">
             <button class="modal-btn-si" onclick="showModalStep(2)">Sí, quiero acceso ✦</button>
-            <button class="modal-btn-codigo" onclick="window.location.href='acceso360.html'">Ya tengo mi código</button>
+            <button class="modal-btn-codigo" onclick="closeVipModal();mostrarOfertaEspecial();">Ya tengo mi código</button>
         </div>
         <div class="modal-step" id="modal-step-2">
             <label class="modal-email-label">Tu correo electrónico para recibir tu acceso:</label>
@@ -4517,7 +4510,7 @@ Completa - 1200 MN X 360 Saldo.</div><div class="price product-price">Desde 400 
             <div class="modal-espera-title">¡Ya tienes tu acceso!</div>
             <div class="modal-espera-desc">Este es tu código, válido por 7 días. Vuelve aquí y pulsa "Ya tengo mi código" cuando quieras entrar.</div>
             <div id="modal-codigo-generado" style="background:#1a1100;border:1px solid #b8860b;border-radius:10px;padding:16px;text-align:center;font-size:1.3rem;font-weight:900;color:#ffd700;letter-spacing:3px;margin:16px 0;"></div>
-            <button class="modal-btn-si" onclick="window.location.href='acceso360.html'">Ya tengo mi código, entrar →</button>
+            <button class="modal-btn-si" onclick="closeVipModal();mostrarOfertaEspecial();">Ya tengo mi código, entrar →</button>
             <button class="modal-back-btn" onclick="showModalStep(1)">← Volver al inicio</button>
         </div>
     </div>
