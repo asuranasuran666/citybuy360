@@ -16,6 +16,7 @@ producto que de verdad vende más).
 import json
 import os
 import random
+import re
 import time
 import urllib.request
 
@@ -39,16 +40,58 @@ APODOS = ["Cuqui", "Yuni", "Nany", "Pity", "Fefa", "Tato", "Bebo", "Mima", "Kiki
     "LaGuajira", "ElGuajiro", "Bombón23", "Chiqui.HAB"]
 
 
+def _con_typo(palabra):
+    """Simula errores de tecleo reales: letras adyacentes intercambiadas."""
+    if len(palabra) < 4 or random.random() >= 0.10:
+        return palabra
+    i = random.randint(0, len(palabra) - 2)
+    return palabra[:i] + palabra[i + 1] + palabra[i] + palabra[i + 2:]
+
+
+def _variar_caso(palabra):
+    r = random.random()
+    if r < 0.55:
+        return palabra          # normal (como lo escribió el generador)
+    if r < 0.75:
+        return palabra.lower()  # todo minúscula (muy común en WhatsApp/reseñas reales)
+    if r < 0.90:
+        return palabra.upper()  # todo mayúscula
+    return palabra[0].lower() + palabra[1:]  # inicial en minúscula, resto normal
+
+
 def generar_nombre():
     if random.random() < 0.15:
         return random.choice(APODOS), None
     es_fem = random.random() < 0.55
     base = NOMBRES_FEM if es_fem else NOMBRES_MASC
-    nombre = random.choice(base)
-    iniciales = random.choice(APELLIDOS_INICIALES)[0] + "."
-    if random.random() < 0.3:
-        iniciales += random.choice(APELLIDOS_INICIALES)[0] + "."
-    return nombre + " " + iniciales, ("f" if es_fem else "m")
+    nombre = _con_typo(random.choice(base))
+
+    r = random.random()
+    if r < 0.22:
+        # Solo el nombre, sin apellido — muy común en reseñas reales
+        completo = nombre
+    elif r < 0.55:
+        # Nombre + una inicial (formato no siempre igual: con/sin punto, may/min)
+        inicial = random.choice(APELLIDOS_INICIALES)[0]
+        formatos = [inicial + ".", inicial, inicial.lower() + "."]
+        completo = nombre + " " + random.choice(formatos)
+    elif r < 0.75:
+        # Nombre + dos iniciales
+        i1 = random.choice(APELLIDOS_INICIALES)[0]
+        i2 = random.choice(APELLIDOS_INICIALES)[0]
+        completo = nombre + " " + i1 + "." + i2 + "."
+    else:
+        # Nombre + apellido completo, a veces en minúscula (nadie corrige el autocorrector)
+        apellido = random.choice(APELLIDOS_INICIALES)
+        if random.random() < 0.4:
+            apellido = apellido.lower()
+        completo = nombre + " " + apellido
+
+    # Variación de caso general, aplicada de vez en cuando sobre el resultado ya armado
+    if random.random() < 0.18:
+        completo = _variar_caso(completo)
+
+    return completo, ("f" if es_fem else "m")
 
 TIPOS_PRODUCTO = [
     (["media", "calcetin", "calcetín"], "medias"),
@@ -101,6 +144,52 @@ GENERICAS = [
     "sin problemas con el pedido, todo en orden",
 ]
 
+# ── Specs reales del producto (RAM, batería, cámara, etc.) ──────────────────
+# Se extraen de "descripcion" + "detalles" cuando el producto las trae, para
+# que el comentario hable del producto concreto y no solo de la satisfacción
+# general — un cliente real que compró una tablet o un power bank casi
+# siempre menciona algo de esto.
+PATRONES_SPEC = [
+    ("ram", re.compile(r'(\d+)\s?GB\s*(?:de)?\s*RAM', re.I)),
+    ("almacenamiento", re.compile(r'(\d+)\s?(?:GB|TB)\s*(?:de)?\s*(?:almacenamiento|memoria interna|rom)', re.I)),
+    ("bateria", re.compile(r'(\d[\d.,]*)\s?mAh', re.I)),
+    ("camara", re.compile(r'(\d+)\s?(?:MP|Mpx|megap[íi]xeles)', re.I)),
+    ("pantalla", re.compile(r'(\d+[.,]?\d*)\s?(?:pulgadas|")', re.I)),
+    ("procesador", re.compile(r'(octa-?core|quad-?core|snapdragon\s?\w*|mediatek\s?\w*|helio\s?\w*|unisoc\s?\w*)', re.I)),
+    ("carga_rapida", re.compile(r'carga\s*r[áa]pida(?:\s*(?:de)?\s*(\d+\s?W))?', re.I)),
+]
+
+FRASES_SPEC = {
+    "ram": ["con {v}GB de RAM se mueve fluido, no se traba ni con varias apps abiertas",
+            "los {v}GB de RAM rinden bien para el uso diario", "la RAM alcanza, no se pone lenta"],
+    "almacenamiento": ["los {v}GB de almacenamiento me alcanzan bien", "buen espacio para guardar fotos y apps, {v}GB rinde"],
+    "bateria": ["la batería de {v}mAh aguanta bien un día completo", "con {v}mAh no tengo que estar cargando a cada rato",
+                "el power bank de {v}mAh carga el teléfono varias veces sin problema"],
+    "camara": ["la cámara de {v}MP se ve bien en fotos de día", "las fotos con la cámara de {v}MP salen nítidas"],
+    "pantalla": ["la pantalla de {v} pulgadas se ve nítida", "buen tamaño de pantalla, {v} pulgadas es cómodo para ver videos"],
+    "procesador": ["con el {v} anda fluido, no se traba", "el {v} responde bien, sin demoras"],
+    "carga_rapida": ["carga bastante rápido, se agradece", "la carga rápida sí se nota, en poco rato ya tiene batería"],
+}
+
+
+def extraer_specs(texto):
+    specs = {}
+    for clave, patron in PATRONES_SPEC:
+        m = patron.search(texto or "")
+        if m and m.groups() and m.group(1):
+            specs[clave] = m.group(1)
+        elif m:
+            specs[clave] = ""
+    return specs
+
+
+def frase_spec(specs):
+    """Elige una spec al azar de las encontradas y arma la frase con su valor."""
+    clave = random.choice(list(specs.keys()))
+    valor = specs[clave]
+    plantilla = random.choice(FRASES_SPEC[clave])
+    return plantilla.format(v=valor) if "{v}" in plantilla and valor else random.choice(FRASES_SPEC[clave]).replace("{v} ", "").replace("{v}", "")
+
 # Cuando el género del nombre no coincide con la sección del producto (ej:
 # nombre de mujer en ropa de hombre), se reencuadra como compra para alguien
 # más, en vez de hablar en primera persona de cómo le queda a ella/él.
@@ -136,17 +225,35 @@ def detectar_tipo(nombre):
     return None
 
 
-def elegir_texto(nombre_producto, seccion, genero=None):
-    if seccion == "hombre" and genero == "f":
-        pool = RELACIONAL_HOMBRE
+def _con_faltas_ortograficas(texto):
+    """Ruido ortográfico ocasional — tildes perdidas, abreviaturas informales."""
+    if random.random() < 0.25:
+        for a, b in [("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u")]:
+            texto = texto.replace(a, b)
+    if random.random() < 0.12:
+        texto = re.sub(r'\bque\b', 'q', texto)
+        texto = re.sub(r'\bporque\b', 'xq', texto)
+    return texto
+
+
+def elegir_texto(nombre_producto, seccion, genero=None, descripcion="", detalles=""):
+    specs = extraer_specs((descripcion or "") + " " + (detalles or ""))
+
+    if specs and random.random() < 0.7:
+        # La mayoría de las veces que hay specs reales, el comentario las menciona
+        detalle = frase_spec(specs)
+    elif seccion == "hombre" and genero == "f":
+        detalle = random.choice(RELACIONAL_HOMBRE)
     elif seccion == "mujer" and genero == "m":
-        pool = RELACIONAL_MUJER
+        detalle = random.choice(RELACIONAL_MUJER)
     else:
         tipo = detectar_tipo(nombre_producto)
         pool = POOLS_TIPO.get(tipo) or POR_CATEGORIA.get(seccion) or GENERICAS
-    # ~20% de las veces, va genérico aunque haya pool específico
-    detalle = random.choice(GENERICAS) if random.random() < 0.2 else random.choice(pool)
-    return random.choice(APERTURAS) + detalle + random.choice(CIERRES)
+        # ~20% de las veces, va genérico aunque haya pool específico
+        detalle = random.choice(GENERICAS) if random.random() < 0.2 else random.choice(pool)
+
+    texto = random.choice(APERTURAS) + detalle + random.choice(CIERRES)
+    return _con_faltas_ortograficas(texto)
 
 
 def elegir_estrella(avg_objetivo):
@@ -210,7 +317,8 @@ def main():
     nombre_gen, genero = generar_nombre()
     testimonio = {
         "nombre": nombre_gen,
-        "texto": elegir_texto(producto.get("nombre", ""), producto.get("seccion", ""), genero),
+        "texto": elegir_texto(producto.get("nombre", ""), producto.get("seccion", ""), genero,
+                              producto.get("descripcion", ""), producto.get("detalles", "")),
         "estrellas": estrella_nueva,
         "fecha": int(time.time() * 1000),
     }
