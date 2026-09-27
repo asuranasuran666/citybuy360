@@ -1,0 +1,16 @@
+name: Regenerar testimonios existentes (manual, una vez)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  regenerar-testimonios:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Regenerar texto de testimonios existentes con specs reales
+        env:
+          FIREBASE_URL: https://citybuy360-default-rtdb.firebaseio.com
+        run: python3 scripts/regenerar_testimonios_existentes.py
