@@ -1,0 +1,18 @@
+name: Crecimiento diario de testimonios
+
+on:
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  agregar-testimonio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Agregar un testimonio nuevo a un producto al azar
+        env:
+          FIREBASE_URL: https://citybuy360-default-rtdb.firebaseio.com
+        run: python3 scripts/agregar_testimonio_diario.py
