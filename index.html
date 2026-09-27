@@ -358,6 +358,7 @@
         }
         .badge-360:hover { box-shadow: 0 0 22px rgba(255,215,0,0.95); transform: scale(1.05); transition: all 0.2s; }
         .badge-360.disabled { pointer-events: none; opacity: 0.45; }
+        #badge-360-header.disabled { display: none !important; }
         .section-title { font-size: 0.9rem; padding: 10px 12px; }
 
         .section-title { 
@@ -1159,6 +1160,7 @@
         <div id="pdp-scroll">
             <div id="pdp-title"></div>
             <div id="pdp-agotado-badge" class="stock-badge-inline agotado" style="display:none;position:static;margin-bottom:8px;">Agotado</div>
+            <div id="pdp-viewers" style="display:none;font-size:0.78rem;font-weight:700;color:#e65100;margin-bottom:8px;"></div>
             <div id="pdp-meta">
                 <span id="pdp-vendedor"></span>
                 <span id="pdp-stars"></span>
@@ -1778,14 +1780,16 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
             var grid = title.nextElementSibling;
             if (!grid) return;
             var visible = grid.querySelectorAll('.card:not([style*="display: none"])').length > 0;
-            title.style.display = visible || cat === 'todos' ? '' : 'none';
-            grid.style.display = visible || cat === 'todos' ? '' : 'none';
+            title.style.display = visible ? '' : 'none';
+            grid.style.display = visible ? '' : 'none';
         });
-        // Destacados: solo visible con "Todos", sin importar si algún producto coincide con la categoría
+        // Destacados: solo visible con "Todos" (y solo si tiene productos), sin importar
+        // si algún producto coincide con la categoría cuando se filtra por otra pestaña
         var destTitle = document.getElementById('sec-title-destacado');
         var destGrid  = document.getElementById('grid-destacado');
-        if (destTitle) destTitle.style.display = cat === 'todos' ? '' : 'none';
-        if (destGrid)  destGrid.style.display  = cat === 'todos' ? '' : 'none';
+        var destVisible = cat === 'todos' && destGrid && destGrid.querySelectorAll('.card').length > 0;
+        if (destTitle) destTitle.style.display = destVisible ? '' : 'none';
+        if (destGrid)  destGrid.style.display  = destVisible ? '' : 'none';
     }
 
     // Disparado desde el slide "Nueva Mercancía": activa la categoría real "🆕 Lo último"
@@ -3206,6 +3210,18 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
         }, { passive: true });
     }
 
+    // Número de "personas viendo esto" — no mide tráfico real, es una señal de urgencia
+    // estable por producto y por franja de 15 min, con jitter de ±2 en cada visita/refresco.
+    function personasViendoCount(pid) {
+        var franja = Math.floor(Date.now() / (15 * 60 * 1000));
+        var seed = pid + '-' + franja;
+        var hash = 0;
+        for (var i = 0; i < seed.length; i++) { hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0; }
+        var base = 2 + (Math.abs(hash) % 11); // 2–12, estable por franja de 15 min
+        var jitter = Math.floor(Math.random() * 5) - 2; // ±2, distinto en cada visita/refresco
+        return Math.max(1, base + jitter);
+    }
+
     function openProductDetail(card) {
         pdpAjustarLayoutMovil();
         var pdpScrollEl = document.getElementById('pdp-scroll');
@@ -3259,6 +3275,15 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
         document.getElementById('pdp-compromiso').innerHTML = esCardNegocio ? '' : pdpCompromisoHTML;
         document.getElementById('pdp-testimonios-wrap').style.display = esCardNegocio ? 'none' : 'block';
         if (!esCardNegocio) cargarTestimonios(pdpCurrentId);
+
+        var pdpViewersEl = document.getElementById('pdp-viewers');
+        if (pdpViewersEl) {
+            if (esCardNegocio) { pdpViewersEl.style.display = 'none'; }
+            else {
+                pdpViewersEl.style.display = '';
+                pdpViewersEl.innerHTML = '🔥 ' + personasViendoCount(pdpCurrentId) + ' personas viendo esto ahora';
+            }
+        }
 
         // Próxima venta: bloquear el botón de compra del panel, o convertirlo en reserva si hay Acceso 360
         var esProximaVentaPdp = card.getAttribute('data-proxima-venta') === 'true';
