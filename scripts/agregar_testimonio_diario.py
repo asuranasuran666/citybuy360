@@ -128,7 +128,7 @@ POR_CATEGORIA = {
     "hombre": ["buena tela, no se destiñó al lavarla", "pedí mi talla de siempre y ajustó perfecto", "buen acabado, se ve mejor en persona", "cómoda y fresca, la uso para todo", "aguanta bien el uso diario", "buen material, no se ve barato"],
     "ninos": ["le quedó perfecta a mi niño, buena talla", "tela suave, no le dio alergia", "buena calidad para lo que cuesta", "aguanta el trote de los niños sin dañarse rápido", "buen tamaño, tal cual la talla pedida"],
     "unisex": ["se ve bien, buen acabado", "combina con todo lo que tengo", "buena calidad, no se siente barato", "ajusta bien, cómodo de usar", "buen material, se ve resistente"],
-    "electronica": ["funciona excelente, la batería dura bastante", "se conecta rápido, sin interferencias", "buena calidad para el precio", "llegó bien empacado y prendió a la primera", "cumple lo que promete sin fallas"],
+    "electronica": ["funciona excelente, la batería dura bastante", "buena calidad para el precio", "llegó bien empacado y prendió a la primera", "cumple lo que promete sin fallas", "se ve resistente, no es de mala calidad"],
     "aseo": ["huele bien y rinde bastante", "buena textura, no reseca", "cumple lo que promete", "buena relación cantidad-precio", "buena presentación del producto"],
     "servicios": ["cumplieron rápido con lo acordado", "buena comunicación durante todo el proceso", "resolvieron todo sin complicaciones", "excelente atención de principio a fin", "todo salió tal cual se acordó"],
 }
@@ -164,12 +164,36 @@ FRASES_SPEC = {
             "los {v}GB de RAM rinden bien para el uso diario", "la RAM alcanza, no se pone lenta"],
     "almacenamiento": ["los {v}GB de almacenamiento me alcanzan bien", "buen espacio para guardar fotos y apps, {v}GB rinde"],
     "bateria": ["la batería de {v}mAh aguanta bien un día completo", "con {v}mAh no tengo que estar cargando a cada rato",
-                "el power bank de {v}mAh carga el teléfono varias veces sin problema"],
+                "la batería rinde bien, dura bastante para el uso diario"],
+    "bateria_powerbank": ["el power bank de {v}mAh carga el teléfono varias veces sin problema",
+                          "con {v}mAh de capacidad carga hasta dos veces el celular", "buena capacidad, {v}mAh rinden para varios días"],
     "camara": ["la cámara de {v}MP se ve bien en fotos de día", "las fotos con la cámara de {v}MP salen nítidas"],
     "pantalla": ["la pantalla de {v} pulgadas se ve nítida", "buen tamaño de pantalla, {v} pulgadas es cómodo para ver videos"],
     "procesador": ["con el {v} anda fluido, no se traba", "el {v} responde bien, sin demoras"],
     "carga_rapida": ["carga bastante rápido, se agradece", "la carga rápida sí se nota, en poco rato ya tiene batería"],
+    "marca": ["la marca {v} nunca desencanta", "confío en {v}, nunca me ha fallado esa marca", "se nota que es {v}, buena fama y se cumple"],
 }
+
+# Marcas conocidas — se buscan en el nombre/descripción para poder mencionar
+# el fabricante ("Samsung nunca desencanta") cuando el producto lo trae.
+MARCAS = ["samsung", "xiaomi", "redmi", "poco", "huawei", "honor", "motorola", "tecno",
+          "infinix", "oppo", "realme", "vivo", "nokia", "lenovo", "apple", "iphone",
+          "jbl", "sony", "anker", "baseus", "tcl", "zte"]
+
+POWER_BANK_CLAVES = ["power bank", "powerbank", "bateria portatil", "batería portátil"]
+
+
+def detectar_marca(texto):
+    t = (texto or "").lower()
+    for marca in MARCAS:
+        if marca in t:
+            return "iPhone" if marca == "iphone" else marca.capitalize()
+    return None
+
+
+def es_power_bank(nombre_producto):
+    n = (nombre_producto or "").lower()
+    return any(c in n for c in POWER_BANK_CLAVES)
 
 
 def extraer_specs(texto):
@@ -183,10 +207,21 @@ def extraer_specs(texto):
     return specs
 
 
-def frase_spec(specs):
-    """Elige una spec al azar de las encontradas y arma la frase con su valor."""
-    clave = random.choice(list(specs.keys()))
-    valor = specs[clave]
+def frase_spec(specs, nombre_producto=""):
+    """Elige una spec al azar de las encontradas (incluyendo marca si aplica)
+    y arma la frase con su valor. Distingue batería de dispositivo vs de
+    power bank según el nombre del producto, para no confundir una cosa
+    con la otra."""
+    opciones = dict(specs)
+    if "bateria" in opciones:
+        clave_bateria = "bateria_powerbank" if es_power_bank(nombre_producto) else "bateria"
+        opciones[clave_bateria] = opciones.pop("bateria")
+    marca = detectar_marca(nombre_producto)
+    if marca:
+        opciones["marca"] = marca
+
+    clave = random.choice(list(opciones.keys()))
+    valor = opciones[clave]
     plantilla = random.choice(FRASES_SPEC[clave])
     return plantilla.format(v=valor) if "{v}" in plantilla and valor else random.choice(FRASES_SPEC[clave]).replace("{v} ", "").replace("{v}", "")
 
@@ -238,10 +273,11 @@ def _con_faltas_ortograficas(texto):
 
 def elegir_texto(nombre_producto, seccion, genero=None, descripcion="", detalles=""):
     specs = extraer_specs((descripcion or "") + " " + (detalles or ""))
+    hay_marca = detectar_marca((nombre_producto or "") + " " + (descripcion or "")) is not None
 
-    if specs and random.random() < 0.7:
-        # La mayoría de las veces que hay specs reales, el comentario las menciona
-        detalle = frase_spec(specs)
+    if (specs or hay_marca) and random.random() < 0.7:
+        # La mayoría de las veces que hay specs reales (o marca conocida), el comentario las menciona
+        detalle = frase_spec(specs or {"marca": True}, nombre_producto + " " + (descripcion or ""))
     elif seccion == "hombre" and genero == "f":
         detalle = random.choice(RELACIONAL_HOMBRE)
     elif seccion == "mujer" and genero == "m":
