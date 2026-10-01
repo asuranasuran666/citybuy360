@@ -3217,8 +3217,8 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
         var seed = pid + '-' + franja;
         var hash = 0;
         for (var i = 0; i < seed.length; i++) { hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0; }
-        var base = 2 + (Math.abs(hash) % 11); // 2–12, estable por franja de 15 min
-        var jitter = Math.floor(Math.random() * 5) - 2; // ±2, distinto en cada visita/refresco
+        var base = 2 + (Math.abs(hash) % 24); // 2–25, estable por franja de 15 min (más variedad entre productos)
+        var jitter = Math.floor(Math.random() * 7) - 3; // ±3, distinto en cada visita/refresco
         return Math.max(1, base + jitter);
     }
 
