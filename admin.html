@@ -2771,14 +2771,14 @@ function renderControl() {
         <span class="section-name">${sec.name}</span>
         <span class="section-meta" onclick="event.stopPropagation()">
           <span class="expiry-label">Expira:</span>
-          <input type="date" class="expiry-input" data-sec="${sec.id}" value="${secCfg.expires||''}" onchange="onExpiryChange(this)">
+          <input type="date" class="expiry-input" aria-label="Fecha de expiración de la sección" data-sec="${sec.id}" value="${secCfg.expires||''}" onchange="onExpiryChange(this)">
           <label class="toggle" title="Mostrar título">
-            <input type="checkbox" data-sec-title="${sec.id}" ${secCfg.showTitle!==false?'checked':''} onchange="onTitleToggle(this)">
+            <input type="checkbox" aria-label="Mostrar título de la sección" data-sec-title="${sec.id}" ${secCfg.showTitle!==false?'checked':''} onchange="onTitleToggle(this)">
             <span class="toggle-slider"></span>
           </label>
           <span style="font-size:0.7rem;color:var(--text-muted);">Título</span>
           <label class="toggle">
-            <input type="checkbox" data-sec="${sec.id}" ${secCfg.active!==false?'checked':''} onchange="onSectionToggle(this)">
+            <input type="checkbox" aria-label="Sección activa" data-sec="${sec.id}" ${secCfg.active!==false?'checked':''} onchange="onSectionToggle(this)">
             <span class="toggle-slider"></span>
           </label>
           <button onclick="moverSeccion('${sec.id}',-1)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;padding:2px 4px;" title="Subir">▲</button>
@@ -2797,13 +2797,13 @@ function renderControl() {
           return `<div class="product-row">
             <span class="product-row-name">${p.nombre||pid}</span>
             <span class="expiry-label">Expira:</span>
-            <input type="date" class="expiry-input" data-prod-exp="${pid}" value="${pCfg.expires||''}" onchange="onProductExpiryChange(this)">
+            <input type="date" class="expiry-input" aria-label="Fecha de expiración del producto" data-prod-exp="${pid}" value="${pCfg.expires||''}" onchange="onProductExpiryChange(this)">
             ${!isDestacado ? `<button class="dest-btn ${inDestacado?'active':''}" id="dest-${pid}" onclick="toggleDestacado('${pid}',this)" title="${inDestacado?'Quitar de Destacados':'Añadir a Destacados'}">${inDestacado?'⭐':'☆'}</button>` : ''}
             <button class="mod-btn" onclick="editProduct('${pid}')" title="Modificar producto">✏️</button>
             <button data-pid="${pid}" data-action="eliminar-producto" style="background:none;border:1px solid #ff4444;border-radius:6px;padding:3px 8px;cursor:pointer;color:#ff4444;font-size:0.75rem;" title="Eliminar">🗑</button>
             <span class="prod-status ${on?'on':'off'}" id="pstatus-${pid}">${on?'Activo':'Inactivo'}</span>
             <label class="toggle">
-              <input type="checkbox" data-prod="${pid}" ${on?'checked':''} onchange="onProductToggle(this)">
+              <input type="checkbox" aria-label="Producto activo" data-prod="${pid}" ${on?'checked':''} onchange="onProductToggle(this)">
               <span class="toggle-slider"></span>
             </label>
           </div>`;
@@ -3640,9 +3640,9 @@ function agregarFilaVariante(prefijo, nombre, precio, stock) {
   row.className = 'variante-row';
   row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
   row.innerHTML =
-    '<input type="text" placeholder="Nombre (ej: Negro)" value="' + (nombre ? nombre.replace(/"/g,'') : '') + '" class="variante-nombre" style="flex:2;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
-    '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" class="variante-precio" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
-    '<input type="number" placeholder="Stock" step="1" value="' + (stock != null ? stock : '') + '" class="variante-stock" title="Déjalo vacío si no quieres controlar stock de esta opción" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+    '<input type="text" placeholder="Nombre (ej: Negro)" value="' + (nombre ? nombre.replace(/"/g,'') : '') + '" aria-label="Nombre de la variante" class="variante-nombre" style="flex:2;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+    '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" aria-label="Precio de la variante" class="variante-precio" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+    '<input type="number" placeholder="Stock" step="1" value="' + (stock != null ? stock : '') + '" aria-label="Stock de la variante" class="variante-stock" title="Déjalo vacío si no quieres controlar stock de esta opción" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
     '<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>';
   lista.appendChild(row);
 }
@@ -3686,7 +3686,7 @@ function agregarColorMatriz(prefijo, colorNombre, tallas, imagenColor) {
   var imgFieldId = 'color-img-' + Math.random().toString(36).slice(2, 9);
   bloque.innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">' +
-      '<input type="text" placeholder="Color (ej: Negro)" value="' + (colorNombre ? String(colorNombre).replace(/"/g,'') : '') + '" class="variante-color-nombre" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
+      '<input type="text" placeholder="Color (ej: Negro)" value="' + (colorNombre ? String(colorNombre).replace(/"/g,'') : '') + '" aria-label="Nombre del color" class="variante-color-nombre" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.82rem;min-width:0;">' +
       '<button type="button" onclick="this.closest(\'.variante-color-bloque\').remove()" style="background:none;border:none;color:#ff4444;font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none;">✕</button>' +
     '</div>' +
     '<div style="display:flex;gap:6px;margin-bottom:2px;">' +
@@ -3713,9 +3713,9 @@ function agregarTallaMatrizEnLista(tallasList, talla, precio, stock) {
   fila.className = 'variante-talla-row';
   fila.style.cssText = 'display:flex;gap:5px;align-items:center;';
   fila.innerHTML =
-    '<input type="text" placeholder="Talla (ej: M)" value="' + (talla ? String(talla).replace(/"/g,'') : '') + '" class="variante-talla-nombre" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
-    '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" class="variante-talla-precio" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
-    '<input type="number" placeholder="Stock" step="1" value="' + (stock != null ? stock : '') + '" class="variante-talla-stock" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
+    '<input type="text" placeholder="Talla (ej: M)" value="' + (talla ? String(talla).replace(/"/g,'') : '') + '" aria-label="Nombre de la talla" class="variante-talla-nombre" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
+    '<input type="number" placeholder="Precio" step="0.01" value="' + (precio != null ? precio : '') + '" aria-label="Precio para esta talla" class="variante-talla-precio" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
+    '<input type="number" placeholder="Stock" step="1" value="' + (stock != null ? stock : '') + '" aria-label="Stock para esta talla" class="variante-talla-stock" style="flex:1;padding:5px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;min-width:0;">' +
     '<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#ff4444;font-size:1rem;cursor:pointer;padding:2px 5px;flex:none;">✕</button>';
   tallasList.appendChild(fila);
 }
@@ -4444,7 +4444,7 @@ function renderFilasVariantesSimples(p) {
     return '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;' + (agotado ? 'opacity:0.7;' : '') + '">' +
       '<span style="flex:1;font-size:0.8rem;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + icono + ' ' + esc(v.nombre) + (agotado ? ' <span style="color:#ff6666;font-weight:400;">·Agot.</span>' : '') + '</span>' +
       '<button onclick="ajustarStockVariante(\'' + p.id + '\',' + vi + ',-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">−</button>' +
-      '<input type="number" value="' + stock + '" placeholder="—" min="0" onchange="setStockVariante(\'' + p.id + '\',' + vi + ',this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
+      '<input type="number" value="' + stock + '" placeholder="—" min="0" aria-label="Stock de esta variante" onchange="setStockVariante(\'' + p.id + '\',' + vi + ',this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
       '<button onclick="ajustarStockVariante(\'' + p.id + '\',' + vi + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">+</button>' +
     '</div>';
   });
@@ -4465,7 +4465,7 @@ function renderFilasMatriz(p) {
       compactas.push('<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;' + (agotado0 ? 'opacity:0.7;' : '') + '">' +
         '<span style="flex:1;font-size:0.8rem;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎨 ' + esc(c.color) + (agotado0 ? ' <span style="color:#ff6666;font-weight:400;">·Agot.</span>' : '') + '</span>' +
         '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">−</button>' +
-        '<input type="number" value="' + stock0 + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',0,this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
+        '<input type="number" value="' + stock0 + '" placeholder="—" min="0" aria-label="Stock para este color" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',0,this.value)" style="width:40px;text-align:center;padding:4px 2px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;flex:none;">' +
         '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',0,1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:24px;height:24px;font-weight:900;cursor:pointer;flex:none;font-size:0.8rem;">+</button>' +
       '</div>');
       return;
@@ -4478,7 +4478,7 @@ function renderFilasMatriz(p) {
       return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border);">' +
         '<div style="flex:1;font-size:0.82rem;' + (agotado ? 'color:#ff6666;' : '') + '">' + esc(t.talla) + (agotado ? ' — Agotado' : '') + '</div>' +
         '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',-1)" style="background:#3a1a1a;border:1px solid #663333;color:#ff8888;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">−</button>' +
-        '<input type="number" value="' + stock + '" placeholder="—" min="0" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',this.value)" style="width:56px;text-align:center;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">' +
+        '<input type="number" value="' + stock + '" placeholder="—" min="0" aria-label="Stock para esta combinación" onchange="setStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',this.value)" style="width:56px;text-align:center;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">' +
         '<button onclick="ajustarStockMatriz(\'' + p.id + '\',' + ci + ',' + ti + ',1)" style="background:#1a3a1a;border:1px solid #336633;color:#88ff88;border-radius:6px;width:28px;height:28px;font-weight:900;cursor:pointer;">+</button>' +
       '</div>';
     }).join('');
@@ -5558,14 +5558,14 @@ function loadSliderAdmin() {
         '<div style="display:flex;align-items:center;justify-content:space-between;">' +
           '<div style="font-size:0.75rem;color:var(--text-muted);font-weight:700;">SLIDE ' + (i+1) + '</div>' +
           '<label style="display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--text-muted);cursor:pointer;">' +
-            '<input data-slide="'+i+'" data-field="activo" type="checkbox" onchange="toggleSlideActivoVista(this)" ' + (activo ? 'checked' : '') + '> Activo' +
+            '<input data-slide="'+i+'" data-field="activo" aria-label="Slide activo" type="checkbox" onchange="toggleSlideActivoVista(this)" ' + (activo ? 'checked' : '') + '> Activo' +
           '</label>' +
         '</div>' +
-        '<input data-slide="'+i+'" data-field="label" type="text" value="'+escHtml(s.label||'')+'" placeholder="Subtítulo" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.82rem;">' +
-        '<input data-slide="'+i+'" data-field="title" type="text" value="'+escHtml(s.title||'')+'" placeholder="Título principal" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.88rem;font-weight:700;">' +
+        '<input data-slide="'+i+'" data-field="label" aria-label="Subtítulo del slide" type="text" value="'+escHtml(s.label||'')+'" placeholder="Subtítulo" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.82rem;">' +
+        '<input data-slide="'+i+'" data-field="title" aria-label="Título principal del slide" type="text" value="'+escHtml(s.title||'')+'" placeholder="Título principal" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.88rem;font-weight:700;">' +
         '<div style="display:flex;gap:6px;">' +
-          '<input data-slide="'+i+'" data-field="btnText" type="text" value="'+escHtml(s.btnText||'')+'" placeholder="Texto botón (opcional)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.78rem;">' +
-          '<input data-slide="'+i+'" data-field="btnLink" type="text" value="'+escHtml(s.btnLink||'')+'" placeholder="Link botón" style="flex:2;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.78rem;">' +
+          '<input data-slide="'+i+'" data-field="btnText" aria-label="Texto del botón" type="text" value="'+escHtml(s.btnText||'')+'" placeholder="Texto botón (opcional)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.78rem;">' +
+          '<input data-slide="'+i+'" data-field="btnLink" aria-label="Link del botón" type="text" value="'+escHtml(s.btnLink||'')+'" placeholder="Link botón" style="flex:2;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.78rem;">' +
         '</div>' +
       '</div>';
     }).join('');
@@ -5596,8 +5596,8 @@ function loadMarquesinaMensajesAdmin() {
           '<div style="font-size:0.75rem;color:var(--text-muted);font-weight:700;">MENSAJE ' + (i+1) + '</div>' +
           '<label class="toggle"><input type="checkbox" data-mmsg="'+i+'" data-field="activo" ' + (m.activo !== false ? 'checked' : '') + '><span class="toggle-slider"></span></label>' +
         '</div>' +
-        '<textarea data-mmsg="'+i+'" data-field="texto" placeholder="Texto del mensaje…" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:6px 8px;font-size:0.82rem;resize:vertical;min-height:40px;">' + escHtml(m.texto||'') + '</textarea>' +
-        '<select data-mmsg="'+i+'" data-field="tipo" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.8rem;">' +
+        '<textarea data-mmsg="'+i+'" data-field="texto" aria-label="Texto del mensaje" placeholder="Texto del mensaje…" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:6px 8px;font-size:0.82rem;resize:vertical;min-height:40px;">' + escHtml(m.texto||'') + '</textarea>' +
+        '<select data-mmsg="'+i+'" data-field="tipo" aria-label="Tipo de mensaje" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:0.8rem;">' +
           Object.keys(marquesinaTiposLabel).map(function(k) { return '<option value="'+k+'"' + (m.tipo===k?' selected':'') + '>' + marquesinaTiposLabel[k] + '</option>'; }).join('') +
         '</select>' +
       '</div>';
