@@ -124,7 +124,10 @@ def main():
         sys.exit(1)
 
     tasa_usd = buscar_moneda(datos, "USD")
+    # elToque devuelve este valor bajo la clave "ECU", no "EUR"
     tasa_eur = buscar_moneda(datos, "EUR")
+    if tasa_eur is None:
+        tasa_eur = buscar_moneda(datos, "ECU")
 
     if tasa_usd is None:
         print("⚠️ No se pudo interpretar el USD de la respuesta de elToque (revisa el JSON de arriba).")
