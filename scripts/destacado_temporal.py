@@ -114,6 +114,17 @@ def main():
     activos = dict(estado.get("activos") or {})
     ultimos = set(estado.get("ultimos") or [])
 
+    # 0. Reconciliar: si alguien quitó el destacado a mano, desactivó el producto o lo editó
+    #    desde el formulario del admin, ese producto ya no cuenta y libera su lugar del cupo.
+    for pid in list(activos):
+        p = catalogo.get(pid)
+        sigue = bool(p) and p.get("destacado") and p.get("destacadoTemporal") \
+            and (p.get("activo") is not False or p.get("proximaVenta"))
+        if not sigue:
+            if p and p.get("destacadoTemporal"):
+                fb_patch(f"catalogo/{pid}", {"destacado": False, "destacadoTemporal": None, "destacadoHasta": None})
+            del activos[pid]
+
     # 1. Quitar los temporales vencidos
     quitados = []
     for pid, hasta in list(activos.items()):
