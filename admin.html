@@ -616,7 +616,7 @@
         <label class="toggle"><input type="checkbox" id="if-slider" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
       </div>
       <div class="interfaz-row">
-        <div style="flex:1"><div class="interfaz-name">Badge Acceso 360</div><div class="interfaz-desc">El pase dorado en el header y la sección exclusiva</div></div>
+        <div style="flex:1"><div class="interfaz-name">Badge Acceso 360</div><div class="interfaz-desc">El pase dorado en el header, la franja "ACCESO VIP" y la sección exclusiva</div></div>
         <label class="toggle"><input type="checkbox" id="if-acceso360" onchange="saveInterfaz()"><span class="toggle-slider"></span></label>
       </div>
       <div class="interfaz-row">
@@ -1221,7 +1221,7 @@
       <button onclick="borrarDatosVentas()" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:6px 12px;font-size:0.8rem;cursor:pointer;">🗑️ Borrar datos de ventas</button>
     </div>
     <table class="sales-table">
-      <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th><th></th></tr></thead>
+      <thead><tr><th>Producto</th><th>Sección</th><th>Ventas</th><th>Fecha</th><th></th></tr></thead>
       <tbody id="sales-tbody"><tr><td colspan="3" class="empty-state">Cargando…</td></tr></tbody>
     </table>
   </div>
@@ -1389,6 +1389,7 @@ var catalogoAdminData = {};
 let cfg = { sections: {}, products: {} };
 let visitsData = {};
 let salesData = {};
+let pedidosPorProducto = {}; // productoId -> [fechas ISO de cada "Lo quiero"], más reciente primero
 let chart = null;
 let currentPeriod = 'week';
 
@@ -1777,10 +1778,22 @@ async function generarIndexEstatico() {
 
       // Badge inferior derecho de la imagen — misma lógica y prioridad que la card dinámica
       var stock = inventarioEstatico[p.id];
+      var stockVar = (function(p){
+        var vals = [];
+        if (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0) {
+          p.variantesMatriz.forEach(function(c){ (c.tallas||[]).forEach(function(t){ vals.push(t.stock); }); });
+        } else if ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes) && p.variantes.length > 0) {
+          p.variantes.forEach(function(v){ vals.push(v.stock); });
+        } else { return null; }
+        if (!vals.some(function(s){ return s !== null && s !== undefined; })) return null;
+        if (vals.some(function(s){ return s === null || s === undefined; })) return Infinity;
+        return vals.reduce(function(x,y){ return x + y; }, 0);
+      })(p);
+      if (stockVar !== null) stock = (stockVar === Infinity) ? undefined : stockVar;
       var badgeInline = '';
       var ahoraMs = Date.now();
       var sieteDs = 7 * 24 * 60 * 60 * 1000;
-      if (stock === 0 && inventarioEstatico[p.id] !== undefined) {
+      if (stock === 0 && (stockVar !== null || inventarioEstatico[p.id] !== undefined)) {
         badgeInline = '<div class="stock-badge-inline agotado">Agotado</div>';
       } else if (stock !== undefined && stock !== null && stock > 0 && stock <= 3) {
         badgeInline = '<div class="stock-badge-stack">' +
@@ -2198,7 +2211,10 @@ async function generarIndexEstatico() {
     if (interfazEstatico.catbar === false) ocultarPorId('cat-bar');
     if (interfazEstatico.slider === false) ocultarPorId('header-slider');
     if (interfazEstatico.bottomnav === false) ocultarPorId('bottom-nav');
-    if (interfazEstatico.acceso360 === false) deshabilitarPorId('badge-360-header');
+    if (interfazEstatico.acceso360 === false) {
+      deshabilitarPorId('badge-360-header');
+      indexHTML = indexHTML.replace('id="vip-promo-banner"', 'id="vip-promo-banner" hidden');
+    }
 
     // 4c. Ticker/marquesina
     var tickerVal = interfazEstatico.ticker;
@@ -2693,6 +2709,17 @@ async function initAdmin() {
   db.ref('sales').once('value', snap => {
     salesData = snap.val() || {};
     renderSales();
+    db.ref('pedidos').once('value', psnap => {
+      pedidosPorProducto = {};
+      var peds = psnap.val() || {};
+      Object.keys(peds).forEach(k => {
+        var pd = peds[k];
+        if (!pd || !pd.productoId || !pd.fecha) return;
+        (pedidosPorProducto[pd.productoId] = pedidosPorProducto[pd.productoId] || []).push(pd.fecha);
+      });
+      Object.keys(pedidosPorProducto).forEach(k => pedidosPorProducto[k].sort().reverse());
+      renderSales();
+    }).catch(() => {});
   });
   window._cb360Etapa = 'ventasVendedores';
   db.ref('ventasVendedores').once('value', snap => {
@@ -3794,11 +3821,17 @@ function borrarDatosVentas() {
   }).catch(e => alert('Error al borrar: ' + e.message));
 }
 
+function fechaVentaTxt(iso) {
+  var d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}) + ' ' + d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+}
+
 function renderSales() {
   const tbody = document.getElementById('sales-tbody');
   const entries = Object.entries(salesData).sort((a,b) => b[1]-a[1]);
   if (!entries.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin ventas registradas aún</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin ventas registradas aún</td></tr>';
     return;
   }
   const max = Math.max(...entries.map(e => e[1]));
@@ -3807,9 +3840,13 @@ function renderSales() {
   SECTIONS.forEach(sec => {
     const secEntries = entries.filter(([pid]) => sec.products.includes(pid));
     if (!secEntries.length) return;
-    html += `<tr><td colspan="4"><div class="section-title-admin">${sec.emoji} ${sec.name}</div></td></tr>`;
+    html += `<tr><td colspan="5"><div class="section-title-admin">${sec.emoji} ${sec.name}</div></td></tr>`;
     secEntries.forEach(([pid, count]) => {
       const pct = Math.round((count/max)*100);
+      const fechas = pedidosPorProducto[pid] || [];
+      const fechaHTML = fechas.length
+        ? `<details style="font-size:0.78rem;"><summary style="cursor:pointer;color:var(--text);">${fechaVentaTxt(fechas[0])}</summary><div style="color:var(--text-muted);margin-top:4px;line-height:1.5;">${fechas.slice(0,15).map(fechaVentaTxt).join('<br>')}</div></details>`
+        : '<span style="color:var(--text-muted);font-size:0.78rem;">—</span>';
       html += `<tr>
         <td>${PRODUCT_NAMES[pid]||pid}</td>
         <td style="color:var(--text-muted);font-size:0.8rem">${sec.name}</td>
@@ -3817,6 +3854,7 @@ function renderSales() {
           <span class="sales-total-chip">${count}</span>
           <span class="sales-bar-wrap"><span class="sales-bar" style="width:${pct}%"></span></span>
         </td>
+        <td>${fechaHTML}</td>
         <td><button onclick="borrarVentaProducto('${pid}')" title="Borrar datos de este producto" style="background:none;border:1px solid #ff4444;color:#ff4444;border-radius:6px;padding:4px 8px;font-size:0.75rem;cursor:pointer;">🗑️</button></td>
       </tr>`;
     });
@@ -4040,17 +4078,35 @@ function combinarFrase(detalle) {
   return ap + detalle + ci;
 }
 
+// Comentarios sobre el producto sin spec concreta: evitan caer en frases de servicio (el servicio queda ~20%).
+var PRODUCTO_GENERICO_TESTIMONIOS = [
+  'buena calidad para el precio', 'tal cual la foto, no tuve sorpresas', 'se ve mejor en persona que en la foto',
+  'buen material, se siente resistente', 'llegó bien y en perfecto estado', 'cumple lo que promete',
+  'buen acabado, no se ve barato', 'justo lo que buscaba, buen producto', 'la calidad superó lo que esperaba',
+  'lo uso seguido y sigue como nuevo', 'buen tamaño, tal cual la descripción', 'vale lo que cuesta, muy buen producto'
+];
+var POOL_ROPA_INTERIOR_TESTIMONIOS = [
+  'muy cómodo, la tela es suave y no marca', 'no tiene costuras que molesten, se siente como una segunda piel',
+  'la tela es fresca y transpira bien', 'el elástico no aprieta ni se enrolla', 'los colores son iguales a la foto, no destiñen al lavar',
+  'la talla ajustó perfecto, ni apretada ni floja', 'buena tela, no se transparenta', 'después de varios lavados sigue igual, no se deforma',
+  'se siente suave en la piel, no irrita', 'ideal para usar todo el día, no se nota debajo de la ropa'
+];
+var CLAVES_ROPA_INTERIOR = ['blumer', 'panty', 'panti', 'tanga', 'boxer', 'calzoncillo', 'brasier', 'sosten', 'sostén', 'bikini', 'lenceria', 'lencería', 'ropa interior'];
+
 function elegirPoolDetalle(nombreProducto, seccion, genero) {
   if (seccion === 'hombre' && genero === 'f') return RELACIONAL_HOMBRE;
   if (seccion === 'mujer' && genero === 'm') return RELACIONAL_MUJER;
+  var nom = (nombreProducto || '').toLowerCase();
+  if (seccion === 'ropa-interior' || CLAVES_ROPA_INTERIOR.some(function(c) { return nom.indexOf(c) !== -1; })) return POOL_ROPA_INTERIOR_TESTIMONIOS;
   var tipo = detectarTipoProducto(nombreProducto);
-  return (tipo && POOLS_TIPO[tipo]) || POR_CATEGORIA[seccion] || [];
+  var porSeccion = POR_CATEGORIA[seccion] || (seccion === 'ropa-moda' ? POOLS_TIPO.ropa : null) || (seccion === 'accesorios' ? POOLS_TIPO.bolso : null);
+  return (tipo && POOLS_TIPO[tipo]) || porSeccion || PRODUCTO_GENERICO_TESTIMONIOS;
 }
 
 function elegirDetalleParaTestimonio(nombreProducto, seccion, genero) {
   var poolEspecifico = elegirPoolDetalle(nombreProducto, seccion, genero);
   // ~20% de las veces, va genérico de tienda aunque haya pool específico
-  if (!poolEspecifico.length || Math.random() < 0.2) {
+  if (Math.random() < 0.2) {
     return GENERICAS_TESTIMONIOS[Math.floor(Math.random() * GENERICAS_TESTIMONIOS.length)];
   }
   return poolEspecifico[Math.floor(Math.random() * poolEspecifico.length)];
@@ -4631,20 +4687,17 @@ function esc(s) {
 // en la pestaña principal, en vez de quedar silenciosamente mal.
 function verificarAutoDesactivarPorStockUnico(p, etiquetaOpcion) {
   if (!p || p.activo === false) return; // ya estaba desactivado, no repetir aviso
-  var totalOpciones = 0;
-  var unicoStock = null;
+  var stocks = [];
   if (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz)) {
-    p.variantesMatriz.forEach(function(c) { (c.tallas || []).forEach(function(t) {
-      totalOpciones++; unicoStock = t.stock;
-    }); });
+    p.variantesMatriz.forEach(function(c) { (c.tallas || []).forEach(function(t) { stocks.push(t.stock); }); });
   } else if ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes)) {
-    totalOpciones = p.variantes.length;
-    if (totalOpciones === 1) unicoStock = p.variantes[0].stock;
+    p.variantes.forEach(function(v) { stocks.push(v.stock); });
   }
-  if (totalOpciones === 1 && unicoStock === 0) {
+  // Se desactiva cuando TODAS las opciones están en 0 (una opción sin límite o sin dato lo impide)
+  if (stocks.length > 0 && stocks.every(function(s) { return s === 0; })) {
     p.activo = false;
     db.ref('catalogo/' + p.id + '/activo').set(false);
-    crearAlertaAdmin('"' + (p.nombre || p.id) + '" se desactivó automáticamente — su única opción (' + etiquetaOpcion + ') se agotó.');
+    crearAlertaAdmin('"' + (p.nombre || p.id) + '" se agotó y se desactivó automáticamente' + (stocks.length === 1 ? ' — su única opción (' + etiquetaOpcion + ') llegó a 0.' : ' — todas sus opciones llegaron a 0.'));
     if (typeof renderCatalogoAdmin === 'function') renderCatalogoAdmin();
   }
 }

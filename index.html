@@ -358,6 +358,7 @@
         .badge-360:hover { box-shadow: 0 0 22px rgba(255,215,0,0.95); transform: scale(1.05); transition: all 0.2s; }
         .badge-360.disabled { pointer-events: none; opacity: 0.45; }
         #badge-360-header.disabled { display: none !important; }
+        #vip-promo-banner[hidden] { display: none !important; }
         #badge-360-header { display: inline-flex !important; background: linear-gradient(135deg,#f5c518,#ffe566,#f5c518) !important; color: #1a0a00 !important; }
         .section-title { font-size: 0.9rem; padding: 10px 12px; }
 
@@ -372,6 +373,7 @@
         .products-container { padding: 4px 20px 40px; width: 100%; box-sizing: border-box; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .grid-destacado { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        #grid-destacado { padding: 12px 12px 14px; margin: 0 0 28px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 12px; box-shadow: 0 2px 8px rgba(255,111,0,0.10); gap: 8px; }
         #grid-destacado.premium-carrusel { display: flex; overflow-x: auto; gap: 8px; padding: 12px 12px 14px; margin: 0 0 28px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 12px; box-shadow: 0 2px 8px rgba(255,111,0,0.10); scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         #grid-destacado.premium-carrusel::-webkit-scrollbar { display: none; }
         #grid-destacado.premium-carrusel .card { flex: 0 0 calc(50% - 6px); scroll-snap-align: start; }
@@ -1632,6 +1634,8 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
             if (interfaz.acceso360 === false) { badge360.classList.add('disabled'); }
             else { badge360.classList.remove('disabled'); }
         }
+        var vipBanner = document.getElementById('vip-promo-banner');
+        if (vipBanner) vipBanner.hidden = (interfaz.acceso360 === false);
         var span360 = document.getElementById('span-360');
         if (span360) {
             if (interfaz.acceso360 === false) { span360.style.pointerEvents='none'; span360.style.cursor='default'; }
@@ -1771,13 +1775,28 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
         });
     }
 
+    // El stock de las variantes manda sobre el inventario viejo (inventario/{id}).
+    function stockTotalVariantes(p) {
+        // null = el producto no controla stock por variantes; Infinity = alguna opción sin límite; número = suma
+        var vals = [];
+        if (p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0) {
+            p.variantesMatriz.forEach(function(c){ (c.tallas||[]).forEach(function(t){ vals.push(t.stock); }); });
+        } else if ((p.variantesTipo === 'color' || p.variantesTipo === 'talla') && Array.isArray(p.variantes) && p.variantes.length > 0) {
+            p.variantes.forEach(function(v){ vals.push(v.stock); });
+        } else { return null; }
+        var algunoDefinido = vals.some(function(s){ return s !== null && s !== undefined; });
+        if (!algunoDefinido) return null;
+        if (vals.some(function(s){ return s === null || s === undefined; })) return Infinity;
+        return vals.reduce(function(a,b){ return a + b; }, 0);
+    }
+
     // ── PREMIUM / DESTACADOS ─────────────────────────────────────────────────
     // Una sola función decide si se ve el bloque de destacados, tanto en la tienda
     // dinámica como en la estática (el modo se lee del atributo data-slot del grid:
     // lo pone loadPromoSlider en vivo y lo hornea el generador en la versión estática).
     //   productos   -> cuadrícula "SELECCIÓN PREMIUM"
     //   promociones -> solo el slider de promociones (destacados ocultos)
-    //   ambos       -> slider de promociones + carrusel "DESTACADOS DE LA SEMANA"
+    //   ambos       -> slider de promociones + carrusel "SELECCIÓN PREMIUM"
     var _catActual = 'todos';
     function aplicarVisibilidadPremium() {
         var t = document.getElementById('sec-title-destacado');
@@ -1786,7 +1805,7 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
         var slot = g.getAttribute('data-slot');
         var hay = g.querySelectorAll('.card').length > 0;
         var mostrar = !!slot && slot !== 'promociones' && hay && _catActual === 'todos';
-        t.textContent = slot === 'ambos' ? '⭐ DESTACADOS DE LA SEMANA' : '⭐ SELECCIÓN PREMIUM';
+        t.textContent = '⭐ SELECCIÓN PREMIUM';
         t.style.display = mostrar ? '' : 'none';
         g.style.display = mostrar ? '' : 'none';
         if (slot === 'ambos') g.classList.add('premium-carrusel'); else g.classList.remove('premium-carrusel');
@@ -2071,6 +2090,8 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
 
         // Badge de stock (esquina inferior derecha de la imagen — el único sistema que realmente se muestra)
         var stock = inventarioData[p.id];
+        var stockVar = stockTotalVariantes(p);
+        if (stockVar !== null) stock = (stockVar === Infinity) ? undefined : stockVar;
         var matrizTotalmenteAgotada = p.variantesTipo === 'matriz' && Array.isArray(p.variantesMatriz) && p.variantesMatriz.length > 0 &&
             p.variantesMatriz.every(function(c){ return (c.tallas||[]).every(function(t){ return t.stock !== null && t.stock !== undefined && t.stock <= 0; }); });
 
@@ -2084,7 +2105,7 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
         var badgeInline = '';
         var ahoraMs = Date.now();
         var quinceDs = 15 * 24 * 60 * 60 * 1000;
-        if ((stock === 0 && inventarioData[p.id] !== undefined) || matrizTotalmenteAgotada) {
+        if ((stock === 0 && (stockVar !== null || inventarioData[p.id] !== undefined)) || matrizTotalmenteAgotada) {
             badgeInline = '<div class="stock-badge-inline agotado">Agotado</div>';
         } else if (stock !== undefined && stock !== null && stock > 0 && stock <= 3) {
             badgeInline = '<div class="stock-badge-stack">' +
@@ -2105,7 +2126,7 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
             recomendado: { icon: '👍', text: 'Recomendado',     cls: 'pedido' },
             calidad:     { icon: '💎', text: 'Máxima Calidad',  cls: 'masvendido' }
         };
-        var yaAgotado = (stock === 0 && inventarioData[p.id] !== undefined) || matrizTotalmenteAgotada;
+        var yaAgotado = (stock === 0 && (stockVar !== null || inventarioData[p.id] !== undefined)) || matrizTotalmenteAgotada;
         if (!yaAgotado && p.etiqueta && etiquetasMap[p.etiqueta]) {
             var et = etiquetasMap[p.etiqueta];
             badgeInline = '<div class="stock-badge-inline ' + et.cls + '">' + et.icon + ' ' + et.text + '</div>';
@@ -2216,7 +2237,7 @@ Entrega: Hasta 20 días hábiles posterior a la compra del producto.</div><div c
                     '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:4px;">Los clientes Acceso 360 ya pueden reservarlo</div>';
             }
         } else {
-            var estaAgotadoCard = (stock === 0 && inventarioData[p.id] !== undefined) || ((tieneVariantesMatriz || tieneVariantesSimples) && stockFiltro === 0);
+            var estaAgotadoCard = (stock === 0 && (stockVar !== null || inventarioData[p.id] !== undefined)) || ((tieneVariantesMatriz || tieneVariantesSimples) && stockFiltro === 0);
             if (estaAgotadoCard) {
                 var waTextAgotado = encodeURIComponent('Hola, vi que "' + p.nombre + '" está agotado. ¿Me pueden hacer un pedido extra?');
                 var waLinkAgotado = 'https://wa.me/5353255813?text=' + waTextAgotado;

@@ -94,6 +94,11 @@ def generar_nombre():
     return completo, ("f" if es_fem else "m")
 
 TIPOS_PRODUCTO = [
+    (["blumer", "panty", "panti", "tanga", "boxer", "calzoncillo", "brasier", "sosten", "sostén", "bikini", "lenceria", "lencería", "ropa interior"], "ropa_interior"),
+    (["tablet"], "tablet"),
+    (["afeitar", "cuchilla", "rastrillo"], "afeitar"),
+    (["venda"], "vendas"),
+    (["bebe", "bebé", "pañal", "panal", "biberon", "biberón"], "bebe"),
     (["media", "calcetin", "calcetín"], "medias"),
     (["gorra", "sombrero", "cachucha"], "gorra"),
     (["ventilador"], "ventilador"),
@@ -101,7 +106,7 @@ TIPOS_PRODUCTO = [
     (["saldo", "recarga"], "recarga"),
     (["perfume", "colonia", "crema", "locion", "loción", "shampoo", "champú", "jabon", "jabón", "desodorante"], "aseo_especifico"),
     (["zapato", "tenis", "sandalia", "bota", "chancleta"], "calzado"),
-    (["mochila", "bolso", "cartera", "maleta"], "bolso"),
+    (["mochila", "bolso", "cartera", "maleta", "bandolera", "riñonera", "rinonera"], "bolso"),
     (["reloj"], "reloj"),
     (["juguete", "muñeca", "muneca", "carrito"], "juguete"),
     (["cargador", "cable", "power bank", "bateria portatil", "batería portátil"], "accesorio_electronico"),
@@ -109,6 +114,11 @@ TIPOS_PRODUCTO = [
 ]
 
 POOLS_TIPO = {
+    "ropa_interior": ["muy cómodo, la tela es suave y no marca", "no tiene costuras que molesten, se siente como una segunda piel", "la tela es fresca y transpira bien", "el elástico no aprieta ni se enrolla", "los colores son iguales a la foto, no destiñen al lavar", "la talla ajustó perfecto, ni apretada ni floja", "buena tela, no se transparenta", "después de varios lavados sigue igual, no se deforma", "se siente suave en la piel, no irrita", "ideal para usar todo el día, no se nota debajo de la ropa"],
+    "tablet": ["la pantalla se ve nítida y de buen tamaño", "la batería me dura todo el día", "funciona fluida, no se traba con varias apps", "buena para ver videos y para los niños", "viene bien empacada y prendió a la primera", "el sonido se escucha bien para el tamaño", "ligera y fácil de llevar a todos lados", "buena calidad para lo que costó"],
+    "afeitar": ["afeitan al ras y no irritan la piel", "la banda con aloe se nota, la piel queda suave", "el mango agarra bien, no resbala", "la cuchilla corta parejo sin tirones", "buena cantidad por el precio, rinden bastante", "no me hice ni un corte, afeita cómodo", "duran más de lo que esperaba"],
+    "vendas": ["buena elasticidad, sujeta bien sin apretar de más", "la tela es resistente y no se deshilacha", "se ajusta fácil y se mantiene firme", "buen material, transpira y no irrita la piel", "justo lo que necesitaba, cumple bien", "se pueden lavar y reutilizar sin que pierdan la forma"],
+    "bebe": ["la tela es suave, a mi bebé no le irritó la piel", "buena calidad y seguro para los más pequeños", "tal cual la foto, buen tamaño", "lavé varias veces y sigue como nuevo", "material delicado, perfecto para el bebé", "a mi bebé le quedó perfecto"],
     "medias": ["buena tela, no aprietan para nada", "calientan bien, buena calidad", "no se han descosido después de varios lavados", "cómodas para todo el día", "buen grosor, ni muy finas ni muy gruesas", "se ven bien, además duraderas", "no se les corre el hilo", "buen ajuste, no se bajan caminando", "material suave, no pican", "aguantan bien el uso diario"],
     "gorra": ["buen ajuste, no me aprieta", "protege bien del sol", "buena tela, no destiñe con el sudor", "se ve mejor en persona que en la foto", "buen material, ligera", "me quedó cómoda, ajusta bien", "la visera es firme, no se dobla", "buen bordado, se ve de calidad", "ajustable, sirve para varias cabezas", "no destiñe con el sol"],
     "ventilador": ["buena brisa, silencioso", "la batería dura bastante", "las velocidades funcionan bien todas", "liviano y fácil de mover", "cumple lo que promete, buen producto", "se siente resistente, no es de mala calidad", "carga rápido y dura harto tiempo", "se puede colgar o poner de mesa sin problema", "buen tamaño, no ocupa mucho espacio", "funciona bien hasta en la potencia más baja"],
@@ -124,6 +134,9 @@ POOLS_TIPO = {
 }
 
 POR_CATEGORIA = {
+    "ropa-interior": ["muy cómoda, la tela es suave y no marca", "buena tela, no se transparenta ni se deforma", "la talla ajustó bien, el elástico no aprieta", "los colores salen igual a la foto", "fresca y suave, ideal para todos los días", "aguanta los lavados sin perder la forma"],
+    "ropa-moda": ["buena tela, no destiñe al lavar", "la talla ajustó como esperaba", "el diseño se ve mejor en persona que en la foto", "buen acabado en las costuras", "cómoda y fresca, la uso seguido", "el color es igual al de la foto"],
+    "accesorios": ["se ve mejor en persona que en la foto", "buen material, se siente resistente", "buen tamaño, práctico para el día a día", "los acabados se ven de calidad", "cumple justo lo que necesitaba", "buena calidad para lo que costó"],
     "mujer": ["me quedó divina, tal cual la talla que pedí", "la tela se siente de buena calidad, no rasca", "combina con todo, ya me la e puesto varias veces", "buen corte, no se ve barata para nada", "el color es igualito a la foto", "no se encoge ni destiñe al lavar"],
     "hombre": ["buena tela, no se destiñó al lavarla", "pedí mi talla de siempre y ajustó perfecto", "buen acabado, se ve mejor en persona", "cómoda y fresca, la uso para todo", "aguanta bien el uso diario", "buen material, no se ve barato"],
     "ninos": ["le quedó perfecta a mi niño, buena talla", "tela suave, no le dio alergia", "buena calidad para lo que cuesta", "aguanta el trote de los niños sin dañarse rápido", "buen tamaño, tal cual la talla pedida"],
@@ -132,6 +145,15 @@ POR_CATEGORIA = {
     "aseo": ["huele bien y rinde bastante", "buena textura, no reseca", "cumple lo que promete", "buena relación cantidad-precio", "buena presentación del producto"],
     "servicios": ["cumplieron rápido con lo acordado", "buena comunicación durante todo el proceso", "resolvieron todo sin complicaciones", "excelente atención de principio a fin", "todo salió tal cual se acordó"],
 }
+
+# Comentarios sobre el PRODUCTO sin spec concreta: se usan cuando no hay pool específico, para que
+# el servicio (GENERICAS) quede como máximo ~20% de los testimonios.
+PRODUCTO_GENERICO = [
+    "buena calidad para el precio", "tal cual la foto, no tuve sorpresas", "se ve mejor en persona que en la foto",
+    "buen material, se siente resistente", "llegó bien y en perfecto estado", "cumple lo que promete",
+    "buen acabado, no se ve barato", "justo lo que buscaba, buen producto", "la calidad superó lo que esperaba",
+    "lo uso seguido y sigue como nuevo", "buen tamaño, tal cual la descripción", "vale lo que cuesta, muy buen producto",
+]
 
 GENERICAS = [
     "buena atención por WhatsApp, resolvieron mis dudas rapido",
@@ -220,10 +242,18 @@ def frase_spec(specs, nombre_producto=""):
     if marca:
         opciones["marca"] = marca
 
-    clave = random.choice(list(opciones.keys()))
-    valor = opciones[clave]
-    plantilla = random.choice(FRASES_SPEC[clave])
-    return plantilla.format(v=valor) if "{v}" in plantilla and valor else random.choice(FRASES_SPEC[clave]).replace("{v} ", "").replace("{v}", "")
+    # Una spec sin valor numérico (ej. "batería" sin mAh) solo puede usar frases sin {v};
+    # si no tiene ninguna, se descarta esa spec para no escribir "la batería de mAh".
+    validas = []
+    for clave, valor in opciones.items():
+        frases = FRASES_SPEC[clave] if valor else [f for f in FRASES_SPEC[clave] if "{v}" not in f]
+        if frases:
+            validas.append((clave, valor, frases))
+    if not validas:
+        return random.choice(PRODUCTO_GENERICO)
+    clave, valor, frases = random.choice(validas)
+    plantilla = random.choice(frases)
+    return plantilla.format(v=valor) if "{v}" in plantilla else plantilla
 
 # Cuando el género del nombre no coincide con la sección del producto (ej:
 # nombre de mujer en ropa de hombre), se reencuadra como compra para alguien
@@ -271,7 +301,17 @@ def _con_faltas_ortograficas(texto):
     return texto
 
 
-def elegir_texto(nombre_producto, seccion, genero=None, descripcion="", detalles=""):
+def pool_por_seccion(seccion):
+    clave = (seccion or "").lower().strip()
+    if clave in POR_CATEGORIA:
+        return POR_CATEGORIA[clave]
+    for k, pool in POR_CATEGORIA.items():
+        if clave.startswith(k):
+            return pool
+    return None
+
+
+def elegir_texto(nombre_producto, seccion, genero=None, descripcion="", detalles="", solo_producto=False):
     specs = extraer_specs((descripcion or "") + " " + (detalles or ""))
     hay_marca = detectar_marca((nombre_producto or "") + " " + (descripcion or "")) is not None
 
@@ -284,9 +324,12 @@ def elegir_texto(nombre_producto, seccion, genero=None, descripcion="", detalles
         detalle = random.choice(RELACIONAL_MUJER)
     else:
         tipo = detectar_tipo(nombre_producto)
-        pool = POOLS_TIPO.get(tipo) or POR_CATEGORIA.get(seccion) or GENERICAS
-        # ~20% de las veces, va genérico aunque haya pool específico
-        detalle = random.choice(GENERICAS) if random.random() < 0.2 else random.choice(pool)
+        pool = POOLS_TIPO.get(tipo) or pool_por_seccion(seccion) or PRODUCTO_GENERICO
+        # 80% habla del producto, ~20% del servicio (salvo que se pida solo producto)
+        if not solo_producto and random.random() < 0.2:
+            detalle = random.choice(GENERICAS)
+        else:
+            detalle = random.choice(pool)
 
     texto = random.choice(APERTURAS) + detalle + random.choice(CIERRES)
     return _con_faltas_ortograficas(texto)

@@ -70,14 +70,14 @@ def actualizar_ticker(firebase_url, tasa_usd, tasa_eur):
         nuevo = hoy + " " + nuevo
 
     if tasa_eur is not None:
-        patron_eur = r"(El TOQUE\)\s*-\s*EURO\s*)(\d+(?:\.\d+)?)(\s*MN)"
+        patron_eur = r"(El TOQUE\)\s*-\s*EURO\s*)(\d+(?:[.,]\d+)?)(\s*(?:MN|CUP))"
         if re.search(patron_eur, nuevo):
             nuevo = re.sub(patron_eur, lambda m: m.group(1) + str(round(tasa_eur)) + m.group(3), nuevo, count=1)
         else:
             print("⚠️ No se encontro el patron de EURO (El TOQUE) en la marquesina — no se toco ese numero.")
 
     if tasa_usd is not None:
-        patron_usd = r"(El TOQUE\).*?-\s*USD\s*)(\d+(?:\.\d+)?)(\s*MN)"
+        patron_usd = r"(El TOQUE\).*?-\s*USD\s*)(\d+(?:[.,]\d+)?)(\s*(?:MN|CUP))"
         if re.search(patron_usd, nuevo):
             nuevo = re.sub(patron_usd, lambda m: m.group(1) + str(round(tasa_usd)) + m.group(3), nuevo, count=1)
         else:
